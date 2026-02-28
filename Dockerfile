@@ -27,11 +27,15 @@ RUN CGO_ENABLED=0 go build \
 FROM ghcr.io/codize-dev/nsjail:83d63e1fc0bddd5cff3b077a4ece89515cb8a482@sha256:536e7c0d8b591bb3a12b86fdbbaee617e503d7058606a48a10b189d20a5cfb09
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates gpg && \
+    apt-get install -y --no-install-recommends ca-certificates gpg gpg-agent && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /out/server /usr/local/bin/server
 COPY --from=mise /usr/local/bin/mise /usr/local/bin/mise
+
+ENV MISE_DATA_DIR="/mise"
+ENV PATH="/mise/installs/node/24.14.0/bin:$PATH"
+RUN mise use -g node@24.14.0
 
 EXPOSE 8080
 
