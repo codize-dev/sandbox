@@ -11,10 +11,38 @@ import (
 	"sync"
 )
 
+const nsjailPath = "/bin/nsjail"
+
+type Runtime string
+
 const (
-	nsjailPath = "/bin/nsjail"
-	nodePath   = "/mise/installs/node/24.14.0/bin/node"
+	RuntimeNode Runtime = "node"
+	RuntimeRuby Runtime = "ruby"
 )
+
+type runtimeConfig struct {
+	binaryPath string
+	installDir string
+	pathEnv    string
+}
+
+var runtimes = map[Runtime]runtimeConfig{
+	RuntimeNode: {
+		binaryPath: "/mise/installs/node/24.14.0/bin/node",
+		installDir: "/mise/installs/node/24.14.0",
+		pathEnv:    "/mise/installs/node/24.14.0/bin",
+	},
+	RuntimeRuby: {
+		binaryPath: "/mise/installs/ruby/3.4.8/bin/ruby",
+		installDir: "/mise/installs/ruby/3.4.8",
+		pathEnv:    "/mise/installs/ruby/3.4.8/bin",
+	},
+}
+
+func ValidRuntime(rt Runtime) bool {
+	_, ok := runtimes[rt]
+	return ok
+}
 
 type Result struct {
 	Stdout   string `json:"stdout"`
@@ -34,12 +62,13 @@ func (lw *lockedWriter) Write(p []byte) (n int, err error) {
 	return lw.buf.Write(p)
 }
 
-func Run(tmpDir, entryFile string) (Result, error) {
+func Run(rt Runtime, tmpDir, entryFile string) (Result, error) {
 	tmpHome, err := os.MkdirTemp("", "sandbox-tmp-*")
 	if err != nil {
 		return Result{}, fmt.Errorf("failed to create tmp directory: %w", err)
 	}
 	defer os.RemoveAll(tmpHome)
+	cfg := runtimes[rt]
 
 	args := []string{
 		"-Mo",
@@ -54,7 +83,7 @@ func Run(tmpDir, entryFile string) (Result, error) {
 	}
 
 	args = append(args,
-		"-R", "/mise/installs/node/24.14.0:/mise/installs/node/24.14.0",
+		"-R", cfg.installDir+":"+cfg.installDir,
 		"-R", "/dev/null:/dev/null",
 		"-R", "/dev/urandom:/dev/urandom",
 		"-B", tmpDir+":/code",
@@ -62,10 +91,10 @@ func Run(tmpDir, entryFile string) (Result, error) {
 		"-m", "none:/proc:proc:ro",
 		"-s", "/proc/self/fd:/dev/fd",
 		"--rlimit_as", "hard",
-		"-E", "PATH=/mise/installs/node/24.14.0/bin",
+		"-E", "PATH="+cfg.pathEnv,
 		"-E", "HOME=/tmp",
 		"--",
-		nodePath,
+		cfg.binaryPath,
 		"/code/"+entryFile,
 	)
 

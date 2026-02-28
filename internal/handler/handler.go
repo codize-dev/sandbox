@@ -12,7 +12,8 @@ import (
 )
 
 type RunRequest struct {
-	Files []File `json:"files"`
+	Runtime string `json:"runtime"`
+	Files   []File `json:"files"`
 }
 
 type File struct {
@@ -29,6 +30,13 @@ func RunHandler(c *echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "invalid request body: " + err.Error(),
+		})
+	}
+
+	rt := sandbox.Runtime(req.Runtime)
+	if !sandbox.ValidRuntime(rt) {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "invalid or missing runtime: must be \"node\" or \"ruby\"",
 		})
 	}
 
@@ -54,7 +62,7 @@ func RunHandler(c *echo.Context) error {
 		}
 	}
 
-	result, err := sandbox.Run(tmpDir, req.Files[0].Name)
+	result, err := sandbox.Run(rt, tmpDir, req.Files[0].Name)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": err.Error(),
