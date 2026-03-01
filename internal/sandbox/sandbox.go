@@ -7,10 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -19,24 +17,6 @@ import (
 )
 
 const nsjailPath = "/bin/nsjail"
-
-const defaultRunTimeout = 30
-
-var (
-	nsjailTimeLimit = defaultRunTimeout
-	execTimeout     = time.Duration(defaultRunTimeout+10) * time.Second
-)
-
-func init() {
-	if v := os.Getenv("SANDBOX_RUN_TIMEOUT"); v != "" {
-		sec, err := strconv.Atoi(v)
-		if err != nil || sec <= 0 {
-			log.Fatalf("invalid SANDBOX_RUN_TIMEOUT: %q (must be a positive integer)", v)
-		}
-		nsjailTimeLimit = sec
-		execTimeout = time.Duration(sec+10) * time.Second
-	}
-}
 
 type Runtime string
 
@@ -55,7 +35,12 @@ const (
 
 var errOutputLimitExceeded = errors.New("output limit exceeded")
 
-const outputLimit = 1 << 20 // 1 MiB
+// Config holds runtime-configurable parameters for the sandbox.
+type Config struct {
+	RunTimeout  int
+	ExecTimeout time.Duration
+	OutputLimit int
+}
 
 type runtimeConfig struct {
 	binaryPath string
@@ -101,8 +86,8 @@ func resolveSignal(exitCode int, logOutput string) *string {
 	return nil
 }
 
-func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, error) {
-	ctx, cancel := context.WithTimeout(ctx, execTimeout)
+func Run(ctx context.Context, cfg Config, rt Runtime, tmpDir, entryFile string) (Result, error) {
+	ctx, cancel := context.WithTimeout(ctx, cfg.ExecTimeout)
 	defer cancel()
 
 	tmpHome, err := os.MkdirTemp("", "sandbox-tmp-*")
@@ -110,7 +95,7 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 		return Result{}, fmt.Errorf("failed to create tmp directory: %w", err)
 	}
 	defer func() { _ = os.RemoveAll(tmpHome) }()
-	cfg := runtimes[rt]
+	rtCfg := runtimes[rt]
 
 	args := []string{
 		"-Mo",
@@ -127,7 +112,7 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 	}
 
 	args = append(args,
-		"-R", cfg.installDir+":"+cfg.installDir,
+		"-R", rtCfg.installDir+":"+rtCfg.installDir,
 		"-R", "/dev/null:/dev/null",
 		"-R", "/dev/urandom:/dev/urandom",
 		"-B", tmpDir+":/code",
@@ -135,11 +120,11 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 		"-m", "none:/proc:proc:ro",
 		"-s", "/proc/self/fd:/dev/fd",
 		"--rlimit_as", "hard",
-		"--time_limit", fmt.Sprintf("%d", nsjailTimeLimit),
-		"-E", "PATH="+cfg.pathEnv,
+		"--time_limit", fmt.Sprintf("%d", cfg.RunTimeout),
+		"-E", "PATH="+rtCfg.pathEnv,
 		"-E", "HOME=/tmp",
 		"--",
-		cfg.binaryPath,
+		rtCfg.binaryPath,
 		"/code/"+entryFile,
 	)
 
@@ -195,7 +180,7 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 
 	var stdoutBuf, stderrBuf, combined bytes.Buffer
 
-	drainErr := drainPipes(ctx, cmd.Process, stdoutR, stderrR, &stdoutBuf, &stderrBuf, &combined)
+	drainErr := drainPipes(ctx, cmd.Process, stdoutR, stderrR, &stdoutBuf, &stderrBuf, &combined, cfg.OutputLimit)
 	if drainErr != nil && !errors.Is(drainErr, errOutputLimitExceeded) {
 		_ = cmd.Wait()
 		_ = stdoutR.Close()
@@ -270,7 +255,7 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 // pipes are ready simultaneously, stdout is processed first. The poll
 // timeout is derived from ctx's deadline so that the execution timeout
 // and client disconnects are respected promptly.
-func drainPipes(ctx context.Context, proc *os.Process, stdoutR, stderrR *os.File, stdoutBuf, stderrBuf, combined *bytes.Buffer) error {
+func drainPipes(ctx context.Context, proc *os.Process, stdoutR, stderrR *os.File, stdoutBuf, stderrBuf, combined *bytes.Buffer, outputLimit int) error {
 	type pipe struct {
 		file *os.File
 		buf  *bytes.Buffer

@@ -36,13 +36,13 @@ COPY . .
 RUN CGO_ENABLED=0 go build \
       -trimpath \
       -ldflags="-w -s" \
-      -o /out/server \
-      ./cmd/server
+      -o /out/sandbox \
+      .
 
 # ---
 
 FROM base
 
-COPY --from=builder /out/server /usr/local/bin/server
+COPY --from=builder /out/sandbox /usr/local/bin/sandbox
 EXPOSE 8080
-ENTRYPOINT ["/usr/local/bin/server"]
+ENTRYPOINT ["/usr/local/bin/sandbox", "serve"]

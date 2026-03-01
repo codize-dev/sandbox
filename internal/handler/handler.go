@@ -28,7 +28,12 @@ type RunResponse struct {
 	Run sandbox.Result `json:"run"`
 }
 
-func RunHandler(c *echo.Context) error {
+// Handler holds dependencies for the HTTP handler.
+type Handler struct {
+	Config sandbox.Config
+}
+
+func (h *Handler) RunHandler(c *echo.Context) error {
 	var req RunRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
@@ -73,7 +78,7 @@ func RunHandler(c *echo.Context) error {
 		}
 	}
 
-	result, err := sandbox.Run(c.Request().Context(), rt, tmpDir, req.Files[0].Name)
+	result, err := sandbox.Run(c.Request().Context(), h.Config, rt, tmpDir, req.Files[0].Name)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return c.JSON(http.StatusGatewayTimeout, map[string]string{
