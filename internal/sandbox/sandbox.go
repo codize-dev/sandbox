@@ -104,11 +104,12 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 	defer func() { _ = os.RemoveAll(tmpHome) }()
 
 	e := &execution{
-		runTimeout: r.cfg.RunTimeout,
-		rtCfg:      runtimes[rt],
-		tmpDir:     tmpDir,
-		entryFile:  entryFile,
-		tmpHome:    tmpHome,
+		runTimeout:  r.cfg.RunTimeout,
+		outputLimit: r.cfg.OutputLimit,
+		rtCfg:       runtimes[rt],
+		tmpDir:      tmpDir,
+		entryFile:   entryFile,
+		tmpHome:     tmpHome,
 	}
 
 	args := e.buildArgs()
@@ -122,7 +123,7 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 		return Result{}, err
 	}
 
-	drainErr := e.drainPipes(ctx, cmd.Process, r.cfg.OutputLimit)
+	drainErr := e.drainPipes(ctx)
 	if drainErr != nil && !errors.Is(drainErr, errOutputLimitExceeded) {
 		_ = cmd.Wait()
 		_ = e.stdoutR.Close()

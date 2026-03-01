@@ -16,11 +16,14 @@ import (
 )
 
 type execution struct {
-	runTimeout int
-	rtCfg     runtimeConfig
-	tmpDir    string
-	entryFile string
-	tmpHome   string
+	runTimeout  int
+	outputLimit int
+	rtCfg       runtimeConfig
+	tmpDir      string
+	entryFile   string
+	tmpHome     string
+
+	proc *os.Process
 
 	stdoutR *os.File
 	stdoutW *os.File
@@ -119,6 +122,8 @@ func (e *execution) start(ctx context.Context, args []string) (*exec.Cmd, error)
 		return nil, fmt.Errorf("sandbox execution failed: %w", err)
 	}
 
+	e.proc = cmd.Process
+
 	// Close the parent's copy of the write ends. A pipe delivers EOF to
 	// readers only when all write-end fds are closed; without this, the
 	// read ends would block forever even after the child exits.
@@ -160,48 +165,31 @@ func (e *execution) collectResult(waitErr error) (Result, error) {
 	return result, nil
 }
 
+type pipe struct {
+	file *os.File
+	buf  *bytes.Buffer
+	open bool
+}
+
 // drainPipes multiplexes reads from e.stdoutR and e.stderrR using poll(2),
 // writing to per-stream buffers and a combined buffer. Processing in a
 // single goroutine eliminates races on the combined buffer. When both
 // pipes are ready simultaneously, stdout is processed first. The poll
 // timeout is derived from ctx's deadline so that the execution timeout
 // and client disconnects are respected promptly.
-func (e *execution) drainPipes(ctx context.Context, proc *os.Process, outputLimit int) error {
-	type pipe struct {
-		file *os.File
-		buf  *bytes.Buffer
-		open bool
-	}
+func (e *execution) drainPipes(ctx context.Context) error {
 	pipes := [2]pipe{
 		{file: e.stdoutR, buf: &e.stdoutBuf, open: true},
 		{file: e.stderrR, buf: &e.stderrBuf, open: true},
 	}
 	buf := make([]byte, 32*1024)
 
-	deadline, hasDeadline := ctx.Deadline()
-
 	for pipes[0].open || pipes[1].open {
-		var fds [2]unix.PollFd
-		var idx [2]int
-		n := 0
-		for i := range pipes {
-			if pipes[i].open {
-				fds[n] = unix.PollFd{Fd: int32(pipes[i].file.Fd()), Events: unix.POLLIN}
-				idx[n] = i
-				n++
-			}
-		}
+		fds, idx, n := buildPollFds(pipes)
 
-		pollTimeout := -1
-		if hasDeadline {
-			ms := int(time.Until(deadline).Milliseconds())
-			if ms <= 0 {
-				if err := ctx.Err(); err != nil {
-					return err
-				}
-				ms = 0
-			}
-			pollTimeout = ms
+		pollTimeout, err := calcPollTimeout(ctx)
+		if err != nil {
+			return err
 		}
 
 		count, err := unix.Poll(fds[:n], pollTimeout)
@@ -223,24 +211,56 @@ func (e *execution) drainPipes(ctx context.Context, proc *os.Process, outputLimi
 			if fds[j].Revents&(unix.POLLIN|unix.POLLHUP|unix.POLLERR) == 0 {
 				continue
 			}
-			i := idx[j]
-			nr, readErr := pipes[i].file.Read(buf)
-			if nr > 0 {
-				pipes[i].buf.Write(buf[:nr])
-				e.combined.Write(buf[:nr])
-				if e.combined.Len() > outputLimit {
-					_ = proc.Kill()
-					return errOutputLimitExceeded
-				}
-			}
-			if readErr != nil {
-				if readErr == io.EOF {
-					pipes[i].open = false
-				} else {
-					return fmt.Errorf("read: %w", readErr)
-				}
+			if err := e.readPipe(&pipes[idx[j]], buf); err != nil {
+				return err
 			}
 		}
+	}
+	return nil
+}
+
+func buildPollFds(pipes [2]pipe) (fds [2]unix.PollFd, idx [2]int, n int) {
+	for i := range pipes {
+		if pipes[i].open {
+			fds[n] = unix.PollFd{Fd: int32(pipes[i].file.Fd()), Events: unix.POLLIN}
+			idx[n] = i
+			n++
+		}
+	}
+	return fds, idx, n
+}
+
+func calcPollTimeout(ctx context.Context) (int, error) {
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return -1, nil
+	}
+	ms := int(time.Until(deadline).Milliseconds())
+	if ms <= 0 {
+		if err := ctx.Err(); err != nil {
+			return 0, err
+		}
+		ms = 0
+	}
+	return ms, nil
+}
+
+func (e *execution) readPipe(p *pipe, buf []byte) error {
+	nr, err := p.file.Read(buf)
+	if nr > 0 {
+		p.buf.Write(buf[:nr])
+		e.combined.Write(buf[:nr])
+		if e.combined.Len() > e.outputLimit {
+			_ = e.proc.Kill()
+			return errOutputLimitExceeded
+		}
+	}
+	if err != nil {
+		if err == io.EOF {
+			p.open = false
+			return nil
+		}
+		return fmt.Errorf("read: %w", err)
 	}
 	return nil
 }
