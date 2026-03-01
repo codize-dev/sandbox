@@ -48,7 +48,7 @@ func RunHandler(c *echo.Context) error {
 			"error": "failed to create temporary directory",
 		})
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	for _, f := range req.Files {
 		decoded, err := base64.StdEncoding.DecodeString(f.Content)

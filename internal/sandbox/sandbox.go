@@ -91,7 +91,7 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 	if err != nil {
 		return Result{}, fmt.Errorf("failed to create tmp directory: %w", err)
 	}
-	defer os.RemoveAll(tmpHome)
+	defer func() { _ = os.RemoveAll(tmpHome) }()
 	cfg := runtimes[rt]
 
 	args := []string{
