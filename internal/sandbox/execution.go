@@ -160,21 +160,21 @@ func (e *execution) collectResult(waitErr error) (Result, error) {
 	return result, nil
 }
 
-// drainPipes multiplexes reads from stdoutR and stderrR using poll(2),
+// drainPipes multiplexes reads from e.stdoutR and e.stderrR using poll(2),
 // writing to per-stream buffers and a combined buffer. Processing in a
 // single goroutine eliminates races on the combined buffer. When both
 // pipes are ready simultaneously, stdout is processed first. The poll
 // timeout is derived from ctx's deadline so that the execution timeout
 // and client disconnects are respected promptly.
-func drainPipes(ctx context.Context, proc *os.Process, stdoutR, stderrR *os.File, stdoutBuf, stderrBuf, combined *bytes.Buffer, outputLimit int) error {
+func (e *execution) drainPipes(ctx context.Context, proc *os.Process, outputLimit int) error {
 	type pipe struct {
 		file *os.File
 		buf  *bytes.Buffer
 		open bool
 	}
 	pipes := [2]pipe{
-		{file: stdoutR, buf: stdoutBuf, open: true},
-		{file: stderrR, buf: stderrBuf, open: true},
+		{file: e.stdoutR, buf: &e.stdoutBuf, open: true},
+		{file: e.stderrR, buf: &e.stderrBuf, open: true},
 	}
 	buf := make([]byte, 32*1024)
 
@@ -227,8 +227,8 @@ func drainPipes(ctx context.Context, proc *os.Process, stdoutR, stderrR *os.File
 			nr, readErr := pipes[i].file.Read(buf)
 			if nr > 0 {
 				pipes[i].buf.Write(buf[:nr])
-				combined.Write(buf[:nr])
-				if combined.Len() > outputLimit {
+				e.combined.Write(buf[:nr])
+				if e.combined.Len() > outputLimit {
 					_ = proc.Kill()
 					return errOutputLimitExceeded
 				}

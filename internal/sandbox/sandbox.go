@@ -122,7 +122,7 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 		return Result{}, err
 	}
 
-	drainErr := drainPipes(ctx, cmd.Process, e.stdoutR, e.stderrR, &e.stdoutBuf, &e.stderrBuf, &e.combined, r.cfg.OutputLimit)
+	drainErr := e.drainPipes(ctx, cmd.Process, r.cfg.OutputLimit)
 	if drainErr != nil && !errors.Is(drainErr, errOutputLimitExceeded) {
 		_ = cmd.Wait()
 		_ = e.stdoutR.Close()
