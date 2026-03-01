@@ -46,11 +46,32 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 		})
 	}
 
-	rt, files, err := req.Validate()
-	if err != nil {
+	rt := sandbox.Runtime(req.Runtime)
+	if err := rt.Validate(); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": err.Error(),
 		})
+	}
+	if len(req.Files) == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "files must not be empty",
+		})
+	}
+
+	files := make([]decodedFile, len(req.Files))
+	for i, f := range req.Files {
+		if err := f.Validate(); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": err.Error(),
+			})
+		}
+		content, err := base64.StdEncoding.DecodeString(f.Content)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": fmt.Sprintf("file %q: invalid base64 content", f.Name),
+			})
+		}
+		files[i] = decodedFile{name: f.Name, content: content}
 	}
 
 	tmpDir, err := os.MkdirTemp("", "sandbox-*")
@@ -108,26 +129,4 @@ func (f File) Validate() error {
 		return fmt.Errorf("file name %q is not allowed", f.Name)
 	}
 	return nil
-}
-
-func (req RunRequest) Validate() (sandbox.Runtime, []decodedFile, error) {
-	rt := sandbox.Runtime(req.Runtime)
-	if err := rt.Validate(); err != nil {
-		return "", nil, err
-	}
-	if len(req.Files) == 0 {
-		return "", nil, errors.New("files must not be empty")
-	}
-	files := make([]decodedFile, len(req.Files))
-	for i, f := range req.Files {
-		if err := f.Validate(); err != nil {
-			return "", nil, err
-		}
-		content, err := base64.StdEncoding.DecodeString(f.Content)
-		if err != nil {
-			return "", nil, fmt.Errorf("file %q: invalid base64 content", f.Name)
-		}
-		files[i] = decodedFile{name: f.Name, content: content}
-	}
-	return rt, files, nil
 }
