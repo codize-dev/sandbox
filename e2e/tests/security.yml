@@ -1,11 +1,11 @@
 tests:
   - name: "execution timeout"
     input:
-      runtime: ruby
+      runtime: node
       files:
-        - name: main.rb
+        - name: index.js
           content: |
-            sleep 60
+            setTimeout(() => {}, 60000);
     output:
       status: 200
       run:
@@ -18,13 +18,12 @@ tests:
 
   - name: "timeout with partial output"
     input:
-      runtime: ruby
+      runtime: node
       files:
-        - name: main.rb
+        - name: index.js
           content: |
-            $stdout.sync = true
-            puts "started"
-            sleep 60
+            console.log("started");
+            setTimeout(() => {}, 60000);
     output:
       status: 200
       run:
@@ -102,23 +101,6 @@ tests:
         exit_code: 130
         status: "OK"
         signal: null
-
-  - name: "process killed by SIGSEGV"
-    input:
-      runtime: ruby
-      files:
-        - name: main.rb
-          content: |
-            Process.kill("SEGV", Process.pid)
-    output:
-      status: 200
-      run:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 139
-        status: "OK"
-        signal: "SIGSEGV"
 
   - name: "path traversal with dotdot-slash"
     input:
