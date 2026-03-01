@@ -51,30 +51,9 @@ POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
 
 ### Key Packages
 
-- **cmd/** — CLI entrypoint using Cobra. `root.go` defines the root command; `serve.go` registers the `serve` subcommand that starts the Echo v5 HTTP server with request logging middleware. Single route: `POST /v1/run`. Accepts `--addr` (default `:8080`), `--timeout` (default `30`), and `--output-limit` (default 1 MiB) flags.
-- **internal/handler/** — Request parsing and response formatting. Defines the `Handler` struct holding a `*sandbox.Runner`. Validates the `runtime` field and file names (rejects path traversal, slashes, `.`, `..`, empty names, null bytes), decodes base64 file contents from the request, writes them to a temp directory, and calls `Runner.Run()`. The first file in the `files` array is the entrypoint. Returns HTTP 400 on invalid input, HTTP 504 on execution timeout.
-- **internal/sandbox/** — Core execution logic split across two files. `sandbox.go` defines the public API: `Runner` struct (created via `NewRunner(cfg Config)`), `Config`, `Runtime`, `Status`, and `Result` types, and the runtime configuration registry (`runtimes` map). `Runner.Run()` orchestrates pipe creation, process execution, and result collection. `execution.go` defines the private `execution` struct that handles nsjail CLI argument assembly, pipe management (stdout, stderr, log fd 3), output draining via `unix.Poll` for deterministic pipe ordering, output limit enforcement, and timeout/signal detection from the nsjail log pipe. Returns base64-encoded output.
-
-### nsjail Isolation
-
-The sandbox uses nsjail (`/bin/nsjail`) with these key properties:
-- `-Mo` (once mode): runs the process once and exits
-- `-D /code`: sets the initial working directory inside the jail
-- Network isolation via new network namespace
-- `--log_fd 3`: nsjail logs piped to fd 3 for timeout detection
-- `--time_limit`: configurable via `--timeout` CLI flag (default 30s); Go-level exec timeout is nsjail limit + 10s
-- Read-only bind mounts for system libraries (`/lib`, `/usr`, and `/lib64` if it exists), the selected runtime, `/dev/null`, `/dev/urandom`, and `/proc` (via `-m`)
-- Read-write bind mount for the user code directory (`/code`) and a separate temp directory mounted as `/tmp`
-- Address space limited to system hard limit (`--rlimit_as hard`)
-- Environment: `PATH` set to runtime bin dir, `HOME=/tmp`
-- Symlink mount for `/dev/fd` via `/proc/self/fd` (`-s /proc/self/fd:/dev/fd`)
-- Combined output limit enforced by Go: configurable via `--output-limit` CLI flag (default 1 MiB). When exceeded, the jailed process is killed and status is set to `OUTPUT_LIMIT_EXCEEDED`.
-
-### Hardcoded Paths (in sandbox.go and Dockerfile)
-
-- nsjail binary: `/bin/nsjail`
-- Node.js runtime: `/mise/installs/node/24.14.0/bin/node`
-- Ruby runtime: `/mise/installs/ruby/3.4.8/bin/ruby`
+- **cmd/** — CLI entrypoint using Cobra. See `cmd/CLAUDE.md`.
+- **internal/handler/** — Request parsing and response formatting. See `internal/handler/CLAUDE.md`.
+- **internal/sandbox/** — Core sandbox execution logic. See `internal/sandbox/CLAUDE.md`.
 
 ### Docker Build
 
