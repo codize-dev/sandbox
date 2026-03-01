@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"syscall"
@@ -122,24 +123,21 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 	if err != nil {
 		return Result{}, err
 	}
+	defer e.closeReadEnds()
 
 	drainErr := e.drainPipes(ctx)
 	if drainErr != nil && !errors.Is(drainErr, errOutputLimitExceeded) {
 		_ = cmd.Wait()
-		_ = e.stdoutR.Close()
-		_ = e.stderrR.Close()
-		_ = e.logR.Close()
 		return Result{}, fmt.Errorf("sandbox execution failed: %w", drainErr)
 	}
 	outputLimitHit := errors.Is(drainErr, errOutputLimitExceeded)
 
-	_ = e.stdoutR.Close()
-	_ = e.stderrR.Close()
-
 	waitErr := cmd.Wait()
 
+	logData, _ := io.ReadAll(e.logR)
+	logStr := string(logData)
+
 	if outputLimitHit {
-		_ = e.logR.Close()
 		return Result{
 			Stdout:   "",
 			Stderr:   "",
@@ -151,9 +149,8 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 	}
 
 	if ctx.Err() != nil {
-		_ = e.logR.Close()
 		return Result{}, ctx.Err()
 	}
 
-	return e.collectResult(waitErr)
+	return e.collectResult(waitErr, logStr)
 }

@@ -72,7 +72,13 @@ func (e *execution) buildArgs() []string {
 	return args
 }
 
-func (e *execution) openPipes() error {
+func (e *execution) openPipes() (retErr error) {
+	defer func() {
+		if retErr != nil {
+			e.closePipes()
+		}
+	}()
+
 	var err error
 
 	e.stdoutR, e.stdoutW, err = os.Pipe()
@@ -81,8 +87,6 @@ func (e *execution) openPipes() error {
 	}
 	e.stderrR, e.stderrW, err = os.Pipe()
 	if err != nil {
-		_ = e.stdoutR.Close()
-		_ = e.stdoutW.Close()
 		return fmt.Errorf("failed to create stderr pipe: %w", err)
 	}
 	// Pipe for capturing nsjail log output. We read this after execution
@@ -95,14 +99,36 @@ func (e *execution) openPipes() error {
 	//    voluntarily exits with a signal-like exit code.
 	e.logR, e.logW, err = os.Pipe()
 	if err != nil {
-		_ = e.stdoutR.Close()
-		_ = e.stdoutW.Close()
-		_ = e.stderrR.Close()
-		_ = e.stderrW.Close()
 		return fmt.Errorf("failed to create log pipe: %w", err)
 	}
 
 	return nil
+}
+
+// closePipes closes all pipe file descriptors. Nil-safe for partially
+// created pipes (e.g. when openPipes fails midway).
+func (e *execution) closePipes() {
+	for _, f := range []*os.File{e.stdoutR, e.stdoutW, e.stderrR, e.stderrW, e.logR, e.logW} {
+		if f != nil {
+			_ = f.Close()
+		}
+	}
+}
+
+// closeWriteEnds closes the parent's copy of all pipe write ends.
+// Must only be called after openPipes succeeds (all fields are non-nil).
+func (e *execution) closeWriteEnds() {
+	_ = e.stdoutW.Close()
+	_ = e.stderrW.Close()
+	_ = e.logW.Close()
+}
+
+// closeReadEnds closes all pipe read ends.
+// Must only be called after openPipes succeeds (all fields are non-nil).
+func (e *execution) closeReadEnds() {
+	_ = e.stdoutR.Close()
+	_ = e.stderrR.Close()
+	_ = e.logR.Close()
 }
 
 func (e *execution) start(ctx context.Context, args []string) (*exec.Cmd, error) {
@@ -113,12 +139,7 @@ func (e *execution) start(ctx context.Context, args []string) (*exec.Cmd, error)
 	cmd.ExtraFiles = []*os.File{e.logW}
 
 	if err := cmd.Start(); err != nil {
-		_ = e.stdoutR.Close()
-		_ = e.stdoutW.Close()
-		_ = e.stderrR.Close()
-		_ = e.stderrW.Close()
-		_ = e.logR.Close()
-		_ = e.logW.Close()
+		e.closePipes()
 		return nil, fmt.Errorf("sandbox execution failed: %w", err)
 	}
 
@@ -127,20 +148,12 @@ func (e *execution) start(ctx context.Context, args []string) (*exec.Cmd, error)
 	// Close the parent's copy of the write ends. A pipe delivers EOF to
 	// readers only when all write-end fds are closed; without this, the
 	// read ends would block forever even after the child exits.
-	_ = e.stdoutW.Close()
-	_ = e.stderrW.Close()
-	_ = e.logW.Close()
+	e.closeWriteEnds()
 
 	return cmd, nil
 }
 
-func (e *execution) collectResult(waitErr error) (Result, error) {
-	// Read nsjail log to detect timeout and signal kills. cmd.Wait() has
-	// returned, so nsjail has exited and the write end of the log pipe is
-	// guaranteed to be closed.
-	logData, _ := io.ReadAll(e.logR)
-	_ = e.logR.Close()
-	logStr := string(logData)
+func (e *execution) collectResult(waitErr error, logStr string) (Result, error) {
 	timedOut := strings.Contains(logStr, "run time >= time limit")
 
 	result := Result{
