@@ -1,0 +1,13 @@
+tests:
+  - name: "hello world"
+    input:
+      runtime: ruby
+      code: |
+        puts "Hello, World!"
+    output:
+      status: 200
+      run:
+        stdout: "Hello, World!\n"
+        stderr: ""
+        output: "Hello, World!\n"
+        exit_code: 0

@@ -25,8 +25,11 @@ docker compose up --build
 # Lint
 golangci-lint run
 
-# Run tests (none exist yet)
+# Run unit tests
 go test ./...
+
+# Run E2E tests (requires running server: docker compose up --build)
+go test -tags e2e ./e2e/...
 ```
 
 The container must run in **privileged mode** (required for nsjail to create Linux namespaces).
