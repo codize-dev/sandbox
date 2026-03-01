@@ -47,6 +47,7 @@ type testInput struct {
 type testOutput struct {
 	Status int       `yaml:"status"`
 	Run    runOutput `yaml:"run"`
+	Error  string    `yaml:"error"`
 }
 
 type runOutput struct {
@@ -79,6 +80,10 @@ type apiRunResult struct {
 	ExitCode int     `json:"exit_code"`
 	Status   string  `json:"status"`
 	Signal   *string `json:"signal"`
+}
+
+type apiErrorResponse struct {
+	Error string `json:"error"`
 }
 
 func decodeBase64(t *testing.T, encoded, field string) string {
@@ -130,20 +135,28 @@ func TestE2E(t *testing.T) {
 
 				require.Equal(t, tc.Output.Status, resp.StatusCode, "unexpected HTTP status code")
 
-				var apiResp apiResponse
-				err = json.NewDecoder(resp.Body).Decode(&apiResp)
-				require.NoError(t, err, "failed to decode response body")
+				if tc.Output.Error != "" {
+					var errResp apiErrorResponse
+					err = json.NewDecoder(resp.Body).Decode(&errResp)
+					require.NoError(t, err, "failed to decode error response body")
 
-				actualStdout := decodeBase64(t, apiResp.Run.Stdout, "stdout")
-				actualStderr := decodeBase64(t, apiResp.Run.Stderr, "stderr")
-				actualOutput := decodeBase64(t, apiResp.Run.Output, "output")
+					assert.Equal(t, tc.Output.Error, errResp.Error, "error message mismatch")
+				} else {
+					var apiResp apiResponse
+					err = json.NewDecoder(resp.Body).Decode(&apiResp)
+					require.NoError(t, err, "failed to decode response body")
 
-				assert.Equal(t, tc.Output.Run.Stdout, actualStdout, "stdout mismatch")
-				assert.Equal(t, tc.Output.Run.Stderr, actualStderr, "stderr mismatch")
-				assert.Equal(t, tc.Output.Run.Output, actualOutput, "output mismatch")
-				assert.Equal(t, tc.Output.Run.ExitCode, apiResp.Run.ExitCode, "exit_code mismatch")
-				assert.Equal(t, tc.Output.Run.Status, apiResp.Run.Status, "status mismatch")
-				assert.Equal(t, tc.Output.Run.Signal, apiResp.Run.Signal, "signal mismatch")
+					actualStdout := decodeBase64(t, apiResp.Run.Stdout, "stdout")
+					actualStderr := decodeBase64(t, apiResp.Run.Stderr, "stderr")
+					actualOutput := decodeBase64(t, apiResp.Run.Output, "output")
+
+					assert.Equal(t, tc.Output.Run.Stdout, actualStdout, "stdout mismatch")
+					assert.Equal(t, tc.Output.Run.Stderr, actualStderr, "stderr mismatch")
+					assert.Equal(t, tc.Output.Run.Output, actualOutput, "output mismatch")
+					assert.Equal(t, tc.Output.Run.ExitCode, apiResp.Run.ExitCode, "exit_code mismatch")
+					assert.Equal(t, tc.Output.Run.Status, apiResp.Run.Status, "status mismatch")
+					assert.Equal(t, tc.Output.Run.Signal, apiResp.Run.Signal, "signal mismatch")
+				}
 			})
 		}
 	}

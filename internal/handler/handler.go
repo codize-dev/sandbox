@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/codize-dev/sandbox/internal/sandbox"
 	"github.com/labstack/echo/v5"
@@ -51,13 +52,27 @@ func RunHandler(c *echo.Context) error {
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	for _, f := range req.Files {
+		if err := validateFileName(f.Name); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": err.Error(),
+			})
+		}
+
 		decoded, err := base64.StdEncoding.DecodeString(f.Content)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{
 				"error": fmt.Sprintf("file %q: invalid base64 content", f.Name),
 			})
 		}
-		if err := os.WriteFile(filepath.Join(tmpDir, f.Name), decoded, 0644); err != nil {
+
+		dest := filepath.Join(tmpDir, f.Name)
+		if filepath.Dir(dest) != tmpDir {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": fmt.Sprintf("file name %q results in a path outside the sandbox", f.Name),
+			})
+		}
+
+		if err := os.WriteFile(dest, decoded, 0644); err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{
 				"error": fmt.Sprintf("failed to write file %q", f.Name),
 			})
@@ -77,4 +92,17 @@ func RunHandler(c *echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, RunResponse{Run: result})
+}
+
+func validateFileName(name string) error {
+	if name == "" {
+		return errors.New("file name must not be empty")
+	}
+	if strings.ContainsRune(name, '/') || strings.ContainsRune(name, 0) {
+		return fmt.Errorf("file name %q contains invalid characters", name)
+	}
+	if name == "." || name == ".." {
+		return fmt.Errorf("file name %q is not allowed", name)
+	}
+	return nil
 }
