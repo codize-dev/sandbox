@@ -11,3 +11,20 @@ tests:
         stderr: ""
         output: ""
         exit_code: 137
+        status: "TIMEOUT"
+
+  - name: "timeout with partial output"
+    input:
+      runtime: ruby
+      code: |
+        $stdout.sync = true
+        puts "started"
+        sleep 60
+    output:
+      status: 200
+      run:
+        stdout: "started\n"
+        stderr: ""
+        output: "started\n"
+        exit_code: 137
+        status: "TIMEOUT"

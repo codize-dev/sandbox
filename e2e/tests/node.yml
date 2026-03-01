@@ -11,6 +11,7 @@ tests:
         stderr: ""
         output: "Hello, World!\n"
         exit_code: 0
+        status: "OK"
 
   - name: "stderr output"
     input:
@@ -24,6 +25,7 @@ tests:
         stderr: "error message\n"
         output: "error message\n"
         exit_code: 0
+        status: "OK"
 
   - name: "stdout and stderr"
     input:
@@ -38,6 +40,7 @@ tests:
         stderr: "err\n"
         output: "out\nerr\n"
         exit_code: 0
+        status: "OK"
 
   - name: "non-zero exit code"
     input:
@@ -51,6 +54,7 @@ tests:
         stderr: ""
         output: ""
         exit_code: 1
+        status: "OK"
 
   - name: "stderr with non-zero exit code"
     input:
@@ -65,3 +69,4 @@ tests:
         stderr: "error occurred\n"
         output: "error occurred\n"
         exit_code: 2
+        status: "OK"

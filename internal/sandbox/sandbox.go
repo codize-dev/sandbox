@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -43,6 +44,13 @@ const (
 	RuntimeRuby Runtime = "ruby"
 )
 
+type Status string
+
+const (
+	StatusOK      Status = "OK"
+	StatusTimeout Status = "TIMEOUT"
+)
+
 type runtimeConfig struct {
 	binaryPath string
 	installDir string
@@ -72,6 +80,7 @@ type Result struct {
 	Stderr   string `json:"stderr"`
 	Output   string `json:"output"`
 	ExitCode int    `json:"exit_code"`
+	Status   Status `json:"status"`
 }
 
 func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, error) {
@@ -87,7 +96,9 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 
 	args := []string{
 		"-Mo",
-		"--log", "/dev/null",
+		// Capture nsjail logs via a pipe (fd 3) to detect timeout kills.
+		// ExtraFiles[0] is always mapped to fd 3 in the child process.
+		"--log_fd", "3",
 		"-D", "/code",
 		"-R", "/lib:/lib",
 		"-R", "/usr:/usr",
@@ -126,15 +137,30 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 		_ = stdoutW.Close()
 		return Result{}, fmt.Errorf("failed to create stderr pipe: %w", err)
 	}
+	// Pipe for capturing nsjail log output. When --time_limit is exceeded,
+	// nsjail logs "run time >= time limit" before killing the child process.
+	// We read this log after execution to distinguish timeouts from other
+	// SIGKILL scenarios (e.g. OOM killer), since both produce exit code 137.
+	logR, logW, err := os.Pipe()
+	if err != nil {
+		_ = stdoutR.Close()
+		_ = stdoutW.Close()
+		_ = stderrR.Close()
+		_ = stderrW.Close()
+		return Result{}, fmt.Errorf("failed to create log pipe: %w", err)
+	}
 
 	cmd.Stdout = stdoutW
 	cmd.Stderr = stderrW
+	cmd.ExtraFiles = []*os.File{logW}
 
 	if err := cmd.Start(); err != nil {
 		_ = stdoutR.Close()
 		_ = stdoutW.Close()
 		_ = stderrR.Close()
 		_ = stderrW.Close()
+		_ = logR.Close()
+		_ = logW.Close()
 		return Result{}, fmt.Errorf("sandbox execution failed: %w", err)
 	}
 
@@ -143,6 +169,7 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 	// read ends would block forever even after the child exits.
 	_ = stdoutW.Close()
 	_ = stderrW.Close()
+	_ = logW.Close()
 
 	var stdoutBuf, stderrBuf, combined bytes.Buffer
 
@@ -150,6 +177,7 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 		_ = cmd.Wait()
 		_ = stdoutR.Close()
 		_ = stderrR.Close()
+		_ = logR.Close()
 		return Result{}, fmt.Errorf("sandbox execution failed: %w", err)
 	}
 
@@ -158,16 +186,28 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 
 	waitErr := cmd.Wait()
 	if ctx.Err() != nil {
+		_ = logR.Close()
 		return Result{}, ctx.Err()
 	}
+
+	// Read nsjail log to detect timeout. cmd.Wait() has returned, so nsjail
+	// has exited and the write end of the log pipe is guaranteed to be closed.
+	logData, _ := io.ReadAll(logR)
+	_ = logR.Close()
+	timedOut := strings.Contains(string(logData), "run time >= time limit")
 	if waitErr != nil {
 		var exitErr *exec.ExitError
 		if errors.As(waitErr, &exitErr) {
+			status := StatusOK
+			if timedOut {
+				status = StatusTimeout
+			}
 			return Result{
 				Stdout:   base64.StdEncoding.EncodeToString(stdoutBuf.Bytes()),
 				Stderr:   base64.StdEncoding.EncodeToString(stderrBuf.Bytes()),
 				Output:   base64.StdEncoding.EncodeToString(combined.Bytes()),
 				ExitCode: exitErr.ExitCode(),
+				Status:   status,
 			}, nil
 		}
 		return Result{}, fmt.Errorf("sandbox execution failed: %w", waitErr)
@@ -178,6 +218,7 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 		Stderr:   base64.StdEncoding.EncodeToString(stderrBuf.Bytes()),
 		Output:   base64.StdEncoding.EncodeToString(combined.Bytes()),
 		ExitCode: 0,
+		Status:   StatusOK,
 	}, nil
 }
 
