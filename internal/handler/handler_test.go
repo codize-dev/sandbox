@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateFileName(t *testing.T) {
+func TestFile_Validate(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -95,7 +95,70 @@ func TestValidateFileName(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := validateFileName(tc.fileName)
+			err := File{Name: tc.fileName}.Validate()
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.errSubstr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestRunRequest_Validate(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		req       RunRequest
+		wantErr   bool
+		errSubstr string
+	}{
+		{
+			name: "valid node request",
+			req:  RunRequest{Runtime: "node", Files: []File{{Name: "index.js", Content: ""}}},
+		},
+		{
+			name: "valid ruby request",
+			req:  RunRequest{Runtime: "ruby", Files: []File{{Name: "main.rb", Content: ""}}},
+		},
+		{
+			name:      "missing runtime",
+			req:       RunRequest{Runtime: "", Files: []File{{Name: "index.js", Content: ""}}},
+			wantErr:   true,
+			errSubstr: "invalid or missing runtime",
+		},
+		{
+			name:      "unknown runtime",
+			req:       RunRequest{Runtime: "python", Files: []File{{Name: "main.py", Content: ""}}},
+			wantErr:   true,
+			errSubstr: "invalid or missing runtime",
+		},
+		{
+			name:      "empty files slice",
+			req:       RunRequest{Runtime: "node", Files: []File{}},
+			wantErr:   true,
+			errSubstr: "files must not be empty",
+		},
+		{
+			name:      "nil files slice",
+			req:       RunRequest{Runtime: "node", Files: nil},
+			wantErr:   true,
+			errSubstr: "files must not be empty",
+		},
+		{
+			name:      "invalid file name in files",
+			req:       RunRequest{Runtime: "node", Files: []File{{Name: "../escape", Content: ""}}},
+			wantErr:   true,
+			errSubstr: "invalid characters",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			_, err := tc.req.Validate()
 			if tc.wantErr {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tc.errSubstr)

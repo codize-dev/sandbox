@@ -36,10 +36,10 @@ func RunHandler(c *echo.Context) error {
 		})
 	}
 
-	rt := sandbox.Runtime(req.Runtime)
-	if !sandbox.ValidRuntime(rt) {
+	rt, err := req.Validate()
+	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "invalid or missing runtime: must be \"node\" or \"ruby\"",
+			"error": err.Error(),
 		})
 	}
 
@@ -52,12 +52,6 @@ func RunHandler(c *echo.Context) error {
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	for _, f := range req.Files {
-		if err := validateFileName(f.Name); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": err.Error(),
-			})
-		}
-
 		decoded, err := base64.StdEncoding.DecodeString(f.Content)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{
@@ -94,15 +88,31 @@ func RunHandler(c *echo.Context) error {
 	return c.JSON(http.StatusOK, RunResponse{Run: result})
 }
 
-func validateFileName(name string) error {
-	if name == "" {
+func (f File) Validate() error {
+	if f.Name == "" {
 		return errors.New("file name must not be empty")
 	}
-	if strings.ContainsRune(name, '/') || strings.ContainsRune(name, 0) {
-		return fmt.Errorf("file name %q contains invalid characters", name)
+	if strings.ContainsRune(f.Name, '/') || strings.ContainsRune(f.Name, 0) {
+		return fmt.Errorf("file name %q contains invalid characters", f.Name)
 	}
-	if name == "." || name == ".." {
-		return fmt.Errorf("file name %q is not allowed", name)
+	if f.Name == "." || f.Name == ".." {
+		return fmt.Errorf("file name %q is not allowed", f.Name)
 	}
 	return nil
+}
+
+func (req RunRequest) Validate() (sandbox.Runtime, error) {
+	rt := sandbox.Runtime(req.Runtime)
+	if err := rt.Validate(); err != nil {
+		return "", err
+	}
+	if len(req.Files) == 0 {
+		return "", errors.New("files must not be empty")
+	}
+	for _, f := range req.Files {
+		if err := f.Validate(); err != nil {
+			return "", err
+		}
+	}
+	return rt, nil
 }

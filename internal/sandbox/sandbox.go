@@ -71,9 +71,11 @@ var runtimes = map[Runtime]runtimeConfig{
 	},
 }
 
-func ValidRuntime(rt Runtime) bool {
-	_, ok := runtimes[rt]
-	return ok
+func (rt Runtime) Validate() error {
+	if _, ok := runtimes[rt]; !ok {
+		return errors.New("invalid or missing runtime: must be \"node\" or \"ruby\"")
+	}
+	return nil
 }
 
 type Result struct {

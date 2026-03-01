@@ -8,7 +8,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func TestResolveSignal(t *testing.T) {
+func Test_resolveSignal(t *testing.T) {
 	t.Parallel()
 
 	sigkill := unix.SignalName(syscall.SIGKILL)
