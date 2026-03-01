@@ -42,23 +42,26 @@ The container must run in **privileged mode** (required for nsjail to create Lin
 POST /v1/run → cmd/server/main.go (Echo v5 router)
              → internal/handler/handler.go (validate runtime, decode base64 files, write to tmpdir)
              → internal/sandbox/sandbox.go (invoke nsjail with the selected runtime)
-             → Response: {stdout, stderr, output, exit_code} (all base64-encoded)
+             → Response: {stdout, stderr, output, exit_code, status} (all base64-encoded)
 ```
 
 ### Key Packages
 
 - **cmd/server/** — HTTP server entrypoint. Echo v5 with request logging middleware. Single route: `POST /v1/run`.
-- **internal/handler/** — Request parsing and response formatting. Validates the `runtime` field, decodes base64 file contents from the request, writes them to a temp directory, and calls `sandbox.Run()`. The first file in the `files` array is the entrypoint.
-- **internal/sandbox/** — Core execution logic. Defines the `Runtime` type and a runtime configuration registry (`runtimes` map). Assembles nsjail CLI arguments for the selected runtime and runs the jailed process. Captures stdout, stderr, and combined output concurrently via `io.MultiWriter` with a mutex-protected buffer. Returns base64-encoded output.
+- **internal/handler/** — Request parsing and response formatting. Validates the `runtime` field, decodes base64 file contents from the request, writes them to a temp directory, and calls `sandbox.Run()`. The first file in the `files` array is the entrypoint. Returns HTTP 504 on execution timeout.
+- **internal/sandbox/** — Core execution logic. Defines the `Runtime` type and a runtime configuration registry (`runtimes` map). Assembles nsjail CLI arguments for the selected runtime and runs the jailed process. Captures stdout, stderr, and combined output using `unix.Poll` for deterministic pipe ordering. Detects nsjail timeout via log pipe. Returns base64-encoded output.
 
 ### nsjail Isolation
 
 The sandbox uses nsjail (`/bin/nsjail`) with these key properties:
 - `-Mo` (once mode): runs the process once and exits
 - Network isolation via new network namespace
-- Read-only bind mounts for system libraries and the selected runtime (Node.js or Ruby)
-- Read-write bind mount only for the user code directory and `/tmp`
+- `--log_fd 3`: nsjail logs piped to fd 3 for timeout detection
+- `--time_limit`: configurable via `SANDBOX_RUN_TIMEOUT` env var (default 30s); Go-level exec timeout is nsjail limit + 10s
+- Read-only bind mounts for system libraries, the selected runtime, `/dev/null`, `/dev/urandom`, and `/proc` (via `-m`)
+- Read-write bind mount for the user code directory (`/code`) and a separate temp directory mounted as `/tmp`
 - Address space limited to system hard limit (`--rlimit_as hard`)
+- Environment: `PATH` set to runtime bin dir, `HOME=/tmp`
 
 ### Hardcoded Paths (in sandbox.go and Dockerfile)
 
@@ -89,5 +92,5 @@ Request (`runtime` is required, must be `"node"` or `"ruby"`):
 
 Response:
 ```json
-{"run": {"stdout": "<base64>", "stderr": "<base64>", "output": "<base64>", "exit_code": 0}}
+{"run": {"stdout": "<base64>", "stderr": "<base64>", "output": "<base64>", "exit_code": 0, "status": "OK"}}
 ```
