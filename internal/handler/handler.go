@@ -33,6 +33,11 @@ type Handler struct {
 	Runner *sandbox.Runner
 }
 
+type decodedFile struct {
+	name    string
+	content []byte
+}
+
 func (h *Handler) RunHandler(c *echo.Context) error {
 	var req RunRequest
 	if err := c.Bind(&req); err != nil {
@@ -41,7 +46,7 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 		})
 	}
 
-	rt, err := req.Validate()
+	rt, files, err := req.Validate()
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": err.Error(),
@@ -56,29 +61,13 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 	}
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
-	for _, f := range req.Files {
-		decoded, err := base64.StdEncoding.DecodeString(f.Content)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": fmt.Sprintf("file %q: invalid base64 content", f.Name),
-			})
-		}
-
-		dest := filepath.Join(tmpDir, f.Name)
-		if filepath.Dir(dest) != tmpDir {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": fmt.Sprintf("file name %q results in a path outside the sandbox", f.Name),
-			})
-		}
-
-		if err := os.WriteFile(dest, decoded, 0644); err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{
-				"error": fmt.Sprintf("failed to write file %q", f.Name),
-			})
-		}
+	if err := writeFiles(tmpDir, files); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": err.Error(),
+		})
 	}
 
-	result, err := h.Runner.Run(c.Request().Context(), rt, tmpDir, req.Files[0].Name)
+	result, err := h.Runner.Run(c.Request().Context(), rt, tmpDir, files[0].name)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return c.JSON(http.StatusGatewayTimeout, map[string]string{
@@ -93,6 +82,21 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 	return c.JSON(http.StatusOK, RunResponse{Run: result})
 }
 
+// writeFiles writes each decoded file into tmpDir.
+func writeFiles(tmpDir string, files []decodedFile) error {
+	for _, f := range files {
+		dest := filepath.Join(tmpDir, f.name)
+		if err := os.WriteFile(dest, f.content, 0644); err != nil {
+			return fmt.Errorf("failed to write file %q: %w", f.name, err)
+		}
+	}
+	return nil
+}
+
+// Validate checks that f.Name is safe to use as a flat filename.
+// It rejects names containing '/' or null bytes, empty names, and "." / "..".
+// Because all slashes are rejected here, writeFiles does not need a secondary
+// path traversal check after filepath.Join.
 func (f File) Validate() error {
 	if f.Name == "" {
 		return errors.New("file name must not be empty")
@@ -106,18 +110,24 @@ func (f File) Validate() error {
 	return nil
 }
 
-func (req RunRequest) Validate() (sandbox.Runtime, error) {
+func (req RunRequest) Validate() (sandbox.Runtime, []decodedFile, error) {
 	rt := sandbox.Runtime(req.Runtime)
 	if err := rt.Validate(); err != nil {
-		return "", err
+		return "", nil, err
 	}
 	if len(req.Files) == 0 {
-		return "", errors.New("files must not be empty")
+		return "", nil, errors.New("files must not be empty")
 	}
-	for _, f := range req.Files {
+	files := make([]decodedFile, len(req.Files))
+	for i, f := range req.Files {
 		if err := f.Validate(); err != nil {
-			return "", err
+			return "", nil, err
 		}
+		content, err := base64.StdEncoding.DecodeString(f.Content)
+		if err != nil {
+			return "", nil, fmt.Errorf("file %q: invalid base64 content", f.Name)
+		}
+		files[i] = decodedFile{name: f.Name, content: content}
 	}
-	return rt, nil
+	return rt, files, nil
 }
