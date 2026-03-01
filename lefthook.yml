@@ -1,0 +1,6 @@
+pre-commit:
+  parallel: true
+  commands:
+    fmt:
+      glob: "**/*.go"
+      run: golangci-lint run
