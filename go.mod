@@ -6,6 +6,7 @@ require (
 	github.com/labstack/echo/v5 v5.0.4
 	github.com/stretchr/testify v1.11.1
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
+	golang.org/x/sys v0.41.0
 )
 
 require (

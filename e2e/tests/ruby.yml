@@ -11,3 +11,58 @@ tests:
         stderr: ""
         output: "Hello, World!\n"
         exit_code: 0
+
+  - name: "stderr output"
+    input:
+      runtime: ruby
+      code: |
+        $stderr.puts "error message"
+    output:
+      status: 200
+      run:
+        stdout: ""
+        stderr: "error message\n"
+        output: "error message\n"
+        exit_code: 0
+
+  - name: "stdout and stderr"
+    input:
+      runtime: ruby
+      code: |
+        $stdout.sync = true
+        puts "out"
+        $stderr.puts "err"
+    output:
+      status: 200
+      run:
+        stdout: "out\n"
+        stderr: "err\n"
+        output: "out\nerr\n"
+        exit_code: 0
+
+  - name: "non-zero exit code"
+    input:
+      runtime: ruby
+      code: |
+        exit(1)
+    output:
+      status: 200
+      run:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 1
+
+  - name: "stderr with non-zero exit code"
+    input:
+      runtime: ruby
+      code: |
+        $stderr.puts "error occurred"
+        exit(2)
+    output:
+      status: 200
+      run:
+        stdout: ""
+        stderr: "error occurred\n"
+        output: "error occurred\n"
+        exit_code: 2
