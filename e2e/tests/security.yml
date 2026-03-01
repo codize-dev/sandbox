@@ -134,3 +134,20 @@ tests:
     output:
       status: 400
       error: 'file name "a/b.js" contains invalid characters'
+
+  - name: "output limit exceeded"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            console.log("AAAAAAAAAA".repeat(10000000))
+    output:
+      status: 200
+      run:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: -1
+        status: "OUTPUT_LIMIT_EXCEEDED"
+        signal: null

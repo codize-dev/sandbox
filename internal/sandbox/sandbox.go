@@ -48,9 +48,14 @@ const (
 type Status string
 
 const (
-	StatusOK      Status = "OK"
-	StatusTimeout Status = "TIMEOUT"
+	StatusOK                  Status = "OK"
+	StatusTimeout             Status = "TIMEOUT"
+	StatusOutputLimitExceeded Status = "OUTPUT_LIMIT_EXCEEDED"
 )
+
+var errOutputLimitExceeded = errors.New("output limit exceeded")
+
+const outputLimit = 1 << 20 // 1 MiB
 
 type runtimeConfig struct {
 	binaryPath string
@@ -190,18 +195,33 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 
 	var stdoutBuf, stderrBuf, combined bytes.Buffer
 
-	if err := drainPipes(ctx, stdoutR, stderrR, &stdoutBuf, &stderrBuf, &combined); err != nil {
+	drainErr := drainPipes(ctx, cmd.Process, stdoutR, stderrR, &stdoutBuf, &stderrBuf, &combined)
+	if drainErr != nil && !errors.Is(drainErr, errOutputLimitExceeded) {
 		_ = cmd.Wait()
 		_ = stdoutR.Close()
 		_ = stderrR.Close()
 		_ = logR.Close()
-		return Result{}, fmt.Errorf("sandbox execution failed: %w", err)
+		return Result{}, fmt.Errorf("sandbox execution failed: %w", drainErr)
 	}
+	outputLimitHit := errors.Is(drainErr, errOutputLimitExceeded)
 
 	_ = stdoutR.Close()
 	_ = stderrR.Close()
 
 	waitErr := cmd.Wait()
+
+	if outputLimitHit {
+		_ = logR.Close()
+		return Result{
+			Stdout:   "",
+			Stderr:   "",
+			Output:   "",
+			ExitCode: -1,
+			Status:   StatusOutputLimitExceeded,
+			Signal:   nil,
+		}, nil
+	}
+
 	if ctx.Err() != nil {
 		_ = logR.Close()
 		return Result{}, ctx.Err()
@@ -250,7 +270,7 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 // pipes are ready simultaneously, stdout is processed first. The poll
 // timeout is derived from ctx's deadline so that the execution timeout
 // and client disconnects are respected promptly.
-func drainPipes(ctx context.Context, stdoutR, stderrR *os.File, stdoutBuf, stderrBuf, combined *bytes.Buffer) error {
+func drainPipes(ctx context.Context, proc *os.Process, stdoutR, stderrR *os.File, stdoutBuf, stderrBuf, combined *bytes.Buffer) error {
 	type pipe struct {
 		file *os.File
 		buf  *bytes.Buffer
@@ -312,6 +332,10 @@ func drainPipes(ctx context.Context, stdoutR, stderrR *os.File, stdoutBuf, stder
 			if nr > 0 {
 				pipes[i].buf.Write(buf[:nr])
 				combined.Write(buf[:nr])
+				if combined.Len() > outputLimit {
+					_ = proc.Kill()
+					return errOutputLimitExceeded
+				}
 			}
 			if readErr != nil {
 				if readErr == io.EOF {
