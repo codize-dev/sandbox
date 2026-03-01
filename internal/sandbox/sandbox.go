@@ -2,17 +2,39 @@ package sandbox
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
+	"strconv"
+	"time"
 
 	"golang.org/x/sys/unix"
 )
 
 const nsjailPath = "/bin/nsjail"
+
+const defaultRunTimeout = 30
+
+var (
+	nsjailTimeLimit = defaultRunTimeout
+	execTimeout     = time.Duration(defaultRunTimeout+10) * time.Second
+)
+
+func init() {
+	if v := os.Getenv("SANDBOX_RUN_TIMEOUT"); v != "" {
+		sec, err := strconv.Atoi(v)
+		if err != nil || sec <= 0 {
+			log.Fatalf("invalid SANDBOX_RUN_TIMEOUT: %q (must be a positive integer)", v)
+		}
+		nsjailTimeLimit = sec
+		execTimeout = time.Duration(sec+10) * time.Second
+	}
+}
 
 type Runtime string
 
@@ -52,7 +74,10 @@ type Result struct {
 	ExitCode int    `json:"exit_code"`
 }
 
-func Run(rt Runtime, tmpDir, entryFile string) (Result, error) {
+func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, error) {
+	ctx, cancel := context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+
 	tmpHome, err := os.MkdirTemp("", "sandbox-tmp-*")
 	if err != nil {
 		return Result{}, fmt.Errorf("failed to create tmp directory: %w", err)
@@ -81,6 +106,7 @@ func Run(rt Runtime, tmpDir, entryFile string) (Result, error) {
 		"-m", "none:/proc:proc:ro",
 		"-s", "/proc/self/fd:/dev/fd",
 		"--rlimit_as", "hard",
+		"--time_limit", fmt.Sprintf("%d", nsjailTimeLimit),
 		"-E", "PATH="+cfg.pathEnv,
 		"-E", "HOME=/tmp",
 		"--",
@@ -88,7 +114,7 @@ func Run(rt Runtime, tmpDir, entryFile string) (Result, error) {
 		"/code/"+entryFile,
 	)
 
-	cmd := exec.Command(nsjailPath, args...)
+	cmd := exec.CommandContext(ctx, nsjailPath, args...)
 
 	stdoutR, stdoutW, err := os.Pipe()
 	if err != nil {
@@ -120,7 +146,7 @@ func Run(rt Runtime, tmpDir, entryFile string) (Result, error) {
 
 	var stdoutBuf, stderrBuf, combined bytes.Buffer
 
-	if err := drainPipes(stdoutR, stderrR, &stdoutBuf, &stderrBuf, &combined); err != nil {
+	if err := drainPipes(ctx, stdoutR, stderrR, &stdoutBuf, &stderrBuf, &combined); err != nil {
 		_ = cmd.Wait()
 		_ = stdoutR.Close()
 		_ = stderrR.Close()
@@ -131,6 +157,9 @@ func Run(rt Runtime, tmpDir, entryFile string) (Result, error) {
 	_ = stderrR.Close()
 
 	waitErr := cmd.Wait()
+	if ctx.Err() != nil {
+		return Result{}, ctx.Err()
+	}
 	if waitErr != nil {
 		var exitErr *exec.ExitError
 		if errors.As(waitErr, &exitErr) {
@@ -155,8 +184,10 @@ func Run(rt Runtime, tmpDir, entryFile string) (Result, error) {
 // drainPipes multiplexes reads from stdoutR and stderrR using poll(2),
 // writing to per-stream buffers and a combined buffer. Processing in a
 // single goroutine eliminates races on the combined buffer. When both
-// pipes are ready simultaneously, stdout is processed first.
-func drainPipes(stdoutR, stderrR *os.File, stdoutBuf, stderrBuf, combined *bytes.Buffer) error {
+// pipes are ready simultaneously, stdout is processed first. The poll
+// timeout is derived from ctx's deadline so that the execution timeout
+// and client disconnects are respected promptly.
+func drainPipes(ctx context.Context, stdoutR, stderrR *os.File, stdoutBuf, stderrBuf, combined *bytes.Buffer) error {
 	type pipe struct {
 		file *os.File
 		buf  *bytes.Buffer
@@ -167,6 +198,8 @@ func drainPipes(stdoutR, stderrR *os.File, stdoutBuf, stderrBuf, combined *bytes
 		{file: stderrR, buf: stderrBuf, open: true},
 	}
 	buf := make([]byte, 32*1024)
+
+	deadline, hasDeadline := ctx.Deadline()
 
 	for pipes[0].open || pipes[1].open {
 		var fds [2]unix.PollFd
@@ -180,11 +213,31 @@ func drainPipes(stdoutR, stderrR *os.File, stdoutBuf, stderrBuf, combined *bytes
 			}
 		}
 
-		if _, err := unix.Poll(fds[:n], -1); err != nil {
+		pollTimeout := -1
+		if hasDeadline {
+			ms := int(time.Until(deadline).Milliseconds())
+			if ms <= 0 {
+				if err := ctx.Err(); err != nil {
+					return err
+				}
+				ms = 0
+			}
+			pollTimeout = ms
+		}
+
+		count, err := unix.Poll(fds[:n], pollTimeout)
+		if err != nil {
 			if err == unix.EINTR {
 				continue
 			}
 			return fmt.Errorf("poll: %w", err)
+		}
+
+		if count == 0 {
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+			continue
 		}
 
 		for j := range n {

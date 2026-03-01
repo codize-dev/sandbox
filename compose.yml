@@ -4,5 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     privileged: true
+    environment:
+      - SANDBOX_RUN_TIMEOUT=5
     ports:
       - "8080:8080"

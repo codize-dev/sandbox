@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -62,8 +64,13 @@ func RunHandler(c *echo.Context) error {
 		}
 	}
 
-	result, err := sandbox.Run(rt, tmpDir, req.Files[0].Name)
+	result, err := sandbox.Run(c.Request().Context(), rt, tmpDir, req.Files[0].Name)
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return c.JSON(http.StatusGatewayTimeout, map[string]string{
+				"error": "execution timed out",
+			})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": err.Error(),
 		})

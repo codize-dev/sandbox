@@ -1,0 +1,13 @@
+tests:
+  - name: "execution timeout"
+    input:
+      runtime: ruby
+      code: |
+        sleep 60
+    output:
+      status: 200
+      run:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 137
