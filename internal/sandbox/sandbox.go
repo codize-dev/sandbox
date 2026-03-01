@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -76,11 +77,21 @@ func ValidRuntime(rt Runtime) bool {
 }
 
 type Result struct {
-	Stdout   string `json:"stdout"`
-	Stderr   string `json:"stderr"`
-	Output   string `json:"output"`
-	ExitCode int    `json:"exit_code"`
-	Status   Status `json:"status"`
+	Stdout   string  `json:"stdout"`
+	Stderr   string  `json:"stderr"`
+	Output   string  `json:"output"`
+	ExitCode int     `json:"exit_code"`
+	Status   Status  `json:"status"`
+	Signal   *string `json:"signal"`
+}
+
+func resolveSignal(exitCode int, logOutput string) *string {
+	if exitCode > 128 && strings.Contains(logOutput, "terminated with signal: ") {
+		if name := unix.SignalName(syscall.Signal(exitCode - 128)); name != "" {
+			return &name
+		}
+	}
+	return nil
 }
 
 func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, error) {
@@ -137,10 +148,14 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 		_ = stdoutW.Close()
 		return Result{}, fmt.Errorf("failed to create stderr pipe: %w", err)
 	}
-	// Pipe for capturing nsjail log output. When --time_limit is exceeded,
-	// nsjail logs "run time >= time limit" before killing the child process.
-	// We read this log after execution to distinguish timeouts from other
-	// SIGKILL scenarios (e.g. OOM killer), since both produce exit code 137.
+	// Pipe for capturing nsjail log output. We read this after execution
+	// to detect two conditions:
+	// 1. Timeout: nsjail logs "run time >= time limit" before killing the
+	//    child, letting us distinguish timeouts from other SIGKILL causes.
+	// 2. Signal kills: nsjail logs "terminated with signal: ..." when the
+	//    child is killed by a signal (WIFSIGNALED), letting us report the
+	//    signal name and distinguish genuine kills from user code that
+	//    voluntarily exits with a signal-like exit code.
 	logR, logW, err := os.Pipe()
 	if err != nil {
 		_ = stdoutR.Close()
@@ -190,11 +205,13 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 		return Result{}, ctx.Err()
 	}
 
-	// Read nsjail log to detect timeout. cmd.Wait() has returned, so nsjail
-	// has exited and the write end of the log pipe is guaranteed to be closed.
+	// Read nsjail log to detect timeout and signal kills. cmd.Wait() has
+	// returned, so nsjail has exited and the write end of the log pipe is
+	// guaranteed to be closed.
 	logData, _ := io.ReadAll(logR)
 	_ = logR.Close()
-	timedOut := strings.Contains(string(logData), "run time >= time limit")
+	logStr := string(logData)
+	timedOut := strings.Contains(logStr, "run time >= time limit")
 	if waitErr != nil {
 		var exitErr *exec.ExitError
 		if errors.As(waitErr, &exitErr) {
@@ -202,12 +219,15 @@ func Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (Result, err
 			if timedOut {
 				status = StatusTimeout
 			}
+			exitCode := exitErr.ExitCode()
+			sig := resolveSignal(exitCode, logStr)
 			return Result{
 				Stdout:   base64.StdEncoding.EncodeToString(stdoutBuf.Bytes()),
 				Stderr:   base64.StdEncoding.EncodeToString(stderrBuf.Bytes()),
 				Output:   base64.StdEncoding.EncodeToString(combined.Bytes()),
-				ExitCode: exitErr.ExitCode(),
+				ExitCode: exitCode,
 				Status:   status,
+				Signal:   sig,
 			}, nil
 		}
 		return Result{}, fmt.Errorf("sandbox execution failed: %w", waitErr)

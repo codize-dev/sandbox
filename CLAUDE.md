@@ -42,14 +42,14 @@ The container must run in **privileged mode** (required for nsjail to create Lin
 POST /v1/run → cmd/server/main.go (Echo v5 router)
              → internal/handler/handler.go (validate runtime, decode base64 files, write to tmpdir)
              → internal/sandbox/sandbox.go (invoke nsjail with the selected runtime)
-             → Response: {stdout, stderr, output, exit_code, status} (all base64-encoded)
+             → Response: {stdout, stderr, output, exit_code, status, signal} (stdout/stderr/output are base64-encoded)
 ```
 
 ### Key Packages
 
 - **cmd/server/** — HTTP server entrypoint. Echo v5 with request logging middleware. Single route: `POST /v1/run`.
 - **internal/handler/** — Request parsing and response formatting. Validates the `runtime` field, decodes base64 file contents from the request, writes them to a temp directory, and calls `sandbox.Run()`. The first file in the `files` array is the entrypoint. Returns HTTP 504 on execution timeout.
-- **internal/sandbox/** — Core execution logic. Defines the `Runtime` type and a runtime configuration registry (`runtimes` map). Assembles nsjail CLI arguments for the selected runtime and runs the jailed process. Captures stdout, stderr, and combined output using `unix.Poll` for deterministic pipe ordering. Detects nsjail timeout via log pipe. Returns base64-encoded output.
+- **internal/sandbox/** — Core execution logic. Defines the `Runtime` type and a runtime configuration registry (`runtimes` map). Assembles nsjail CLI arguments for the selected runtime and runs the jailed process. Captures stdout, stderr, and combined output using `unix.Poll` for deterministic pipe ordering. Detects nsjail timeout and signal termination via log pipe. Returns base64-encoded output.
 
 ### nsjail Isolation
 
@@ -92,5 +92,5 @@ Request (`runtime` is required, must be `"node"` or `"ruby"`):
 
 Response:
 ```json
-{"run": {"stdout": "<base64>", "stderr": "<base64>", "output": "<base64>", "exit_code": 0, "status": "OK"}}
+{"run": {"stdout": "<base64>", "stderr": "<base64>", "output": "<base64>", "exit_code": 0, "status": "OK", "signal": null}}
 ```

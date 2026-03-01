@@ -50,11 +50,12 @@ type testOutput struct {
 }
 
 type runOutput struct {
-	Stdout   string `yaml:"stdout"`
-	Stderr   string `yaml:"stderr"`
-	Output   string `yaml:"output"`
-	ExitCode int    `yaml:"exit_code"`
-	Status   string `yaml:"status"`
+	Stdout   string  `yaml:"stdout"`
+	Stderr   string  `yaml:"stderr"`
+	Output   string  `yaml:"output"`
+	ExitCode int     `yaml:"exit_code"`
+	Status   string  `yaml:"status"`
+	Signal   *string `yaml:"signal"`
 }
 
 type apiRequest struct {
@@ -72,11 +73,12 @@ type apiResponse struct {
 }
 
 type apiRunResult struct {
-	Stdout   string `json:"stdout"`
-	Stderr   string `json:"stderr"`
-	Output   string `json:"output"`
-	ExitCode int    `json:"exit_code"`
-	Status   string `json:"status"`
+	Stdout   string  `json:"stdout"`
+	Stderr   string  `json:"stderr"`
+	Output   string  `json:"output"`
+	ExitCode int     `json:"exit_code"`
+	Status   string  `json:"status"`
+	Signal   *string `json:"signal"`
 }
 
 func decodeBase64(t *testing.T, encoded, field string) string {
@@ -141,6 +143,7 @@ func TestE2E(t *testing.T) {
 				assert.Equal(t, tc.Output.Run.Output, actualOutput, "output mismatch")
 				assert.Equal(t, tc.Output.Run.ExitCode, apiResp.Run.ExitCode, "exit_code mismatch")
 				assert.Equal(t, tc.Output.Run.Status, apiResp.Run.Status, "status mismatch")
+				assert.Equal(t, tc.Output.Run.Signal, apiResp.Run.Signal, "signal mismatch")
 			})
 		}
 	}
