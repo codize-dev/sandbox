@@ -17,7 +17,7 @@ Tool versions are managed by [mise](https://mise.jdx.dev/). Run `mise install` t
 
 ```bash
 # Build the server binary
-go build -o server ./cmd/server
+go build -o sandbox .
 
 # Run locally (requires nsjail + Node.js + Ruby at hardcoded paths; use Docker instead)
 docker compose up --build
@@ -42,7 +42,7 @@ The container must run in **privileged mode** (required for nsjail to create Lin
 ### Request Flow
 
 ```
-POST /v1/run → cmd/server/main.go (Echo v5 router)
+POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
              → internal/handler/handler.go (validate runtime, decode base64 files, write to tmpdir)
              → internal/sandbox/sandbox.go (invoke nsjail with the selected runtime)
              → Response: {stdout, stderr, output, exit_code, status, signal} (stdout/stderr/output are base64-encoded)
@@ -50,7 +50,7 @@ POST /v1/run → cmd/server/main.go (Echo v5 router)
 
 ### Key Packages
 
-- **cmd/server/** — HTTP server entrypoint. Echo v5 with request logging middleware. Single route: `POST /v1/run`.
+- **cmd/** — CLI entrypoint using Cobra. `root.go` defines the root command; `serve.go` registers the `serve` subcommand that starts the Echo v5 HTTP server with request logging middleware. Single route: `POST /v1/run`. Accepts `--addr` (default `:8080`), `--timeout` (default `30`), and `--output-limit` (default 1 MiB) flags.
 - **internal/handler/** — Request parsing and response formatting. Validates the `runtime` field and file names (rejects path traversal, slashes, `.`, `..`, empty names, null bytes), decodes base64 file contents from the request, writes them to a temp directory, and calls `sandbox.Run()`. The first file in the `files` array is the entrypoint. Returns HTTP 400 on invalid input, HTTP 504 on execution timeout.
 - **internal/sandbox/** — Core execution logic. Defines the `Runtime` type and a runtime configuration registry (`runtimes` map). Assembles nsjail CLI arguments for the selected runtime and runs the jailed process. Captures stdout, stderr, and combined output using `unix.Poll` for deterministic pipe ordering. Detects nsjail timeout and signal termination via log pipe. Returns base64-encoded output.
 
@@ -60,11 +60,13 @@ The sandbox uses nsjail (`/bin/nsjail`) with these key properties:
 - `-Mo` (once mode): runs the process once and exits
 - Network isolation via new network namespace
 - `--log_fd 3`: nsjail logs piped to fd 3 for timeout detection
-- `--time_limit`: configurable via `SANDBOX_RUN_TIMEOUT` env var (default 30s); Go-level exec timeout is nsjail limit + 10s
+- `--time_limit`: configurable via `--timeout` CLI flag (default 30s); Go-level exec timeout is nsjail limit + 10s
 - Read-only bind mounts for system libraries, the selected runtime, `/dev/null`, `/dev/urandom`, and `/proc` (via `-m`)
 - Read-write bind mount for the user code directory (`/code`) and a separate temp directory mounted as `/tmp`
 - Address space limited to system hard limit (`--rlimit_as hard`)
 - Environment: `PATH` set to runtime bin dir, `HOME=/tmp`
+- Symlink mount for `/dev/fd` via `/proc/self/fd` (`-s /proc/self/fd:/dev/fd`)
+- Combined output limit enforced by Go: configurable via `--output-limit` CLI flag (default 1 MiB). When exceeded, the jailed process is killed and status is set to `OUTPUT_LIMIT_EXCEEDED`.
 
 ### Hardcoded Paths (in sandbox.go and Dockerfile)
 
@@ -77,8 +79,8 @@ The sandbox uses nsjail (`/bin/nsjail`) with these key properties:
 Four-stage Dockerfile:
 1. **mise** stage: downloads mise binary for the target architecture
 2. **base** stage: based on `ghcr.io/codize-dev/nsjail` (pinned by commit SHA), pre-installs Node.js 24.14.0 and Ruby 3.4.8 via mise
-3. **builder** stage: compiles Go binary with `CGO_ENABLED=0`
-4. **runtime** stage: extends `base`, adds the server binary
+3. **builder** stage: compiles Go binary (`sandbox`) with `CGO_ENABLED=0`, `-trimpath`, `-ldflags="-w -s"`
+4. **runtime** stage: extends `base`, adds the `sandbox` binary. Entrypoint: `sandbox serve`
 
 ### Sister Repository
 
@@ -97,3 +99,5 @@ Response:
 ```json
 {"run": {"stdout": "<base64>", "stderr": "<base64>", "output": "<base64>", "exit_code": 0, "status": "OK", "signal": null}}
 ```
+
+Possible `status` values: `"OK"`, `"TIMEOUT"`, `"OUTPUT_LIMIT_EXCEEDED"`.
