@@ -45,7 +45,7 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		OutputLimit: outputLimit,
 	}
 
-	h := &handler.Handler{Config: cfg}
+	h := &handler.Handler{Runner: sandbox.NewRunner(cfg)}
 
 	e := echo.New()
 	e.Use(middleware.RequestLogger())

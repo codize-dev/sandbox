@@ -30,7 +30,7 @@ type RunResponse struct {
 
 // Handler holds dependencies for the HTTP handler.
 type Handler struct {
-	Config sandbox.Config
+	Runner *sandbox.Runner
 }
 
 func (h *Handler) RunHandler(c *echo.Context) error {
@@ -78,7 +78,7 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 		}
 	}
 
-	result, err := sandbox.Run(c.Request().Context(), h.Config, rt, tmpDir, req.Files[0].Name)
+	result, err := h.Runner.Run(c.Request().Context(), rt, tmpDir, req.Files[0].Name)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return c.JSON(http.StatusGatewayTimeout, map[string]string{
