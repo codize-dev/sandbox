@@ -2,8 +2,10 @@ tests:
   - name: "execution timeout"
     input:
       runtime: ruby
-      code: |
-        sleep 60
+      files:
+        - name: main.rb
+          content: |
+            sleep 60
     output:
       status: 200
       run:
@@ -16,10 +18,12 @@ tests:
   - name: "timeout with partial output"
     input:
       runtime: ruby
-      code: |
-        $stdout.sync = true
-        puts "started"
-        sleep 60
+      files:
+        - name: main.rb
+          content: |
+            $stdout.sync = true
+            puts "started"
+            sleep 60
     output:
       status: 200
       run:

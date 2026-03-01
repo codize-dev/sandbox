@@ -2,8 +2,10 @@ tests:
   - name: "hello world"
     input:
       runtime: node
-      code: |
-        console.log("Hello, World!");
+      files:
+        - name: index.js
+          content: |
+            console.log("Hello, World!");
     output:
       status: 200
       run:
@@ -16,8 +18,10 @@ tests:
   - name: "stderr output"
     input:
       runtime: node
-      code: |
-        console.error("error message");
+      files:
+        - name: index.js
+          content: |
+            console.error("error message");
     output:
       status: 200
       run:
@@ -30,9 +34,11 @@ tests:
   - name: "stdout and stderr"
     input:
       runtime: node
-      code: |
-        console.log("out");
-        console.error("err");
+      files:
+        - name: index.js
+          content: |
+            console.log("out");
+            console.error("err");
     output:
       status: 200
       run:
@@ -45,8 +51,10 @@ tests:
   - name: "non-zero exit code"
     input:
       runtime: node
-      code: |
-        process.exit(1);
+      files:
+        - name: index.js
+          content: |
+            process.exit(1);
     output:
       status: 200
       run:
@@ -59,9 +67,11 @@ tests:
   - name: "stderr with non-zero exit code"
     input:
       runtime: node
-      code: |
-        console.error("error occurred");
-        process.exit(2);
+      files:
+        - name: index.js
+          content: |
+            console.error("error occurred");
+            process.exit(2);
     output:
       status: 200
       run:

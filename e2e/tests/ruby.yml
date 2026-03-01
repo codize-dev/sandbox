@@ -2,8 +2,10 @@ tests:
   - name: "hello world"
     input:
       runtime: ruby
-      code: |
-        puts "Hello, World!"
+      files:
+        - name: main.rb
+          content: |
+            puts "Hello, World!"
     output:
       status: 200
       run:
@@ -16,8 +18,10 @@ tests:
   - name: "stderr output"
     input:
       runtime: ruby
-      code: |
-        $stderr.puts "error message"
+      files:
+        - name: main.rb
+          content: |
+            $stderr.puts "error message"
     output:
       status: 200
       run:
@@ -30,10 +34,12 @@ tests:
   - name: "stdout and stderr"
     input:
       runtime: ruby
-      code: |
-        $stdout.sync = true
-        puts "out"
-        $stderr.puts "err"
+      files:
+        - name: main.rb
+          content: |
+            $stdout.sync = true
+            puts "out"
+            $stderr.puts "err"
     output:
       status: 200
       run:
@@ -46,8 +52,10 @@ tests:
   - name: "non-zero exit code"
     input:
       runtime: ruby
-      code: |
-        exit(1)
+      files:
+        - name: main.rb
+          content: |
+            exit(1)
     output:
       status: 200
       run:
@@ -60,9 +68,11 @@ tests:
   - name: "stderr with non-zero exit code"
     input:
       runtime: ruby
-      code: |
-        $stderr.puts "error occurred"
-        exit(2)
+      files:
+        - name: main.rb
+          content: |
+            $stderr.puts "error occurred"
+            exit(2)
     output:
       status: 200
       run:

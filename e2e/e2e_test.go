@@ -24,11 +24,6 @@ var testFiles embed.FS
 
 const serverURL = "http://localhost:8080"
 
-var runtimeEntryFile = map[string]string{
-	"node": "index.js",
-	"ruby": "main.rb",
-}
-
 type testFile struct {
 	Tests []testCase `yaml:"tests"`
 }
@@ -39,9 +34,14 @@ type testCase struct {
 	Output testOutput `yaml:"output"`
 }
 
+type testInputFile struct {
+	Name    string `yaml:"name"`
+	Content string `yaml:"content"`
+}
+
 type testInput struct {
-	Runtime string `yaml:"runtime"`
-	Code    string `yaml:"code"`
+	Runtime string          `yaml:"runtime"`
+	Files   []testInputFile `yaml:"files"`
 }
 
 type testOutput struct {
@@ -105,17 +105,17 @@ func TestE2E(t *testing.T) {
 		for i, tc := range tf.Tests {
 			t.Run(fmt.Sprintf("%s/%d/%s", fileName, i, tc.Name), func(t *testing.T) {
 				t.Parallel()
-				entryFile, ok := runtimeEntryFile[tc.Input.Runtime]
-				require.True(t, ok, "unknown runtime: %s", tc.Input.Runtime)
+				files := make([]apiFile, len(tc.Input.Files))
+				for i, f := range tc.Input.Files {
+					files[i] = apiFile{
+						Name:    f.Name,
+						Content: base64.StdEncoding.EncodeToString([]byte(f.Content)),
+					}
+				}
 
 				reqBody := apiRequest{
 					Runtime: tc.Input.Runtime,
-					Files: []apiFile{
-						{
-							Name:    entryFile,
-							Content: base64.StdEncoding.EncodeToString([]byte(tc.Input.Code)),
-						},
-					},
+					Files:   files,
 				}
 
 				bodyBytes, err := json.Marshal(reqBody)
