@@ -8,10 +8,11 @@ A code execution sandbox service that runs arbitrary code inside Linux namespace
 
 ## Development Setup
 
-Tool versions are managed by [mise](https://mise.jdx.dev/). Run `mise install` to install Go and golangci-lint.
+Tool versions are managed by [mise](https://mise.jdx.dev/). Run `mise install` to install Go, golangci-lint, and lefthook.
 
 - **Go**: 1.26.0 (mise.toml), module requires 1.25.0 (go.mod)
 - **golangci-lint**: 2.10.1 (installed via mise aqua backend)
+- **lefthook**: 2.1.2 (installed via mise aqua backend) — runs `golangci-lint run` as a pre-commit hook
 
 ## Build & Run Commands
 
@@ -58,10 +59,11 @@ POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
 
 The sandbox uses nsjail (`/bin/nsjail`) with these key properties:
 - `-Mo` (once mode): runs the process once and exits
+- `-D /code`: sets the initial working directory inside the jail
 - Network isolation via new network namespace
 - `--log_fd 3`: nsjail logs piped to fd 3 for timeout detection
 - `--time_limit`: configurable via `--timeout` CLI flag (default 30s); Go-level exec timeout is nsjail limit + 10s
-- Read-only bind mounts for system libraries, the selected runtime, `/dev/null`, `/dev/urandom`, and `/proc` (via `-m`)
+- Read-only bind mounts for system libraries (`/lib`, `/usr`, and `/lib64` if it exists), the selected runtime, `/dev/null`, `/dev/urandom`, and `/proc` (via `-m`)
 - Read-write bind mount for the user code directory (`/code`) and a separate temp directory mounted as `/tmp`
 - Address space limited to system hard limit (`--rlimit_as hard`)
 - Environment: `PATH` set to runtime bin dir, `HOME=/tmp`
