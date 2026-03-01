@@ -22,13 +22,16 @@ go build -o server ./cmd/server
 # Run locally (requires nsjail + Node.js + Ruby at hardcoded paths; use Docker instead)
 docker compose up --build
 
+# Restart with rebuild (for E2E testing after code changes)
+docker compose down && docker compose up --build -d
+
 # Lint
 golangci-lint run
 
 # Run unit tests
 go test ./...
 
-# Run E2E tests (requires running server: docker compose up --build)
+# Run E2E tests (requires running server via docker compose)
 go test -tags e2e ./e2e/...
 ```
 
@@ -48,7 +51,7 @@ POST /v1/run → cmd/server/main.go (Echo v5 router)
 ### Key Packages
 
 - **cmd/server/** — HTTP server entrypoint. Echo v5 with request logging middleware. Single route: `POST /v1/run`.
-- **internal/handler/** — Request parsing and response formatting. Validates the `runtime` field, decodes base64 file contents from the request, writes them to a temp directory, and calls `sandbox.Run()`. The first file in the `files` array is the entrypoint. Returns HTTP 504 on execution timeout.
+- **internal/handler/** — Request parsing and response formatting. Validates the `runtime` field and file names (rejects path traversal, slashes, `.`, `..`, empty names, null bytes), decodes base64 file contents from the request, writes them to a temp directory, and calls `sandbox.Run()`. The first file in the `files` array is the entrypoint. Returns HTTP 400 on invalid input, HTTP 504 on execution timeout.
 - **internal/sandbox/** — Core execution logic. Defines the `Runtime` type and a runtime configuration registry (`runtimes` map). Assembles nsjail CLI arguments for the selected runtime and runs the jailed process. Captures stdout, stderr, and combined output using `unix.Poll` for deterministic pipe ordering. Detects nsjail timeout and signal termination via log pipe. Returns base64-encoded output.
 
 ### nsjail Isolation
