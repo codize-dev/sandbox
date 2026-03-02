@@ -50,6 +50,8 @@ func TestNodeRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "64", got.Rlimits.Nofile)
 	assert.Equal(t, "soft", got.Rlimits.Nproc)
 	assert.Equal(t, "64", got.Cgroups.PidsMax)
+	assert.Equal(t, "268435456", got.Cgroups.MemMax)
+	assert.Equal(t, "0", got.Cgroups.MemSwapMax)
 }
 
 func TestRubyRuntime_Limits(t *testing.T) {
@@ -61,6 +63,8 @@ func TestRubyRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "64", got.Rlimits.Nofile)
 	assert.Equal(t, "soft", got.Rlimits.Nproc)
 	assert.Equal(t, "32", got.Cgroups.PidsMax)
+	assert.Equal(t, "268435456", got.Cgroups.MemMax)
+	assert.Equal(t, "0", got.Cgroups.MemSwapMax)
 }
 
 func TestGoRuntime_Limits(t *testing.T) {
@@ -73,6 +77,8 @@ func TestGoRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "64", run.Rlimits.Nofile)
 	assert.Equal(t, "soft", run.Rlimits.Nproc)
 	assert.Equal(t, "64", run.Cgroups.PidsMax)
+	assert.Equal(t, "268435456", run.Cgroups.MemMax)
+	assert.Equal(t, "0", run.Cgroups.MemSwapMax)
 
 	compile := rt.CompileLimits()
 	assert.Equal(t, "4096", compile.Rlimits.AS)
@@ -80,6 +86,8 @@ func TestGoRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "256", compile.Rlimits.Nofile)
 	assert.Equal(t, "soft", compile.Rlimits.Nproc)
 	assert.Equal(t, "128", compile.Cgroups.PidsMax)
+	assert.Equal(t, "268435456", compile.Cgroups.MemMax)
+	assert.Equal(t, "0", compile.Cgroups.MemSwapMax)
 }
 
 func TestExecution_buildArgs(t *testing.T) {
@@ -96,7 +104,7 @@ func TestExecution_buildArgs(t *testing.T) {
 		tmpHome: "/tmp/sandbox-home",
 		limits: Limits{
 			Rlimits: Rlimits{AS: "4096", Fsize: "64", Nofile: "64", Nproc: "32"},
-			Cgroups: Cgroups{PidsMax: "42"},
+			Cgroups: Cgroups{PidsMax: "42", MemMax: "1000000", MemSwapMax: "0"},
 		},
 	}
 
@@ -130,6 +138,8 @@ func TestExecution_buildArgs(t *testing.T) {
 		"--time_limit", "10",
 		"--detect_cgroupv2",
 		"--cgroup_pids_max", "42",
+		"--cgroup_mem_max", "1000000",
+		"--cgroup_mem_swap_max", "0",
 		"-E", "PATH=/usr/bin",
 		"-E", "HOME=/tmp",
 		"--",

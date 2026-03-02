@@ -1,0 +1,35 @@
+tests:
+  - name: "memory allocation beyond cgroup limit is killed"
+    input:
+      runtime: go
+      files:
+        - name: main.go
+          content: |
+            package main
+
+            func main() {
+            	chunks := make([][]byte, 0)
+            	for {
+            		chunk := make([]byte, 10*1024*1024)
+            		for i := 0; i < len(chunk); i += 4096 {
+            			chunk[i] = 1
+            		}
+            		chunks = append(chunks, chunk)
+            	}
+            }
+    output:
+      status: 200
+      compile:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 0
+        status: "OK"
+        signal: null
+      run:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 137
+        status: "OK"
+        signal: "SIGKILL"
