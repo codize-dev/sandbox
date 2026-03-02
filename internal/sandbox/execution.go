@@ -73,6 +73,7 @@ func (e *execution) buildArgs() []string {
 		"--rlimit_as", e.rlimits.AS,
 		"--rlimit_fsize", e.rlimits.Fsize,
 		"--rlimit_nofile", e.rlimits.Nofile,
+		"--rlimit_cpu", fmt.Sprintf("%d", e.timeout),
 		"--time_limit", fmt.Sprintf("%d", e.timeout),
 	)
 

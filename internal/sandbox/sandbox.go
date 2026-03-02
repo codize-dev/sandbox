@@ -29,8 +29,8 @@ var errOutputLimitExceeded = errors.New("output limit exceeded")
 
 // Config holds runtime-configurable parameters for the sandbox.
 type Config struct {
-	RunTimeout     int // nsjail --time_limit for the run step, in seconds
-	CompileTimeout int // nsjail --time_limit for the compile step, in seconds
+	RunTimeout     int // nsjail --time_limit and --rlimit_cpu for the run step, in seconds
+	CompileTimeout int // nsjail --time_limit and --rlimit_cpu for the compile step, in seconds
 	OutputLimit    int // maximum combined stdout+stderr bytes before killing the process
 }
 
@@ -59,7 +59,7 @@ type execParams struct {
 	tmpDir     string      // host directory bind-mounted as /code (sandbox working directory)
 	tmpHome    string      // host directory bind-mounted as /tmp (writable scratch space)
 	rlimits    Rlimits     // nsjail resource limits
-	timeout    int         // nsjail --time_limit value for this invocation, in seconds
+	timeout    int         // nsjail --time_limit and --rlimit_cpu value for this invocation, in seconds
 }
 
 // resolveSignal decodes Unix signal-encoded exit codes. By convention, shells
@@ -158,9 +158,9 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 	return e.collectResult(waitErr, logStr)
 }
 
-// execTimeoutBuffer is the grace period added beyond the nsjail --time_limit
-// values so nsjail can terminate the sandboxed process and exec.Cmd can
-// return before the Go context fires.
+// execTimeoutBuffer is the grace period added beyond the nsjail --time_limit /
+// --rlimit_cpu values so nsjail can terminate the sandboxed process and
+// exec.Cmd can return before the Go context fires.
 const execTimeoutBuffer = 10 * time.Second
 
 // Run executes the given entryFile inside an nsjail sandbox.
