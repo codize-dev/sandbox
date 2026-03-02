@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestLookupRuntime(t *testing.T) {
+func Test_LookupRuntime(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -41,7 +41,7 @@ func TestLookupRuntime(t *testing.T) {
 	}
 }
 
-func TestNodeRuntimeLimits(t *testing.T) {
+func TestNodeRuntime_Limits(t *testing.T) {
 	t.Parallel()
 	rt := nodeRuntime{}
 	got := rt.Limits()
@@ -52,7 +52,7 @@ func TestNodeRuntimeLimits(t *testing.T) {
 	assert.Equal(t, "64", got.Cgroups.PidsMax)
 }
 
-func TestRubyRuntimeLimits(t *testing.T) {
+func TestRubyRuntime_Limits(t *testing.T) {
 	t.Parallel()
 	rt := rubyRuntime{}
 	got := rt.Limits()
@@ -63,7 +63,7 @@ func TestRubyRuntimeLimits(t *testing.T) {
 	assert.Equal(t, "32", got.Cgroups.PidsMax)
 }
 
-func TestGoRuntimeLimits(t *testing.T) {
+func TestGoRuntime_Limits(t *testing.T) {
 	t.Parallel()
 	rt := goRuntime{}
 
@@ -82,7 +82,7 @@ func TestGoRuntimeLimits(t *testing.T) {
 	assert.Equal(t, "128", compile.Cgroups.PidsMax)
 }
 
-func TestReadDefaultFiles(t *testing.T) {
+func Test_readDefaultFiles(t *testing.T) {
 	t.Parallel()
 
 	t.Run("go has go.mod and go.sum", func(t *testing.T) {
@@ -119,7 +119,7 @@ func TestReadDefaultFiles(t *testing.T) {
 	})
 }
 
-func TestApplyDefaultFiles(t *testing.T) {
+func Test_applyDefaultFiles(t *testing.T) {
 	t.Parallel()
 
 	t.Run("writes file when absent", func(t *testing.T) {
@@ -156,7 +156,7 @@ func TestApplyDefaultFiles(t *testing.T) {
 	})
 }
 
-func TestRuntimeRestrictedFiles(t *testing.T) {
+func TestRuntime_RestrictedFiles(t *testing.T) {
 	t.Parallel()
 
 	t.Run("node has no restricted files", func(t *testing.T) {

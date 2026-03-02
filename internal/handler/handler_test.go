@@ -109,7 +109,7 @@ func TestFile_Validate(t *testing.T) {
 	}
 }
 
-func TestWriteFiles(t *testing.T) {
+func Test_writeFiles(t *testing.T) {
 	t.Parallel()
 
 	t.Run("writes files with correct content", func(t *testing.T) {

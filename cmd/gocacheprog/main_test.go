@@ -13,7 +13,7 @@ func makeActionEntry(actionHex, outputHex string, size, tsNano int64) []byte {
 	return []byte(fmt.Sprintf("v1 %s %s %20d %20d\n", actionHex, outputHex, size, tsNano))
 }
 
-func TestHandleGet_Hit(t *testing.T) {
+func Test_handleGet_Hit(t *testing.T) {
 	actionID, _ := hex.DecodeString("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 	outputHex := "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
 	actionHex := hex.EncodeToString(actionID)
@@ -58,7 +58,7 @@ func TestHandleGet_Hit(t *testing.T) {
 	}
 }
 
-func TestHandleGet_MissNoActionFile(t *testing.T) {
+func Test_handleGet_MissNoActionFile(t *testing.T) {
 	actionID, _ := hex.DecodeString("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 
 	cacheDir := t.TempDir()
@@ -71,7 +71,7 @@ func TestHandleGet_MissNoActionFile(t *testing.T) {
 	}
 }
 
-func TestHandleGet_MissInvalidActionIDLength(t *testing.T) {
+func Test_handleGet_MissInvalidActionIDLength(t *testing.T) {
 	cacheDir := t.TempDir()
 
 	req := &Request{ID: 3, ActionID: []byte("short")}
@@ -82,7 +82,7 @@ func TestHandleGet_MissInvalidActionIDLength(t *testing.T) {
 	}
 }
 
-func TestHandleGet_MissNoDataFile(t *testing.T) {
+func Test_handleGet_MissNoDataFile(t *testing.T) {
 	actionID, _ := hex.DecodeString("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 	outputHex := "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
 	actionHex := hex.EncodeToString(actionID)
@@ -106,7 +106,7 @@ func TestHandleGet_MissNoDataFile(t *testing.T) {
 	}
 }
 
-func TestHandleGet_MissInvalidFormat(t *testing.T) {
+func Test_handleGet_MissInvalidFormat(t *testing.T) {
 	actionID, _ := hex.DecodeString("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 	actionHex := hex.EncodeToString(actionID)
 
