@@ -18,9 +18,10 @@ import (
 type execution struct {
 	runTimeout  int
 	outputLimit int
-	rt          Runtime
+	command     []string
+	bindMounts  []BindMount
+	env         []string
 	tmpDir      string
-	entryFile   string
 	tmpHome     string
 
 	proc *os.Process
@@ -52,7 +53,7 @@ func (e *execution) buildArgs() []string {
 		args = append(args, "-R", "/lib64:/lib64")
 	}
 
-	for _, m := range e.rt.BindMounts() {
+	for _, m := range e.bindMounts {
 		args = append(args, "-R", m.Src+":"+m.Dst)
 	}
 
@@ -64,16 +65,18 @@ func (e *execution) buildArgs() []string {
 		"-m", "none:/proc:proc:ro",
 		"-s", "/proc/self/fd:/dev/fd",
 		"--rlimit_as", "hard",
+		"--rlimit_fsize", "1024",
+		"--rlimit_nofile", "hard",
 		"--time_limit", fmt.Sprintf("%d", e.runTimeout),
 	)
 
-	for _, env := range e.rt.Env() {
+	for _, env := range e.env {
 		args = append(args, "-E", env)
 	}
 	args = append(args, "-E", "HOME=/tmp")
 
 	args = append(args, "--")
-	args = append(args, e.rt.Command("/code/"+e.entryFile)...)
+	args = append(args, e.command...)
 
 	return args
 }

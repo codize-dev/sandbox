@@ -45,9 +45,10 @@ type testInput struct {
 }
 
 type testOutput struct {
-	Status int       `yaml:"status"`
-	Run    runOutput `yaml:"run"`
-	Error  string    `yaml:"error"`
+	Status  int        `yaml:"status"`
+	Compile *runOutput `yaml:"compile"`
+	Run     *runOutput `yaml:"run"`
+	Error   string     `yaml:"error"`
 }
 
 type runOutput struct {
@@ -70,7 +71,8 @@ type apiFile struct {
 }
 
 type apiResponse struct {
-	Run apiRunResult `json:"run"`
+	Compile *apiRunResult `json:"compile"`
+	Run     *apiRunResult `json:"run"`
 }
 
 type apiRunResult struct {
@@ -146,16 +148,29 @@ func TestE2E(t *testing.T) {
 					err = json.NewDecoder(resp.Body).Decode(&apiResp)
 					require.NoError(t, err, "failed to decode response body")
 
-					actualStdout := decodeBase64(t, apiResp.Run.Stdout, "stdout")
-					actualStderr := decodeBase64(t, apiResp.Run.Stderr, "stderr")
-					actualOutput := decodeBase64(t, apiResp.Run.Output, "output")
+					if tc.Output.Compile == nil {
+						assert.Nil(t, apiResp.Compile, "compile should be null")
+					} else {
+						require.NotNil(t, apiResp.Compile, "compile should not be null")
+						assert.Equal(t, tc.Output.Compile.Stdout, decodeBase64(t, apiResp.Compile.Stdout, "compile stdout"), "compile stdout mismatch")
+						assert.Equal(t, tc.Output.Compile.Stderr, decodeBase64(t, apiResp.Compile.Stderr, "compile stderr"), "compile stderr mismatch")
+						assert.Equal(t, tc.Output.Compile.Output, decodeBase64(t, apiResp.Compile.Output, "compile output"), "compile output mismatch")
+						assert.Equal(t, tc.Output.Compile.ExitCode, apiResp.Compile.ExitCode, "compile exit_code mismatch")
+						assert.Equal(t, tc.Output.Compile.Status, apiResp.Compile.Status, "compile status mismatch")
+						assert.Equal(t, tc.Output.Compile.Signal, apiResp.Compile.Signal, "compile signal mismatch")
+					}
 
-					assert.Equal(t, tc.Output.Run.Stdout, actualStdout, "stdout mismatch")
-					assert.Equal(t, tc.Output.Run.Stderr, actualStderr, "stderr mismatch")
-					assert.Equal(t, tc.Output.Run.Output, actualOutput, "output mismatch")
-					assert.Equal(t, tc.Output.Run.ExitCode, apiResp.Run.ExitCode, "exit_code mismatch")
-					assert.Equal(t, tc.Output.Run.Status, apiResp.Run.Status, "status mismatch")
-					assert.Equal(t, tc.Output.Run.Signal, apiResp.Run.Signal, "signal mismatch")
+					if tc.Output.Run == nil {
+						assert.Nil(t, apiResp.Run, "run should be null")
+					} else {
+						require.NotNil(t, apiResp.Run, "run should not be null")
+						assert.Equal(t, tc.Output.Run.Stdout, decodeBase64(t, apiResp.Run.Stdout, "run stdout"), "run stdout mismatch")
+						assert.Equal(t, tc.Output.Run.Stderr, decodeBase64(t, apiResp.Run.Stderr, "run stderr"), "run stderr mismatch")
+						assert.Equal(t, tc.Output.Run.Output, decodeBase64(t, apiResp.Run.Output, "run output"), "run output mismatch")
+						assert.Equal(t, tc.Output.Run.ExitCode, apiResp.Run.ExitCode, "run exit_code mismatch")
+						assert.Equal(t, tc.Output.Run.Status, apiResp.Run.Status, "run status mismatch")
+						assert.Equal(t, tc.Output.Run.Signal, apiResp.Run.Signal, "run signal mismatch")
+					}
 				}
 			})
 		}

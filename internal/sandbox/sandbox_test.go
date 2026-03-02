@@ -16,6 +16,7 @@ func TestLookupRuntime(t *testing.T) {
 	}{
 		{name: "node is valid", runtime: "node", wantErr: false},
 		{name: "ruby is valid", runtime: "ruby", wantErr: false},
+		{name: "go is valid", runtime: "go", wantErr: false},
 		{name: "empty string is invalid", runtime: "", wantErr: true},
 		{name: "unknown runtime is invalid", runtime: "python", wantErr: true},
 		{name: "capitalized Node is invalid", runtime: "Node", wantErr: true},

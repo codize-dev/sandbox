@@ -25,7 +25,8 @@ type File struct {
 }
 
 type RunResponse struct {
-	Run sandbox.Result `json:"run"`
+	Compile *sandbox.Result `json:"compile"`
+	Run     *sandbox.Result `json:"run"`
 }
 
 // Handler holds dependencies for the HTTP handler.
@@ -88,7 +89,7 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 		})
 	}
 
-	result, err := h.Runner.Run(c.Request().Context(), rt, tmpDir, files[0].name)
+	output, err := h.Runner.Run(c.Request().Context(), rt, tmpDir, files[0].name)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return c.JSON(http.StatusGatewayTimeout, map[string]string{
@@ -100,7 +101,7 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, RunResponse{Run: result})
+	return c.JSON(http.StatusOK, RunResponse{Compile: output.Compile, Run: output.Run})
 }
 
 // writeFiles writes each decoded file into tmpDir.

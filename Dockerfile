@@ -19,10 +19,16 @@ RUN apt-get update && \
 COPY --from=mise /usr/local/bin/mise /usr/local/bin/mise
 
 ENV MISE_DATA_DIR="/mise"
+
 ENV PATH="/mise/installs/node/24.14.0/bin:$PATH"
-ENV PATH="/mise/installs/ruby/3.4.8/bin:$PATH"
 RUN mise use -g node@24.14.0
+
+ENV PATH="/mise/installs/ruby/3.4.8/bin:$PATH"
 RUN mise settings ruby.compile=false && mise use -g ruby@3.4.8
+
+ENV PATH="/mise/installs/go/1.26.0/bin:$PATH"
+RUN mise use -g go@1.26.0
+RUN CGO_ENABLED=0 GOCACHE=/mise/go-cache go build std
 
 # ---
 

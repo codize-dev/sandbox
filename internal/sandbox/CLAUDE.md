@@ -5,14 +5,15 @@ Core execution logic split across three files.
 ## Public API (sandbox.go)
 
 - `Runner` struct (created via `NewRunner(cfg Config)`)
-- `Config`, `Status`, and `Result` types
-- `Runner.Run()` orchestrates pipe creation, process execution, and result collection
+- `Config`, `Status`, `Result`, and `RunOutput` types
+- `Runner.Run()` returns `RunOutput` (compile + run results); orchestrates pipe creation, process execution, and result collection
 
 ## Runtime (runtime.go)
 
-- `Runtime` interface (`Command`, `BindMounts`, `Env` methods)
+- `Runtime` interface (`Command`, `BindMounts`, `Env`, `PrepareDir` methods)
+- `CompiledRuntime` optional interface (`CompileCommand`, `CompileBindMounts`, `CompileEnv` methods; checked via type assertion)
 - `BindMount` struct and `LookupRuntime` function
-- Concrete implementations: `nodeRuntime`, `rubyRuntime` (unexported)
+- Concrete implementations: `nodeRuntime`, `rubyRuntime`, `goRuntime` (unexported)
 
 ## Execution (execution.go)
 
@@ -31,11 +32,13 @@ The sandbox uses nsjail (`/bin/nsjail`) with these key properties:
 - `-D /code`: sets the initial working directory inside the jail
 - Network isolation via new network namespace
 - `--log_fd 3`: nsjail logs piped to fd 3 for timeout detection
-- `--time_limit`: configurable via `--timeout` CLI flag (default 30s); Go-level exec timeout is nsjail limit + 10s
+- `--time_limit`: configurable via `--timeout` CLI flag (default 30s); Go-level exec timeout is nsjail limit + 10s for interpreted runtimes, or 2 × nsjail limit + 10s for compiled runtimes (compile + run)
 - Read-only bind mounts for system libraries (`/lib`, `/usr`, and `/lib64` if it exists), the selected runtime, `/dev/null`, `/dev/urandom`, and `/proc` (via `-m`)
 - Read-write bind mount for the user code directory (`/code`) and a separate temp directory mounted as `/tmp`
 - Address space limited to system hard limit (`--rlimit_as hard`)
-- Environment: `PATH` set to runtime bin dir, `HOME=/tmp`
+- File size limited to 1 GiB (`--rlimit_fsize 1024`)
+- Open file descriptors limited to system hard limit (`--rlimit_nofile hard`)
+- Environment: runtime-specific variables (typically `PATH` set to runtime bin dir), plus `HOME=/tmp` always appended
 - Symlink mount for `/dev/fd` via `/proc/self/fd` (`-s /proc/self/fd:/dev/fd`)
 - Combined output limit enforced by Go: configurable via `--output-limit` CLI flag (default 1 MiB). When exceeded, the jailed process is killed and status is set to `OUTPUT_LIMIT_EXCEEDED`.
 
@@ -44,3 +47,5 @@ The sandbox uses nsjail (`/bin/nsjail`) with these key properties:
 - nsjail binary: `/bin/nsjail`
 - Node.js runtime: `/mise/installs/node/24.14.0/bin/node`
 - Ruby runtime: `/mise/installs/ruby/3.4.8/bin/ruby`
+- Go runtime: `/mise/installs/go/1.26.0/bin/go`
+- Go build cache: `/mise/go-cache` (pre-built in Docker image, mounted read-only in nsjail)

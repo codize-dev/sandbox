@@ -1,7 +1,10 @@
 package sandbox
 
 import (
+	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -10,6 +13,8 @@ import (
 type Runtime interface {
 	// Command returns the full command and arguments to execute inside the sandbox.
 	// entryFile is the absolute path inside the sandbox (e.g. "/code/index.js").
+	// Compiled runtimes may ignore this parameter when the executable path is
+	// determined by the compilation step.
 	Command(entryFile string) []string
 
 	// BindMounts returns read-only bind mounts required by this runtime
@@ -19,7 +24,27 @@ type Runtime interface {
 	// Env returns environment variables for the sandbox in "KEY=VALUE" format
 	// (e.g. "PATH=/mise/installs/node/24.14.0/bin").
 	Env() []string
+
+	// PrepareDir performs runtime-specific preparation on the working directory
+	// before execution (e.g. generating a go.mod file if absent).
+	// dir is the host path that will be mounted as /code in the sandbox.
+	PrepareDir(dir string) error
 }
+
+// CompiledRuntime is an optional interface for runtimes that require a
+// compilation step before execution (e.g. Go). Runner checks for this
+// interface via type assertion.
+type CompiledRuntime interface {
+	Runtime
+	// CompileCommand returns the full command and arguments for the compilation step.
+	CompileCommand() []string
+	// CompileBindMounts returns read-only bind mounts required during compilation.
+	CompileBindMounts() []BindMount
+	// CompileEnv returns environment variables for the compilation sandbox in "KEY=VALUE" format.
+	CompileEnv() []string
+}
+
+var _ CompiledRuntime = goRuntime{}
 
 // BindMount represents a read-only bind mount for nsjail (-R src:dst).
 type BindMount struct {
@@ -30,6 +55,7 @@ type BindMount struct {
 var runtimes = map[string]Runtime{
 	"node": nodeRuntime{},
 	"ruby": rubyRuntime{},
+	"go":   goRuntime{},
 }
 
 // LookupRuntime returns the Runtime for the given name, or an error if unknown.
@@ -62,6 +88,10 @@ func (nodeRuntime) Env() []string {
 	return []string{"PATH=/mise/installs/node/24.14.0/bin"}
 }
 
+func (nodeRuntime) PrepareDir(_ string) error {
+	return nil
+}
+
 // --- Ruby ---
 
 type rubyRuntime struct{}
@@ -76,4 +106,59 @@ func (rubyRuntime) BindMounts() []BindMount {
 
 func (rubyRuntime) Env() []string {
 	return []string{"PATH=/mise/installs/ruby/3.4.8/bin"}
+}
+
+func (rubyRuntime) PrepareDir(_ string) error {
+	return nil
+}
+
+// --- Go ---
+
+type goRuntime struct{}
+
+func (goRuntime) Command(_ string) []string {
+	return []string{"/tmp/main"}
+}
+
+func (goRuntime) BindMounts() []BindMount {
+	return nil
+}
+
+func (goRuntime) Env() []string {
+	return nil
+}
+
+func (goRuntime) CompileCommand() []string {
+	return []string{"/mise/installs/go/1.26.0/bin/go", "build", "-o", "/tmp/main", "."}
+}
+
+func (goRuntime) CompileBindMounts() []BindMount {
+	return []BindMount{
+		{Src: "/mise/installs/go/1.26.0", Dst: "/mise/installs/go/1.26.0"},
+		{Src: "/mise/go-cache", Dst: "/mise/go-cache"},
+	}
+}
+
+func (goRuntime) CompileEnv() []string {
+	return []string{
+		"PATH=/mise/installs/go/1.26.0/bin",
+		"GOROOT=/mise/installs/go/1.26.0",
+		"GOPATH=/tmp/gopath",
+		"GOCACHE=/mise/go-cache",
+		"GOPROXY=off",
+		"GOTELEMETRY=off",
+		"CGO_ENABLED=0",
+	}
+}
+
+func (goRuntime) PrepareDir(dir string) error {
+	goModPath := filepath.Join(dir, "go.mod")
+	_, err := os.Stat(goModPath)
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("failed to check go.mod: %w", err)
+	}
+	return os.WriteFile(goModPath, []byte("module sandbox\n\ngo 1.26\n"), 0644)
 }

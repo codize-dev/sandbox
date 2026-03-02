@@ -1,0 +1,148 @@
+tests:
+  - name: "hello world"
+    input:
+      runtime: go
+      files:
+        - name: main.go
+          content: |
+            package main
+
+            import "fmt"
+
+            func main() {
+                fmt.Println("Hello, World!")
+            }
+    output:
+      status: 200
+      compile:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 0
+        status: "OK"
+        signal: null
+      run:
+        stdout: "Hello, World!\n"
+        stderr: ""
+        output: "Hello, World!\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "compile error"
+    input:
+      runtime: go
+      files:
+        - name: main.go
+          content: |
+            package main
+
+            func main() {
+                undefined_variable
+            }
+    output:
+      status: 200
+      compile:
+        stdout: ""
+        stderr: "# sandbox\n./main.go:4:5: undefined: undefined_variable\n"
+        output: "# sandbox\n./main.go:4:5: undefined: undefined_variable\n"
+        exit_code: 1
+        status: "OK"
+        signal: null
+
+  - name: "stderr output"
+    input:
+      runtime: go
+      files:
+        - name: main.go
+          content: |
+            package main
+
+            import (
+                "fmt"
+                "os"
+            )
+
+            func main() {
+                fmt.Fprintln(os.Stderr, "error message")
+            }
+    output:
+      status: 200
+      compile:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 0
+        status: "OK"
+        signal: null
+      run:
+        stdout: ""
+        stderr: "error message\n"
+        output: "error message\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "non-zero exit code"
+    input:
+      runtime: go
+      files:
+        - name: main.go
+          content: |
+            package main
+
+            import "os"
+
+            func main() {
+                os.Exit(1)
+            }
+    output:
+      status: 200
+      compile:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 0
+        status: "OK"
+        signal: null
+      run:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 1
+        status: "OK"
+        signal: null
+
+  - name: "stderr with non-zero exit code"
+    input:
+      runtime: go
+      files:
+        - name: main.go
+          content: |
+            package main
+
+            import (
+                "fmt"
+                "os"
+            )
+
+            func main() {
+                fmt.Fprintln(os.Stderr, "error occurred")
+                os.Exit(2)
+            }
+    output:
+      status: 200
+      compile:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 0
+        status: "OK"
+        signal: null
+      run:
+        stdout: ""
+        stderr: "error occurred\n"
+        output: "error occurred\n"
+        exit_code: 2
+        status: "OK"
+        signal: null
