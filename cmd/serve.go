@@ -40,7 +40,9 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	}
 
 	cfg := sandbox.Config{
-		RunTimeout:  timeout,
+		RunTimeout: timeout,
+		// Add a 10-second buffer beyond RunTimeout so nsjail can terminate the
+		// sandboxed process and exec.Cmd can return before the context fires.
 		ExecTimeout: time.Duration(timeout+10) * time.Second,
 		OutputLimit: outputLimit,
 	}

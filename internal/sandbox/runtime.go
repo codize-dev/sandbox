@@ -198,10 +198,14 @@ type goRuntime struct{}
 
 func (goRuntime) Name() RuntimeName { return RuntimeGo }
 
+// Command returns the path to the compiled binary. The entryFile parameter is
+// unused because the output path is determined by CompileCommand.
 func (goRuntime) Command(_ string) []string {
 	return []string{"/tmp/main"}
 }
 
+// BindMounts returns nil because the compiled binary is statically linked
+// and needs no runtime directories.
 func (goRuntime) BindMounts() []BindMount {
 	return nil
 }
@@ -217,7 +221,7 @@ func (goRuntime) CompileCommand() []string {
 func (goRuntime) CompileBindMounts() []BindMount {
 	return []BindMount{
 		{Src: "/mise/installs/go/1.26.0", Dst: "/mise/installs/go/1.26.0"},
-		{Src: "/mise/go-cache", Dst: "/mise/go-cache"},
+		{Src: "/mise/go-cache", Dst: "/mise/go-cache"}, // pre-built Go stdlib cache (read-only)
 	}
 }
 
@@ -225,11 +229,11 @@ func (goRuntime) CompileEnv() []string {
 	return []string{
 		"PATH=/mise/installs/go/1.26.0/bin",
 		"GOROOT=/mise/installs/go/1.26.0",
-		"GOPATH=/tmp/gopath",
-		"GOCACHE=/mise/go-cache",
-		"GOPROXY=off",
-		"GOTELEMETRY=off",
-		"CGO_ENABLED=0",
+		"GOPATH=/tmp/gopath",     // writable location for module metadata and build artifacts
+		"GOCACHE=/mise/go-cache", // pre-built stdlib cache from Docker image (read-only mount)
+		"GOPROXY=off",            // prevent network access from the compiler
+		"GOTELEMETRY=off",        // disable Go telemetry in the sandbox
+		"CGO_ENABLED=0",          // no C compiler in the sandbox; produces a static binary
 	}
 }
 

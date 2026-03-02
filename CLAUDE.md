@@ -51,17 +51,13 @@ POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
 
 ### Key Packages
 
-- **cmd/** — CLI entrypoint using Cobra. See `cmd/CLAUDE.md`.
-- **internal/handler/** — Request parsing and response formatting. See `internal/handler/CLAUDE.md`.
-- **internal/sandbox/** — Core sandbox execution logic. See `internal/sandbox/CLAUDE.md`.
+- **cmd/** — CLI entrypoint using Cobra.
+- **internal/handler/** — Request parsing and response formatting.
+- **internal/sandbox/** — Core sandbox execution logic.
 
 ### Docker Build
 
-Four-stage Dockerfile:
-1. **mise** stage: downloads mise binary for the target architecture
-2. **base** stage: based on `ghcr.io/codize-dev/nsjail` (pinned by commit SHA), pre-installs Node.js 24.14.0, Ruby 3.4.8, and Go 1.26.0 via mise; pre-builds Go standard library cache at `/mise/go-cache`
-3. **builder** stage: compiles Go binary (`sandbox`) with `CGO_ENABLED=0`, `-trimpath`, `-ldflags="-w -s"`
-4. **runtime** stage: extends `base`, adds the `sandbox` binary. Entrypoint: `sandbox serve`
+Four-stage Dockerfile (`mise` → `base` → `builder` → `runtime`). The `base` stage uses `ghcr.io/codize-dev/nsjail` and installs language runtimes via mise. See Dockerfile for details.
 
 ### Sister Repository
 

@@ -15,6 +15,9 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// execution manages the lifecycle of a single nsjail invocation: building
+// arguments, creating pipes, starting the process, draining output, and
+// collecting results.
 type execution struct {
 	runTimeout  int
 	outputLimit int
@@ -41,11 +44,13 @@ type execution struct {
 
 func (e *execution) buildArgs() []string {
 	args := []string{
-		"-Mo",
+		"-Mo", // once mode: run the process once and exit
 		// Capture nsjail logs via a pipe (fd 3) to detect timeout kills.
 		// ExtraFiles[0] is always mapped to fd 3 in the child process.
 		"--log_fd", "3",
-		"-D", "/code",
+		"-D", "/code", // initial working directory inside the sandbox
+		// System libraries required by the dynamic linker and language runtimes.
+		// -R = read-only bind mount, -B = read-write bind mount.
 		"-R", "/lib:/lib",
 		"-R", "/usr:/usr",
 	}
@@ -59,12 +64,12 @@ func (e *execution) buildArgs() []string {
 	}
 
 	args = append(args,
-		"-R", "/dev/null:/dev/null",
-		"-R", "/dev/urandom:/dev/urandom",
-		"-B", e.tmpDir+":/code",
-		"-B", e.tmpHome+":/tmp",
-		"-m", "none:/proc:proc:ro",
-		"-s", "/proc/self/fd:/dev/fd",
+		"-R", "/dev/null:/dev/null", // commonly opened by programs
+		"-R", "/dev/urandom:/dev/urandom", // needed for PRNG seeding (V8, Ruby, etc.)
+		"-B", e.tmpDir+":/code", // user code directory (read-write)
+		"-B", e.tmpHome+":/tmp", // writable scratch space
+		"-m", "none:/proc:proc:ro", // fresh read-only /proc (needed for /proc/self)
+		"-s", "/proc/self/fd:/dev/fd", // symlink so /dev/fd works
 		"--rlimit_as", e.rlimits.AS,
 		"--rlimit_fsize", e.rlimits.Fsize,
 		"--rlimit_nofile", e.rlimits.Nofile,
@@ -74,6 +79,7 @@ func (e *execution) buildArgs() []string {
 	for _, env := range e.env {
 		args = append(args, "-E", env)
 	}
+	// HOME must be set because many tools read it for config/cache paths.
 	args = append(args, "-E", "HOME=/tmp")
 
 	args = append(args, "--")
@@ -164,6 +170,8 @@ func (e *execution) start(ctx context.Context, args []string) (*exec.Cmd, error)
 }
 
 func (e *execution) collectResult(waitErr error, logStr string) (Result, error) {
+	// Detect nsjail timeout by searching its log output. This string must
+	// match nsjail's actual log format (see nsjail/logs.cc).
 	timedOut := strings.Contains(logStr, "run time >= time limit")
 
 	result := Result{

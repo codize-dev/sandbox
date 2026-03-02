@@ -14,16 +14,21 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// RunRequest is the JSON request body for POST /v1/run.
 type RunRequest struct {
 	Runtime string `json:"runtime"`
 	Files   []File `json:"files"`
 }
 
+// File represents a single source file in the run request.
+// The first file in the request's Files array is used as the entrypoint.
 type File struct {
 	Name    string `json:"name"`
 	Content string `json:"content"`
 }
 
+// RunResponse is the JSON response for POST /v1/run.
+// Compile is nil for interpreted runtimes. Run is nil when compilation fails.
 type RunResponse struct {
 	Compile *sandbox.Result `json:"compile"`
 	Run     *sandbox.Result `json:"run"`

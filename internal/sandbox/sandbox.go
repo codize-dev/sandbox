@@ -14,6 +14,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// nsjailPath is the path to the nsjail binary inside the Docker image.
 const nsjailPath = "/bin/nsjail"
 
 type Status string
@@ -28,9 +29,9 @@ var errOutputLimitExceeded = errors.New("output limit exceeded")
 
 // Config holds runtime-configurable parameters for the sandbox.
 type Config struct {
-	RunTimeout  int
-	ExecTimeout time.Duration
-	OutputLimit int
+	RunTimeout  int           // nsjail --time_limit value, in seconds
+	ExecTimeout time.Duration // Go-level context timeout wrapping the entire exec.Cmd
+	OutputLimit int           // maximum combined stdout+stderr bytes before killing the process
 }
 
 type Result struct {
@@ -50,15 +51,19 @@ type RunOutput struct {
 	Run     *Result
 }
 
+// execParams holds the parameters for a single nsjail invocation.
 type execParams struct {
-	command    []string
-	bindMounts []BindMount
-	env        []string
-	tmpDir     string
-	tmpHome    string
-	rlimits    Rlimits
+	command    []string    // command and arguments to run inside the sandbox
+	bindMounts []BindMount // runtime-specific bind mounts (mounted read-only by buildArgs)
+	env        []string    // environment variables in "KEY=VALUE" format
+	tmpDir     string      // host directory bind-mounted as /code (sandbox working directory)
+	tmpHome    string      // host directory bind-mounted as /tmp (writable scratch space)
+	rlimits    Rlimits     // nsjail resource limits
 }
 
+// resolveSignal decodes Unix signal-encoded exit codes. By convention, shells
+// encode signal kills as exit code 128 + signal number. Returns the signal
+// name (e.g. "SIGKILL") if applicable, nil otherwise.
 func resolveSignal(exitCode int, logOutput string) *string {
 	if exitCode > 128 && strings.Contains(logOutput, "terminated with signal: ") {
 		if name := unix.SignalName(syscall.Signal(exitCode - 128)); name != "" {
@@ -155,6 +160,8 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 // Run executes the given entryFile inside an nsjail sandbox.
 func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (RunOutput, error) {
 	timeout := r.cfg.ExecTimeout
+	// For compiled runtimes, extend the timeout by RunTimeout to cover both
+	// the compilation and execution steps.
 	if _, ok := rt.(CompiledRuntime); ok {
 		timeout += time.Duration(r.cfg.RunTimeout) * time.Second
 	}
