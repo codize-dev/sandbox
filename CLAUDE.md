@@ -38,13 +38,20 @@ go test -tags e2e ./e2e/...
 
 The container must run in **privileged mode** (required for nsjail to create Linux namespaces).
 
+### CLI Flags (`serve` subcommand)
+
+- `--addr` (default `:8080`) — TCP address to listen on
+- `--run-timeout` (default `30`) — sandbox run timeout in seconds
+- `--compile-timeout` (default `30`) — sandbox compile timeout in seconds
+- `--output-limit` (default `1048576` / 1 MiB) — maximum combined output bytes
+
 ## Architecture
 
 ### Request Flow
 
 ```
 POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
-             → internal/handler/handler.go (validate runtime, decode base64 files, write to tmpdir)
+             → internal/handler/handler.go (validate runtime, reject restricted files, decode base64 files, validate filenames, write to tmpdir)
              → internal/sandbox/sandbox.go (invoke nsjail with the selected runtime)
              → Response: {compile, run} where each contains {stdout, stderr, output, exit_code, status, signal} (stdout/stderr/output are base64-encoded)
 ```
