@@ -146,3 +146,39 @@ tests:
         exit_code: 2
         status: "OK"
         signal: null
+
+  - name: "pre-installed package golang.org/x/text"
+    input:
+      runtime: go
+      files:
+        - name: main.go
+          content: |
+            package main
+
+            import (
+                "fmt"
+
+                "golang.org/x/text/cases"
+                "golang.org/x/text/language"
+            )
+
+            func main() {
+                c := cases.Title(language.English)
+                fmt.Println(c.String("hello world"))
+            }
+    output:
+      status: 200
+      compile:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 0
+        status: "OK"
+        signal: null
+      run:
+        stdout: "Hello World\n"
+        stderr: ""
+        output: "Hello World\n"
+        exit_code: 0
+        status: "OK"
+        signal: null

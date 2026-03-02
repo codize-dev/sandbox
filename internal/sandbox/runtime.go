@@ -221,7 +221,8 @@ func (goRuntime) CompileCommand() []string {
 func (goRuntime) CompileBindMounts() []BindMount {
 	return []BindMount{
 		{Src: "/mise/installs/go/1.26.0", Dst: "/mise/installs/go/1.26.0"},
-		{Src: "/mise/go-cache", Dst: "/mise/go-cache"}, // pre-built Go stdlib cache (read-only)
+		{Src: "/mise/go-cache", Dst: "/mise/go-cache"},       // pre-built Go stdlib cache (read-only)
+		{Src: "/mise/go-modcache", Dst: "/mise/go-modcache"}, // pre-downloaded module cache (read-only)
 	}
 }
 
@@ -230,6 +231,7 @@ func (goRuntime) CompileEnv() []string {
 		"PATH=/mise/installs/go/1.26.0/bin",
 		"GOROOT=/mise/installs/go/1.26.0",
 		"GOPATH=/tmp/gopath",                                    // writable location for module metadata and build artifacts
+		"GOMODCACHE=/mise/go-modcache",                          // read-only pre-downloaded module cache from Docker image
 		"GOCACHEPROG=/usr/local/bin/gocacheprog /mise/go-cache", // read-only cache backed by pre-built stdlib cache from Docker image
 		"GOPROXY=off",     // prevent network access from the compiler
 		"GOTELEMETRY=off", // disable Go telemetry in the sandbox

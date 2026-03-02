@@ -77,13 +77,16 @@ func TestGoRuntimeRlimits(t *testing.T) {
 func TestReadDefaultFiles(t *testing.T) {
 	t.Parallel()
 
-	t.Run("go has go.mod", func(t *testing.T) {
+	t.Run("go has go.mod and go.sum", func(t *testing.T) {
 		t.Parallel()
 		files, err := readDefaultFiles(RuntimeGo)
 		require.NoError(t, err)
-		require.Len(t, files, 1)
+		require.Len(t, files, 2)
 		assert.Equal(t, "go.mod", files[0].Name)
-		assert.Equal(t, "module sandbox\n\ngo 1.26\n", string(files[0].Content))
+		assert.Contains(t, string(files[0].Content), "module sandbox")
+		assert.Contains(t, string(files[0].Content), "golang.org/x/text")
+		assert.Equal(t, "go.sum", files[1].Name)
+		assert.Contains(t, string(files[1].Content), "golang.org/x/text")
 	})
 
 	t.Run("node has no defaults", func(t *testing.T) {

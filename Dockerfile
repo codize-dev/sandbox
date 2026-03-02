@@ -29,6 +29,11 @@ RUN mise settings ruby.compile=false && mise use -g ruby@3.4.8
 ENV PATH="/mise/installs/go/1.26.0/bin:$PATH"
 RUN mise use -g go@1.26.0
 RUN CGO_ENABLED=0 GOCACHE=/mise/go-cache go build std
+COPY internal/sandbox/defaults/go/go.mod.tmpl /tmp/preinstall/go.mod
+COPY internal/sandbox/defaults/go/go.sum.tmpl /tmp/preinstall/go.sum
+RUN cd /tmp/preinstall && \
+    GOMODCACHE=/mise/go-modcache go mod download && \
+    rm -rf /tmp/preinstall
 
 # ---
 
