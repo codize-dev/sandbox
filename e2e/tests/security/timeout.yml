@@ -1,0 +1,35 @@
+tests:
+  - name: "execution timeout"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            setTimeout(() => {}, 60000);
+    output:
+      status: 200
+      run:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 137
+        status: "TIMEOUT"
+        signal: "SIGKILL"
+
+  - name: "timeout with partial output"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            console.log("started");
+            setTimeout(() => {}, 60000);
+    output:
+      status: 200
+      run:
+        stdout: "started\n"
+        stderr: ""
+        output: "started\n"
+        exit_code: 137
+        status: "TIMEOUT"
+        signal: "SIGKILL"

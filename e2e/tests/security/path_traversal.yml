@@ -1,0 +1,33 @@
+tests:
+  - name: "path traversal with dotdot-slash"
+    input:
+      runtime: node
+      files:
+        - name: "../escape.js"
+          content: |
+            console.log("escaped");
+    output:
+      status: 400
+      error: 'file name "../escape.js" contains invalid characters'
+
+  - name: "deep path traversal"
+    input:
+      runtime: node
+      files:
+        - name: "../../etc/passwd"
+          content: |
+            console.log("escaped");
+    output:
+      status: 400
+      error: 'file name "../../etc/passwd" contains invalid characters'
+
+  - name: "subdirectory slash rejected"
+    input:
+      runtime: node
+      files:
+        - name: "a/b.js"
+          content: |
+            console.log("escaped");
+    output:
+      status: 400
+      error: 'file name "a/b.js" contains invalid characters'
