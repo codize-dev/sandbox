@@ -1,16 +1,31 @@
 package sandbox
 
 import (
+	"embed"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
+	"io/fs"
 	"sort"
 	"strings"
 )
 
+//go:embed all:defaults
+var defaultFiles embed.FS
+
+// RuntimeName identifies a supported runtime.
+type RuntimeName string
+
+const (
+	RuntimeNode RuntimeName = "node"
+	RuntimeRuby RuntimeName = "ruby"
+	RuntimeGo   RuntimeName = "go"
+)
+
 // Runtime defines the interface that all sandbox runtimes must implement.
 type Runtime interface {
+	// Name returns the runtime identifier.
+	Name() RuntimeName
+
 	// Command returns the full command and arguments to execute inside the sandbox.
 	// entryFile is the absolute path inside the sandbox (e.g. "/code/index.js").
 	// Compiled runtimes may ignore this parameter when the executable path is
@@ -24,11 +39,6 @@ type Runtime interface {
 	// Env returns environment variables for the sandbox in "KEY=VALUE" format
 	// (e.g. "PATH=/mise/installs/node/24.14.0/bin").
 	Env() []string
-
-	// PrepareDir performs runtime-specific preparation on the working directory
-	// before execution (e.g. generating a go.mod file if absent).
-	// dir is the host path that will be mounted as /code in the sandbox.
-	PrepareDir(dir string) error
 
 	// Rlimits returns the nsjail resource limits for the run step.
 	Rlimits() Rlimits
@@ -67,14 +77,49 @@ type Rlimits struct {
 	Nofile string // --rlimit_nofile (count or "hard")
 }
 
-var runtimes = map[string]Runtime{
-	"node": nodeRuntime{},
-	"ruby": rubyRuntime{},
-	"go":   goRuntime{},
+// DefaultFile represents a file that should be written to the working directory
+// before execution if a file with that name does not already exist.
+type DefaultFile struct {
+	Name    string // filename relative to the working directory (e.g. "go.mod")
+	Content []byte
+}
+
+// readDefaultFiles reads all files from defaults/<name> in the embedded FS.
+// Returns (nil, nil) if the subdirectory does not exist (i.e. the runtime has no defaults).
+// Files stored with a .tmpl suffix have that suffix stripped when read (workaround for
+// the Go toolchain treating directories containing go.mod as separate modules).
+func readDefaultFiles(name RuntimeName) ([]DefaultFile, error) {
+	dir := "defaults/" + string(name)
+	entries, err := defaultFiles.ReadDir(dir)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to read defaults directory for runtime %s: %w", name, err)
+	}
+	files := make([]DefaultFile, 0, len(entries))
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		data, err := defaultFiles.ReadFile(dir + "/" + e.Name())
+		if err != nil {
+			return nil, fmt.Errorf("failed to read embedded default file %s/%s: %w", name, e.Name(), err)
+		}
+		fileName := strings.TrimSuffix(e.Name(), ".tmpl")
+		files = append(files, DefaultFile{Name: fileName, Content: data})
+	}
+	return files, nil
+}
+
+var runtimes = map[RuntimeName]Runtime{
+	RuntimeNode: nodeRuntime{},
+	RuntimeRuby: rubyRuntime{},
+	RuntimeGo:   goRuntime{},
 }
 
 // LookupRuntime returns the Runtime for the given name, or an error if unknown.
-func LookupRuntime(name string) (Runtime, error) {
+func LookupRuntime(name RuntimeName) (Runtime, error) {
 	rt, ok := runtimes[name]
 	if !ok {
 		names := make([]string, 0, len(runtimes))
@@ -91,6 +136,8 @@ func LookupRuntime(name string) (Runtime, error) {
 
 type nodeRuntime struct{}
 
+func (nodeRuntime) Name() RuntimeName { return RuntimeNode }
+
 func (nodeRuntime) Command(entryFile string) []string {
 	return []string{"/mise/installs/node/24.14.0/bin/node", entryFile}
 }
@@ -101,10 +148,6 @@ func (nodeRuntime) BindMounts() []BindMount {
 
 func (nodeRuntime) Env() []string {
 	return []string{"PATH=/mise/installs/node/24.14.0/bin"}
-}
-
-func (nodeRuntime) PrepareDir(_ string) error {
-	return nil
 }
 
 // Rlimits returns resource limits for Node.js execution.
@@ -123,6 +166,8 @@ func (nodeRuntime) Rlimits() Rlimits {
 
 type rubyRuntime struct{}
 
+func (rubyRuntime) Name() RuntimeName { return RuntimeRuby }
+
 func (rubyRuntime) Command(entryFile string) []string {
 	return []string{"/mise/installs/ruby/3.4.8/bin/ruby", entryFile}
 }
@@ -133,10 +178,6 @@ func (rubyRuntime) BindMounts() []BindMount {
 
 func (rubyRuntime) Env() []string {
 	return []string{"PATH=/mise/installs/ruby/3.4.8/bin"}
-}
-
-func (rubyRuntime) PrepareDir(_ string) error {
-	return nil
 }
 
 // Rlimits returns resource limits for Ruby execution.
@@ -154,6 +195,8 @@ func (rubyRuntime) Rlimits() Rlimits {
 // --- Go ---
 
 type goRuntime struct{}
+
+func (goRuntime) Name() RuntimeName { return RuntimeGo }
 
 func (goRuntime) Command(_ string) []string {
 	return []string{"/tmp/main"}
@@ -200,18 +243,6 @@ func (goRuntime) CompileRlimits() Rlimits {
 		Fsize:  "64",
 		Nofile: "256",
 	}
-}
-
-func (goRuntime) PrepareDir(dir string) error {
-	goModPath := filepath.Join(dir, "go.mod")
-	_, err := os.Stat(goModPath)
-	if err == nil {
-		return nil
-	}
-	if !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("failed to check go.mod: %w", err)
-	}
-	return os.WriteFile(goModPath, []byte("module sandbox\n\ngo 1.26\n"), 0644)
 }
 
 // Rlimits returns resource limits for Go runtime execution.

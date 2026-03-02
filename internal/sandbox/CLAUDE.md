@@ -6,14 +6,16 @@ Core execution logic split across three files.
 
 - `Runner` struct (created via `NewRunner(cfg Config)`)
 - `Config`, `Status`, `Result`, and `RunOutput` types
-- `Runner.Run()` returns `RunOutput` (compile + run results); orchestrates pipe creation, process execution, and result collection
+- `Runner.Run()` returns `RunOutput` (compile + run results); applies default files, orchestrates pipe creation, process execution, and result collection
 
 ## Runtime (runtime.go)
 
-- `Runtime` interface (`Command`, `BindMounts`, `Env`, `PrepareDir`, `Rlimits` methods)
+- `RuntimeName` type (`string`-based) with `RuntimeNode`, `RuntimeRuby`, `RuntimeGo` constants; used as map key, `LookupRuntime` parameter, and `Name()` return type
+- `Runtime` interface (`Name`, `Command`, `BindMounts`, `Env`, `Rlimits` methods)
 - `CompiledRuntime` optional interface (`CompileCommand`, `CompileBindMounts`, `CompileEnv`, `CompileRlimits` methods; checked via type assertion)
-- `BindMount` struct and `LookupRuntime` function
+- `BindMount` struct and `LookupRuntime(RuntimeName)` function
 - `Rlimits` struct and `Rlimits()` / `CompileRlimits()` methods for per-runtime nsjail resource limits
+- `DefaultFile` struct and `readDefaultFiles` helper: reads files from `//go:embed all:defaults` embedded FS; returns `([]DefaultFile, error)`; strips `.tmpl` suffix when reading (workaround for Go treating directories with `go.mod` as separate modules)
 - Concrete implementations: `nodeRuntime`, `rubyRuntime`, `goRuntime` (unexported)
 
 ## Execution (execution.go)
@@ -48,3 +50,4 @@ The sandbox uses nsjail (`/bin/nsjail`) with these key properties:
 - Ruby runtime: `/mise/installs/ruby/3.4.8/bin/ruby`
 - Go runtime: `/mise/installs/go/1.26.0/bin/go`
 - Go build cache: `/mise/go-cache` (pre-built in Docker image, mounted read-only in nsjail)
+- Runtime default files: `internal/sandbox/defaults/<runtime>/` (embedded via `//go:embed all:defaults`; e.g. `defaults/go/go.mod.tmpl` → written as `go.mod`). Files conflicting with Go module detection (e.g. `go.mod`) must use `.tmpl` suffix.

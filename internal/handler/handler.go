@@ -47,7 +47,7 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 		})
 	}
 
-	rt, err := sandbox.LookupRuntime(req.Runtime)
+	rt, err := sandbox.LookupRuntime(sandbox.RuntimeName(req.Runtime))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": err.Error(),

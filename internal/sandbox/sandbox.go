@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -62,6 +63,23 @@ func resolveSignal(exitCode int, logOutput string) *string {
 	if exitCode > 128 && strings.Contains(logOutput, "terminated with signal: ") {
 		if name := unix.SignalName(syscall.Signal(exitCode - 128)); name != "" {
 			return &name
+		}
+	}
+	return nil
+}
+
+// applyDefaultFiles writes each default file into dir if a file with that
+// name does not already exist. User-provided files are never overwritten.
+func applyDefaultFiles(dir string, files []DefaultFile) error {
+	for _, f := range files {
+		dest := filepath.Join(dir, f.Name)
+		if _, err := os.Stat(dest); err == nil {
+			continue
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("failed to check %s: %w", f.Name, err)
+		}
+		if err := os.WriteFile(dest, f.Content, 0644); err != nil {
+			return fmt.Errorf("failed to write default file %s: %w", f.Name, err)
 		}
 	}
 	return nil
@@ -149,8 +167,12 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 	}
 	defer func() { _ = os.RemoveAll(tmpHome) }()
 
-	if err := rt.PrepareDir(tmpDir); err != nil {
-		return RunOutput{}, fmt.Errorf("failed to prepare directory: %w", err)
+	defaults, err := readDefaultFiles(rt.Name())
+	if err != nil {
+		return RunOutput{}, fmt.Errorf("failed to read default files: %w", err)
+	}
+	if err := applyDefaultFiles(tmpDir, defaults); err != nil {
+		return RunOutput{}, fmt.Errorf("failed to apply default files: %w", err)
 	}
 
 	var compileResult *Result
