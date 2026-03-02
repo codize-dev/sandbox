@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"time"
+	"fmt"
 
 	"github.com/codize-dev/sandbox/internal/handler"
 	"github.com/codize-dev/sandbox/internal/sandbox"
@@ -19,7 +19,8 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 
 	serveCmd.Flags().String("addr", ":8080", "TCP address to listen on")
-	serveCmd.Flags().Int("timeout", 30, "sandbox run timeout in seconds")
+	serveCmd.Flags().Int("run-timeout", 30, "sandbox run timeout in seconds")
+	serveCmd.Flags().Int("compile-timeout", 30, "sandbox compile timeout in seconds")
 	serveCmd.Flags().Int("output-limit", 1<<20, "maximum combined output bytes")
 }
 
@@ -29,7 +30,12 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	timeout, err := cmd.Flags().GetInt("timeout")
+	runTimeout, err := cmd.Flags().GetInt("run-timeout")
+	if err != nil {
+		return err
+	}
+
+	compileTimeout, err := cmd.Flags().GetInt("compile-timeout")
 	if err != nil {
 		return err
 	}
@@ -39,12 +45,17 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	if runTimeout <= 0 {
+		return fmt.Errorf("--run-timeout must be a positive integer, got %d", runTimeout)
+	}
+	if compileTimeout <= 0 {
+		return fmt.Errorf("--compile-timeout must be a positive integer, got %d", compileTimeout)
+	}
+
 	cfg := sandbox.Config{
-		RunTimeout: timeout,
-		// Add a 10-second buffer beyond RunTimeout so nsjail can terminate the
-		// sandboxed process and exec.Cmd can return before the context fires.
-		ExecTimeout: time.Duration(timeout+10) * time.Second,
-		OutputLimit: outputLimit,
+		RunTimeout:     runTimeout,
+		CompileTimeout: compileTimeout,
+		OutputLimit:    outputLimit,
 	}
 
 	h := &handler.Handler{Runner: sandbox.NewRunner(cfg)}

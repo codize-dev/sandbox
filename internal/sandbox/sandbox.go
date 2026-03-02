@@ -29,9 +29,9 @@ var errOutputLimitExceeded = errors.New("output limit exceeded")
 
 // Config holds runtime-configurable parameters for the sandbox.
 type Config struct {
-	RunTimeout  int           // nsjail --time_limit value, in seconds
-	ExecTimeout time.Duration // Go-level context timeout wrapping the entire exec.Cmd
-	OutputLimit int           // maximum combined stdout+stderr bytes before killing the process
+	RunTimeout     int // nsjail --time_limit for the run step, in seconds
+	CompileTimeout int // nsjail --time_limit for the compile step, in seconds
+	OutputLimit    int // maximum combined stdout+stderr bytes before killing the process
 }
 
 type Result struct {
@@ -59,6 +59,7 @@ type execParams struct {
 	tmpDir     string      // host directory bind-mounted as /code (sandbox working directory)
 	tmpHome    string      // host directory bind-mounted as /tmp (writable scratch space)
 	rlimits    Rlimits     // nsjail resource limits
+	timeout    int         // nsjail --time_limit value for this invocation, in seconds
 }
 
 // resolveSignal decodes Unix signal-encoded exit codes. By convention, shells
@@ -105,7 +106,7 @@ func NewRunner(cfg Config) *Runner {
 // for compiled runtimes.
 func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 	e := &execution{
-		runTimeout:  r.cfg.RunTimeout,
+		timeout:     params.timeout,
 		outputLimit: r.cfg.OutputLimit,
 		command:     params.command,
 		bindMounts:  params.bindMounts,
@@ -157,15 +158,22 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 	return e.collectResult(waitErr, logStr)
 }
 
+// execTimeoutBuffer is the grace period added beyond the nsjail --time_limit
+// values so nsjail can terminate the sandboxed process and exec.Cmd can
+// return before the Go context fires.
+const execTimeoutBuffer = 10 * time.Second
+
 // Run executes the given entryFile inside an nsjail sandbox.
 func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (RunOutput, error) {
-	timeout := r.cfg.ExecTimeout
-	// For compiled runtimes, extend the timeout by RunTimeout to cover both
-	// the compilation and execution steps.
+	// Compute a single Go-level context timeout covering the full lifecycle
+	// (compile + run). Per-step time limits are enforced by nsjail's
+	// --time_limit; this context is a coarse safety net that fires only if
+	// nsjail fails to enforce its own limit.
+	execTimeout := time.Duration(r.cfg.RunTimeout)*time.Second + execTimeoutBuffer
 	if _, ok := rt.(CompiledRuntime); ok {
-		timeout += time.Duration(r.cfg.RunTimeout) * time.Second
+		execTimeout += time.Duration(r.cfg.CompileTimeout) * time.Second
 	}
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+	ctx, cancel := context.WithTimeout(ctx, execTimeout)
 	defer cancel()
 
 	tmpHome, err := os.MkdirTemp("", "sandbox-tmp-*")
@@ -192,6 +200,7 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 			tmpDir:     tmpDir,
 			tmpHome:    tmpHome,
 			rlimits:    cr.CompileRlimits(),
+			timeout:    r.cfg.CompileTimeout,
 		})
 		if err != nil {
 			return RunOutput{}, fmt.Errorf("compile: %w", err)
@@ -210,6 +219,7 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 		tmpDir:     tmpDir,
 		tmpHome:    tmpHome,
 		rlimits:    rt.Rlimits(),
+		timeout:    r.cfg.RunTimeout,
 	})
 	if err != nil {
 		return RunOutput{}, fmt.Errorf("run: %w", err)

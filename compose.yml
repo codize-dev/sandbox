@@ -4,6 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile
     privileged: true
-    command: ["serve", "--timeout", "10"]
+    command: ["serve", "--run-timeout", "10", "--compile-timeout", "10"]
     ports:
       - "8080:8080"

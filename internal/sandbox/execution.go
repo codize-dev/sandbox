@@ -19,7 +19,7 @@ import (
 // arguments, creating pipes, starting the process, draining output, and
 // collecting results.
 type execution struct {
-	runTimeout  int
+	timeout     int
 	outputLimit int
 	command     []string
 	bindMounts  []BindMount
@@ -73,7 +73,7 @@ func (e *execution) buildArgs() []string {
 		"--rlimit_as", e.rlimits.AS,
 		"--rlimit_fsize", e.rlimits.Fsize,
 		"--rlimit_nofile", e.rlimits.Nofile,
-		"--time_limit", fmt.Sprintf("%d", e.runTimeout),
+		"--time_limit", fmt.Sprintf("%d", e.timeout),
 	)
 
 	for _, env := range e.env {
