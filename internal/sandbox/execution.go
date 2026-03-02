@@ -73,7 +73,12 @@ func (e *execution) buildArgs() []string {
 		"--rlimit_as", e.rlimits.AS,
 		"--rlimit_fsize", e.rlimits.Fsize,
 		"--rlimit_nofile", e.rlimits.Nofile,
+		"--rlimit_nproc", e.rlimits.Nproc,
 		"--rlimit_cpu", fmt.Sprintf("%d", e.timeout),
+		"--rlimit_stack", "8", // 8 MiB; explicit match of Linux default
+		"--rlimit_memlock", "0", // no legitimate reason to lock memory in a sandbox
+		"--rlimit_rtprio", "0", // real-time scheduling is unnecessary in a sandbox
+		"--rlimit_msgqueue", "0", // POSIX message queues are unnecessary in a sandbox
 		"--time_limit", fmt.Sprintf("%d", e.timeout),
 	)
 

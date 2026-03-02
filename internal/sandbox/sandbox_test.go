@@ -48,6 +48,7 @@ func TestNodeRuntimeRlimits(t *testing.T) {
 	assert.Equal(t, "4096", got.AS)
 	assert.Equal(t, "64", got.Fsize)
 	assert.Equal(t, "64", got.Nofile)
+	assert.Equal(t, "64", got.Nproc)
 }
 
 func TestRubyRuntimeRlimits(t *testing.T) {
@@ -57,6 +58,7 @@ func TestRubyRuntimeRlimits(t *testing.T) {
 	assert.Equal(t, "1024", got.AS)
 	assert.Equal(t, "64", got.Fsize)
 	assert.Equal(t, "64", got.Nofile)
+	assert.Equal(t, "32", got.Nproc)
 }
 
 func TestGoRuntimeRlimits(t *testing.T) {
@@ -67,11 +69,13 @@ func TestGoRuntimeRlimits(t *testing.T) {
 	assert.Equal(t, "1024", run.AS)
 	assert.Equal(t, "64", run.Fsize)
 	assert.Equal(t, "64", run.Nofile)
+	assert.Equal(t, "64", run.Nproc)
 
 	compile := rt.CompileRlimits()
 	assert.Equal(t, "4096", compile.AS)
 	assert.Equal(t, "64", compile.Fsize)
 	assert.Equal(t, "256", compile.Nofile)
+	assert.Equal(t, "128", compile.Nproc)
 }
 
 func TestReadDefaultFiles(t *testing.T) {

@@ -79,6 +79,7 @@ type Rlimits struct {
 	AS     string // --rlimit_as (MiB or "hard")
 	Fsize  string // --rlimit_fsize (MiB or "hard")
 	Nofile string // --rlimit_nofile (count or "hard")
+	Nproc  string // --rlimit_nproc (count or "hard")
 }
 
 // DefaultFile represents a file that should be written to the working directory
@@ -158,11 +159,13 @@ func (nodeRuntime) Env() []string {
 // AS 4096 MiB: V8 uses mmap for heap management and requires a large virtual address space.
 // Fsize 64 MiB: sufficient for typical output files.
 // Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and V8 engine file descriptors.
+// Nproc 64: V8 starts ~7 threads (main + libuv pool + internals) plus DNS; 64 provides ample headroom.
 func (nodeRuntime) Rlimits() Rlimits {
 	return Rlimits{
 		AS:     "4096",
 		Fsize:  "64",
 		Nofile: "64",
+		Nproc:  "64",
 	}
 }
 
@@ -190,11 +193,13 @@ func (rubyRuntime) Env() []string {
 // AS 1024 MiB: sufficient for the Ruby interpreter and typical user scripts.
 // Fsize 64 MiB: sufficient for typical output files.
 // Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and Ruby runtime file descriptors.
+// Nproc 32: MRI needs ~2 threads minimum; 32 allows user Thread.new with headroom.
 func (rubyRuntime) Rlimits() Rlimits {
 	return Rlimits{
 		AS:     "1024",
 		Fsize:  "64",
 		Nofile: "64",
+		Nproc:  "32",
 	}
 }
 
@@ -251,11 +256,13 @@ func (goRuntime) CompileEnv() []string {
 // AS 4096 MiB: the Go compiler and linker together consume significant virtual address space; 4 GiB provides comfortable headroom.
 // Fsize 64 MiB: sufficient for compiled binaries (typically 2-20 MiB).
 // Nofile 256: go build opens many source and object files concurrently.
+// Nproc 128: go build spawns compiler/linker processes in parallel; RLIMIT_NPROC counts both processes and threads.
 func (goRuntime) CompileRlimits() Rlimits {
 	return Rlimits{
 		AS:     "4096",
 		Fsize:  "64",
 		Nofile: "256",
+		Nproc:  "128",
 	}
 }
 
@@ -263,11 +270,13 @@ func (goRuntime) CompileRlimits() Rlimits {
 // AS 1024 MiB: sufficient for typical compiled Go programs.
 // Fsize 64 MiB: sufficient for typical output files.
 // Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and minimal runtime file descriptors.
+// Nproc 64: Go runtime uses GOMAXPROCS threads + sysmon + threads for blocking syscalls.
 func (goRuntime) Rlimits() Rlimits {
 	return Rlimits{
 		AS:     "1024",
 		Fsize:  "64",
 		Nofile: "64",
+		Nproc:  "64",
 	}
 }
 
