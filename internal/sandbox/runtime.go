@@ -174,7 +174,7 @@ func (nodeRuntime) Env() []string {
 //   - AS 4096 MiB: V8 uses mmap for heap management and requires a large virtual address space.
 //   - Fsize 64 MiB: sufficient for typical output files.
 //   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and V8 engine file descriptors.
-//   - Nproc 64: V8 starts ~7 threads (main + libuv pool + internals) plus DNS; 64 provides ample headroom.
+//   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
 //
 // Cgroups:
 //   - PidsMax 64: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
@@ -184,7 +184,7 @@ func (nodeRuntime) Limits() Limits {
 			AS:     "4096",
 			Fsize:  "64",
 			Nofile: "64",
-			Nproc:  "64",
+			Nproc:  "soft",
 		},
 		Cgroups: Cgroups{
 			PidsMax: "64",
@@ -217,7 +217,7 @@ func (rubyRuntime) Env() []string {
 //   - AS 1024 MiB: sufficient for the Ruby interpreter and typical user scripts.
 //   - Fsize 64 MiB: sufficient for typical output files.
 //   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and Ruby runtime file descriptors.
-//   - Nproc 32: MRI needs ~2 threads minimum; 32 allows user Thread.new with headroom.
+//   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
 //
 // Cgroups:
 //   - PidsMax 32: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
@@ -227,7 +227,7 @@ func (rubyRuntime) Limits() Limits {
 			AS:     "1024",
 			Fsize:  "64",
 			Nofile: "64",
-			Nproc:  "32",
+			Nproc:  "soft",
 		},
 		Cgroups: Cgroups{
 			PidsMax: "32",
@@ -289,7 +289,7 @@ func (goRuntime) CompileEnv() []string {
 //   - AS 4096 MiB: the Go compiler and linker together consume significant virtual address space; 4 GiB provides comfortable headroom.
 //   - Fsize 64 MiB: sufficient for compiled binaries (typically 2-20 MiB).
 //   - Nofile 256: go build opens many source and object files concurrently.
-//   - Nproc 128: go build spawns compiler/linker processes in parallel; RLIMIT_NPROC counts both processes and threads.
+//   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
 //
 // Cgroups:
 //   - PidsMax 128: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
@@ -299,7 +299,7 @@ func (goRuntime) CompileLimits() Limits {
 			AS:     "4096",
 			Fsize:  "64",
 			Nofile: "256",
-			Nproc:  "128",
+			Nproc:  "soft",
 		},
 		Cgroups: Cgroups{
 			PidsMax: "128",
@@ -312,7 +312,7 @@ func (goRuntime) CompileLimits() Limits {
 //   - AS 1024 MiB: sufficient for typical compiled Go programs.
 //   - Fsize 64 MiB: sufficient for typical output files.
 //   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and minimal runtime file descriptors.
-//   - Nproc 64: Go runtime uses GOMAXPROCS threads + sysmon + threads for blocking syscalls.
+//   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
 //
 // Cgroups:
 //   - PidsMax 64: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
@@ -322,7 +322,7 @@ func (goRuntime) Limits() Limits {
 			AS:     "1024",
 			Fsize:  "64",
 			Nofile: "64",
-			Nproc:  "64",
+			Nproc:  "soft",
 		},
 		Cgroups: Cgroups{
 			PidsMax: "64",

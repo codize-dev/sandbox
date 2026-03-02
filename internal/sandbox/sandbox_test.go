@@ -48,7 +48,7 @@ func TestNodeRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "4096", got.Rlimits.AS)
 	assert.Equal(t, "64", got.Rlimits.Fsize)
 	assert.Equal(t, "64", got.Rlimits.Nofile)
-	assert.Equal(t, "64", got.Rlimits.Nproc)
+	assert.Equal(t, "soft", got.Rlimits.Nproc)
 	assert.Equal(t, "64", got.Cgroups.PidsMax)
 }
 
@@ -59,7 +59,7 @@ func TestRubyRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "1024", got.Rlimits.AS)
 	assert.Equal(t, "64", got.Rlimits.Fsize)
 	assert.Equal(t, "64", got.Rlimits.Nofile)
-	assert.Equal(t, "32", got.Rlimits.Nproc)
+	assert.Equal(t, "soft", got.Rlimits.Nproc)
 	assert.Equal(t, "32", got.Cgroups.PidsMax)
 }
 
@@ -71,14 +71,14 @@ func TestGoRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "1024", run.Rlimits.AS)
 	assert.Equal(t, "64", run.Rlimits.Fsize)
 	assert.Equal(t, "64", run.Rlimits.Nofile)
-	assert.Equal(t, "64", run.Rlimits.Nproc)
+	assert.Equal(t, "soft", run.Rlimits.Nproc)
 	assert.Equal(t, "64", run.Cgroups.PidsMax)
 
 	compile := rt.CompileLimits()
 	assert.Equal(t, "4096", compile.Rlimits.AS)
 	assert.Equal(t, "64", compile.Rlimits.Fsize)
 	assert.Equal(t, "256", compile.Rlimits.Nofile)
-	assert.Equal(t, "128", compile.Rlimits.Nproc)
+	assert.Equal(t, "soft", compile.Rlimits.Nproc)
 	assert.Equal(t, "128", compile.Cgroups.PidsMax)
 }
 
