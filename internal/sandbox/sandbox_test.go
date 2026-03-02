@@ -82,6 +82,63 @@ func TestGoRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "128", compile.Cgroups.PidsMax)
 }
 
+func TestExecution_buildArgs(t *testing.T) {
+	t.Parallel()
+
+	e := &execution{
+		timeout: 10,
+		command: []string{"/usr/bin/node", "/code/index.js"},
+		bindMounts: []BindMount{
+			{Src: "/mise/installs/node/24", Dst: "/mise/installs/node/24"},
+		},
+		env:     []string{"PATH=/usr/bin"},
+		tmpDir:  "/tmp/sandbox-code",
+		tmpHome: "/tmp/sandbox-home",
+		limits: Limits{
+			Rlimits: Rlimits{AS: "4096", Fsize: "64", Nofile: "64", Nproc: "32"},
+			Cgroups: Cgroups{PidsMax: "42"},
+		},
+	}
+
+	want := []string{
+		"-Mo",
+		"--log_fd", "3",
+		"-D", "/code",
+		"-R", "/lib:/lib",
+		"-R", "/usr:/usr",
+	}
+	if _, err := os.Stat("/lib64"); err == nil {
+		want = append(want, "-R", "/lib64:/lib64")
+	}
+	want = append(want,
+		"-R", "/mise/installs/node/24:/mise/installs/node/24",
+		"-R", "/dev/null:/dev/null",
+		"-R", "/dev/urandom:/dev/urandom",
+		"-B", "/tmp/sandbox-code:/code",
+		"-B", "/tmp/sandbox-home:/tmp",
+		"-m", "none:/proc:proc:ro",
+		"-s", "/proc/self/fd:/dev/fd",
+		"--rlimit_as", "4096",
+		"--rlimit_fsize", "64",
+		"--rlimit_nofile", "64",
+		"--rlimit_nproc", "32",
+		"--rlimit_cpu", "10",
+		"--rlimit_stack", "8",
+		"--rlimit_memlock", "0",
+		"--rlimit_rtprio", "0",
+		"--rlimit_msgqueue", "0",
+		"--time_limit", "10",
+		"--detect_cgroupv2",
+		"--cgroup_pids_max", "42",
+		"-E", "PATH=/usr/bin",
+		"-E", "HOME=/tmp",
+		"--",
+		"/usr/bin/node", "/code/index.js",
+	)
+
+	assert.Equal(t, want, e.buildArgs())
+}
+
 func Test_readDefaultFiles(t *testing.T) {
 	t.Parallel()
 
