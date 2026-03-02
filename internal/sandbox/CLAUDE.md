@@ -36,7 +36,7 @@ The sandbox uses nsjail (`/bin/nsjail`) with these key properties:
 - `--time_limit`: configurable via `--timeout` CLI flag (default 30s); Go-level exec timeout is nsjail limit + 10s for interpreted runtimes, or 2 × nsjail limit + 10s for compiled runtimes (compile + run)
 - Read-only bind mounts for system libraries (`/lib`, `/usr`, and `/lib64` if it exists), the selected runtime, `/dev/null`, `/dev/urandom`, and `/proc` (via `-m`)
 - Read-write bind mount for the user code directory (`/code`) and a separate temp directory mounted as `/tmp`
-- Resource limits (`--rlimit_as`, `--rlimit_fsize`, `--rlimit_nofile`) are configured per runtime via `Rlimits()` (run step) and `CompileRlimits()` (compile step). Current defaults for all runtimes: `--rlimit_as hard`, `--rlimit_fsize 1024`, `--rlimit_nofile hard`.
+- Resource limits (`--rlimit_as`, `--rlimit_fsize`, `--rlimit_nofile`) are configured per runtime via `Rlimits()` (run step) and `CompileRlimits()` (compile step). Tuned per runtime: Node.js run (`--rlimit_as 4096`, `--rlimit_fsize 64`, `--rlimit_nofile 64`), Ruby run (`--rlimit_as 1024`, `--rlimit_fsize 64`, `--rlimit_nofile 64`), Go compile (`--rlimit_as 4096`, `--rlimit_fsize 64`, `--rlimit_nofile 256`), Go run (`--rlimit_as 1024`, `--rlimit_fsize 64`, `--rlimit_nofile 64`).
 - Environment: runtime-specific variables (typically `PATH` set to runtime bin dir), plus `HOME=/tmp` always appended
 - Symlink mount for `/dev/fd` via `/proc/self/fd` (`-s /proc/self/fd:/dev/fd`)
 - Combined output limit enforced by Go: configurable via `--output-limit` CLI flag (default 1 MiB). When exceeded, the jailed process is killed and status is set to `OUTPUT_LIMIT_EXCEEDED`.

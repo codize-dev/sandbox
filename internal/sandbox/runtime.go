@@ -107,11 +107,15 @@ func (nodeRuntime) PrepareDir(_ string) error {
 	return nil
 }
 
+// Rlimits returns resource limits for Node.js execution.
+// AS 4096 MiB: V8 uses mmap for heap management and requires a large virtual address space.
+// Fsize 64 MiB: sufficient for typical output files.
+// Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and V8 engine file descriptors.
 func (nodeRuntime) Rlimits() Rlimits {
 	return Rlimits{
-		AS:     "hard",
-		Fsize:  "1024",
-		Nofile: "hard",
+		AS:     "4096",
+		Fsize:  "64",
+		Nofile: "64",
 	}
 }
 
@@ -135,11 +139,15 @@ func (rubyRuntime) PrepareDir(_ string) error {
 	return nil
 }
 
+// Rlimits returns resource limits for Ruby execution.
+// AS 1024 MiB: sufficient for the Ruby interpreter and typical user scripts.
+// Fsize 64 MiB: sufficient for typical output files.
+// Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and Ruby runtime file descriptors.
 func (rubyRuntime) Rlimits() Rlimits {
 	return Rlimits{
-		AS:     "hard",
-		Fsize:  "1024",
-		Nofile: "hard",
+		AS:     "1024",
+		Fsize:  "64",
+		Nofile: "64",
 	}
 }
 
@@ -182,11 +190,15 @@ func (goRuntime) CompileEnv() []string {
 	}
 }
 
+// CompileRlimits returns resource limits for the Go compilation step.
+// AS 4096 MiB: the Go compiler and linker together consume significant virtual address space; 4 GiB provides comfortable headroom.
+// Fsize 64 MiB: sufficient for compiled binaries (typically 2-20 MiB).
+// Nofile 256: go build opens many source and object files concurrently.
 func (goRuntime) CompileRlimits() Rlimits {
 	return Rlimits{
-		AS:     "hard",
-		Fsize:  "1024",
-		Nofile: "hard",
+		AS:     "4096",
+		Fsize:  "64",
+		Nofile: "256",
 	}
 }
 
@@ -202,10 +214,14 @@ func (goRuntime) PrepareDir(dir string) error {
 	return os.WriteFile(goModPath, []byte("module sandbox\n\ngo 1.26\n"), 0644)
 }
 
+// Rlimits returns resource limits for Go runtime execution.
+// AS 1024 MiB: sufficient for typical compiled Go programs.
+// Fsize 64 MiB: sufficient for typical output files.
+// Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and minimal runtime file descriptors.
 func (goRuntime) Rlimits() Rlimits {
 	return Rlimits{
-		AS:     "hard",
-		Fsize:  "1024",
-		Nofile: "hard",
+		AS:     "1024",
+		Fsize:  "64",
+		Nofile: "64",
 	}
 }

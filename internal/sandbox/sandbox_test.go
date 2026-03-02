@@ -42,18 +42,18 @@ func TestNodeRuntimeRlimits(t *testing.T) {
 	t.Parallel()
 	rt := nodeRuntime{}
 	got := rt.Rlimits()
-	assert.Equal(t, "hard", got.AS)
-	assert.Equal(t, "1024", got.Fsize)
-	assert.Equal(t, "hard", got.Nofile)
+	assert.Equal(t, "4096", got.AS)
+	assert.Equal(t, "64", got.Fsize)
+	assert.Equal(t, "64", got.Nofile)
 }
 
 func TestRubyRuntimeRlimits(t *testing.T) {
 	t.Parallel()
 	rt := rubyRuntime{}
 	got := rt.Rlimits()
-	assert.Equal(t, "hard", got.AS)
-	assert.Equal(t, "1024", got.Fsize)
-	assert.Equal(t, "hard", got.Nofile)
+	assert.Equal(t, "1024", got.AS)
+	assert.Equal(t, "64", got.Fsize)
+	assert.Equal(t, "64", got.Nofile)
 }
 
 func TestGoRuntimeRlimits(t *testing.T) {
@@ -61,12 +61,12 @@ func TestGoRuntimeRlimits(t *testing.T) {
 	rt := goRuntime{}
 
 	run := rt.Rlimits()
-	assert.Equal(t, "hard", run.AS)
-	assert.Equal(t, "1024", run.Fsize)
-	assert.Equal(t, "hard", run.Nofile)
+	assert.Equal(t, "1024", run.AS)
+	assert.Equal(t, "64", run.Fsize)
+	assert.Equal(t, "64", run.Nofile)
 
 	compile := rt.CompileRlimits()
-	assert.Equal(t, "hard", compile.AS)
-	assert.Equal(t, "1024", compile.Fsize)
-	assert.Equal(t, "hard", compile.Nofile)
+	assert.Equal(t, "4096", compile.AS)
+	assert.Equal(t, "64", compile.Fsize)
+	assert.Equal(t, "256", compile.Nofile)
 }
