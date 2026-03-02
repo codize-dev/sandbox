@@ -175,6 +175,7 @@ func (nodeRuntime) Env() []string {
 //   - Fsize 64 MiB: sufficient for typical output files.
 //   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and V8 engine file descriptors.
 //   - Nproc 64: V8 starts ~7 threads (main + libuv pool + internals) plus DNS; 64 provides ample headroom.
+//
 // Cgroups:
 //   - PidsMax 64: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
 func (nodeRuntime) Limits() Limits {
@@ -217,6 +218,7 @@ func (rubyRuntime) Env() []string {
 //   - Fsize 64 MiB: sufficient for typical output files.
 //   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and Ruby runtime file descriptors.
 //   - Nproc 32: MRI needs ~2 threads minimum; 32 allows user Thread.new with headroom.
+//
 // Cgroups:
 //   - PidsMax 32: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
 func (rubyRuntime) Limits() Limits {
@@ -288,6 +290,7 @@ func (goRuntime) CompileEnv() []string {
 //   - Fsize 64 MiB: sufficient for compiled binaries (typically 2-20 MiB).
 //   - Nofile 256: go build opens many source and object files concurrently.
 //   - Nproc 128: go build spawns compiler/linker processes in parallel; RLIMIT_NPROC counts both processes and threads.
+//
 // Cgroups:
 //   - PidsMax 128: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
 func (goRuntime) CompileLimits() Limits {
@@ -310,6 +313,7 @@ func (goRuntime) CompileLimits() Limits {
 //   - Fsize 64 MiB: sufficient for typical output files.
 //   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and minimal runtime file descriptors.
 //   - Nproc 64: Go runtime uses GOMAXPROCS threads + sysmon + threads for blocking syscalls.
+//
 // Cgroups:
 //   - PidsMax 64: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
 func (goRuntime) Limits() Limits {
