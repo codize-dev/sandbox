@@ -229,11 +229,11 @@ func (goRuntime) CompileEnv() []string {
 	return []string{
 		"PATH=/mise/installs/go/1.26.0/bin",
 		"GOROOT=/mise/installs/go/1.26.0",
-		"GOPATH=/tmp/gopath",     // writable location for module metadata and build artifacts
-		"GOCACHE=/mise/go-cache", // pre-built stdlib cache from Docker image (read-only mount)
-		"GOPROXY=off",            // prevent network access from the compiler
-		"GOTELEMETRY=off",        // disable Go telemetry in the sandbox
-		"CGO_ENABLED=0",          // no C compiler in the sandbox; produces a static binary
+		"GOPATH=/tmp/gopath",                                    // writable location for module metadata and build artifacts
+		"GOCACHEPROG=/usr/local/bin/gocacheprog /mise/go-cache", // read-only cache backed by pre-built stdlib cache from Docker image
+		"GOPROXY=off",     // prevent network access from the compiler
+		"GOTELEMETRY=off", // disable Go telemetry in the sandbox
+		"CGO_ENABLED=0",   // no C compiler in the sandbox; produces a static binary
 	}
 }
 

@@ -42,6 +42,11 @@ COPY . .
 RUN CGO_ENABLED=0 go build \
       -trimpath \
       -ldflags="-w -s" \
+      -o /out/gocacheprog \
+      ./cmd/gocacheprog
+RUN CGO_ENABLED=0 go build \
+      -trimpath \
+      -ldflags="-w -s" \
       -o /out/sandbox \
       .
 
@@ -49,6 +54,7 @@ RUN CGO_ENABLED=0 go build \
 
 FROM base
 
+COPY --from=builder /out/gocacheprog /usr/local/bin/gocacheprog
 COPY --from=builder /out/sandbox /usr/local/bin/sandbox
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/sandbox", "serve"]
