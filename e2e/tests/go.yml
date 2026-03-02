@@ -182,3 +182,44 @@ tests:
         exit_code: 0
         status: "OK"
         signal: null
+
+  - name: "restricted file go.mod rejected"
+    input:
+      runtime: go
+      files:
+        - name: go.mod
+          content: |
+            module sandbox
+
+            go 1.26
+    output:
+      status: 400
+      error: 'file "go.mod" is not allowed for the go runtime'
+
+  - name: "restricted file go.sum rejected"
+    input:
+      runtime: go
+      files:
+        - name: go.sum
+          content: ""
+    output:
+      status: 400
+      error: 'file "go.sum" is not allowed for the go runtime'
+
+  - name: "restricted file go.mod rejected even with valid main.go"
+    input:
+      runtime: go
+      files:
+        - name: main.go
+          content: |
+            package main
+
+            func main() {}
+        - name: go.mod
+          content: |
+            module sandbox
+
+            go 1.26
+    output:
+      status: 400
+      error: 'file "go.mod" is not allowed for the go runtime'

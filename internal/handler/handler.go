@@ -71,6 +71,13 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 				"error": err.Error(),
 			})
 		}
+		for _, restricted := range rt.RestrictedFiles() {
+			if f.Name == restricted {
+				return c.JSON(http.StatusBadRequest, map[string]string{
+					"error": fmt.Sprintf("file %q is not allowed for the %s runtime", f.Name, rt.Name()),
+				})
+			}
+		}
 		content, err := base64.StdEncoding.DecodeString(f.Content)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{

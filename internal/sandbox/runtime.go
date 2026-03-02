@@ -42,6 +42,10 @@ type Runtime interface {
 
 	// Rlimits returns the nsjail resource limits for the run step.
 	Rlimits() Rlimits
+
+	// RestrictedFiles returns file names that users are not allowed to submit
+	// for this runtime (e.g. managed dependency files like go.mod).
+	RestrictedFiles() []string
 }
 
 // CompiledRuntime is an optional interface for runtimes that require a
@@ -162,6 +166,8 @@ func (nodeRuntime) Rlimits() Rlimits {
 	}
 }
 
+func (nodeRuntime) RestrictedFiles() []string { return nil }
+
 // --- Ruby ---
 
 type rubyRuntime struct{}
@@ -191,6 +197,8 @@ func (rubyRuntime) Rlimits() Rlimits {
 		Nofile: "64",
 	}
 }
+
+func (rubyRuntime) RestrictedFiles() []string { return nil }
 
 // --- Go ---
 
@@ -261,4 +269,10 @@ func (goRuntime) Rlimits() Rlimits {
 		Fsize:  "64",
 		Nofile: "64",
 	}
+}
+
+// RestrictedFiles prevents users from overriding go.mod and go.sum, which
+// must match the pre-downloaded module cache (GOPROXY=off forbids fetching).
+func (goRuntime) RestrictedFiles() []string {
+	return []string{"go.mod", "go.sum"}
 }

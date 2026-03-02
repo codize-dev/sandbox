@@ -147,3 +147,29 @@ func TestApplyDefaultFiles(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestRuntimeRestrictedFiles(t *testing.T) {
+	t.Parallel()
+
+	t.Run("node has no restricted files", func(t *testing.T) {
+		t.Parallel()
+		rt, err := LookupRuntime(RuntimeNode)
+		require.NoError(t, err)
+		assert.Empty(t, rt.RestrictedFiles())
+	})
+
+	t.Run("ruby has no restricted files", func(t *testing.T) {
+		t.Parallel()
+		rt, err := LookupRuntime(RuntimeRuby)
+		require.NoError(t, err)
+		assert.Empty(t, rt.RestrictedFiles())
+	})
+
+	t.Run("go restricts go.mod and go.sum", func(t *testing.T) {
+		t.Parallel()
+		rt, err := LookupRuntime(RuntimeGo)
+		require.NoError(t, err)
+		restricted := rt.RestrictedFiles()
+		assert.ElementsMatch(t, []string{"go.mod", "go.sum"}, restricted)
+	})
+}
