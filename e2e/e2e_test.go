@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
-	"path"
 	"strings"
 	"testing"
 
@@ -19,7 +18,7 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
-//go:embed tests/*.yml
+//go:embed tests
 var testFiles embed.FS
 
 const serverURL = "http://localhost:8080"
@@ -96,8 +95,17 @@ func decodeBase64(t *testing.T, encoded, field string) string {
 }
 
 func TestE2E(t *testing.T) {
-	files, err := fs.Glob(testFiles, "tests/*.yml")
-	require.NoError(t, err, "failed to glob test files")
+	var files []string
+	err := fs.WalkDir(testFiles, "tests", func(p string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if !d.IsDir() && strings.HasSuffix(p, ".yml") {
+			files = append(files, p)
+		}
+		return nil
+	})
+	require.NoError(t, err, "failed to walk test files")
 	require.NotEmpty(t, files, "no test files found")
 
 	for _, file := range files {
@@ -108,11 +116,11 @@ func TestE2E(t *testing.T) {
 		err = yaml.Unmarshal(data, &tf)
 		require.NoError(t, err, "failed to parse test file: %s", file)
 
-		fileName := strings.TrimSuffix(path.Base(file), ".yml")
+		testPath := strings.TrimSuffix(strings.TrimPrefix(file, "tests/"), ".yml")
 		require.NotEmpty(t, tf.Tests, "test file %s contains no test cases", file)
 
 		for i, tc := range tf.Tests {
-			t.Run(fmt.Sprintf("%s/%d/%s", fileName, i, tc.Name), func(t *testing.T) {
+			t.Run(fmt.Sprintf("%s/%d/%s", testPath, i, tc.Name), func(t *testing.T) {
 				t.Parallel()
 				files := make([]apiFile, len(tc.Input.Files))
 				for i, f := range tc.Input.Files {
