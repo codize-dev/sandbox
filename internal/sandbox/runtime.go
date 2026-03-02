@@ -29,6 +29,9 @@ type Runtime interface {
 	// before execution (e.g. generating a go.mod file if absent).
 	// dir is the host path that will be mounted as /code in the sandbox.
 	PrepareDir(dir string) error
+
+	// Rlimits returns the nsjail resource limits for the run step.
+	Rlimits() Rlimits
 }
 
 // CompiledRuntime is an optional interface for runtimes that require a
@@ -42,6 +45,9 @@ type CompiledRuntime interface {
 	CompileBindMounts() []BindMount
 	// CompileEnv returns environment variables for the compilation sandbox in "KEY=VALUE" format.
 	CompileEnv() []string
+
+	// CompileRlimits returns the nsjail resource limits for the compile step.
+	CompileRlimits() Rlimits
 }
 
 var _ CompiledRuntime = goRuntime{}
@@ -50,6 +56,15 @@ var _ CompiledRuntime = goRuntime{}
 type BindMount struct {
 	Src string
 	Dst string
+}
+
+// Rlimits holds nsjail resource limit flags for a single execution step.
+// Each field corresponds to a --rlimit_* nsjail flag.
+// Valid values are a numeric string (e.g. "1024") or "hard" (system hard limit).
+type Rlimits struct {
+	AS     string // --rlimit_as (MiB or "hard")
+	Fsize  string // --rlimit_fsize (MiB or "hard")
+	Nofile string // --rlimit_nofile (count or "hard")
 }
 
 var runtimes = map[string]Runtime{
@@ -92,6 +107,14 @@ func (nodeRuntime) PrepareDir(_ string) error {
 	return nil
 }
 
+func (nodeRuntime) Rlimits() Rlimits {
+	return Rlimits{
+		AS:     "hard",
+		Fsize:  "1024",
+		Nofile: "hard",
+	}
+}
+
 // --- Ruby ---
 
 type rubyRuntime struct{}
@@ -110,6 +133,14 @@ func (rubyRuntime) Env() []string {
 
 func (rubyRuntime) PrepareDir(_ string) error {
 	return nil
+}
+
+func (rubyRuntime) Rlimits() Rlimits {
+	return Rlimits{
+		AS:     "hard",
+		Fsize:  "1024",
+		Nofile: "hard",
+	}
 }
 
 // --- Go ---
@@ -151,6 +182,14 @@ func (goRuntime) CompileEnv() []string {
 	}
 }
 
+func (goRuntime) CompileRlimits() Rlimits {
+	return Rlimits{
+		AS:     "hard",
+		Fsize:  "1024",
+		Nofile: "hard",
+	}
+}
+
 func (goRuntime) PrepareDir(dir string) error {
 	goModPath := filepath.Join(dir, "go.mod")
 	_, err := os.Stat(goModPath)
@@ -161,4 +200,12 @@ func (goRuntime) PrepareDir(dir string) error {
 		return fmt.Errorf("failed to check go.mod: %w", err)
 	}
 	return os.WriteFile(goModPath, []byte("module sandbox\n\ngo 1.26\n"), 0644)
+}
+
+func (goRuntime) Rlimits() Rlimits {
+	return Rlimits{
+		AS:     "hard",
+		Fsize:  "1024",
+		Nofile: "hard",
+	}
 }

@@ -23,6 +23,7 @@ type execution struct {
 	env         []string
 	tmpDir      string
 	tmpHome     string
+	rlimits     Rlimits
 
 	proc *os.Process
 
@@ -64,9 +65,9 @@ func (e *execution) buildArgs() []string {
 		"-B", e.tmpHome+":/tmp",
 		"-m", "none:/proc:proc:ro",
 		"-s", "/proc/self/fd:/dev/fd",
-		"--rlimit_as", "hard",
-		"--rlimit_fsize", "1024",
-		"--rlimit_nofile", "hard",
+		"--rlimit_as", e.rlimits.AS,
+		"--rlimit_fsize", e.rlimits.Fsize,
+		"--rlimit_nofile", e.rlimits.Nofile,
 		"--time_limit", fmt.Sprintf("%d", e.runTimeout),
 	)
 

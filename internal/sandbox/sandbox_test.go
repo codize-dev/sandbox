@@ -37,3 +37,36 @@ func TestLookupRuntime(t *testing.T) {
 		})
 	}
 }
+
+func TestNodeRuntimeRlimits(t *testing.T) {
+	t.Parallel()
+	rt := nodeRuntime{}
+	got := rt.Rlimits()
+	assert.Equal(t, "hard", got.AS)
+	assert.Equal(t, "1024", got.Fsize)
+	assert.Equal(t, "hard", got.Nofile)
+}
+
+func TestRubyRuntimeRlimits(t *testing.T) {
+	t.Parallel()
+	rt := rubyRuntime{}
+	got := rt.Rlimits()
+	assert.Equal(t, "hard", got.AS)
+	assert.Equal(t, "1024", got.Fsize)
+	assert.Equal(t, "hard", got.Nofile)
+}
+
+func TestGoRuntimeRlimits(t *testing.T) {
+	t.Parallel()
+	rt := goRuntime{}
+
+	run := rt.Rlimits()
+	assert.Equal(t, "hard", run.AS)
+	assert.Equal(t, "1024", run.Fsize)
+	assert.Equal(t, "hard", run.Nofile)
+
+	compile := rt.CompileRlimits()
+	assert.Equal(t, "hard", compile.AS)
+	assert.Equal(t, "1024", compile.Fsize)
+	assert.Equal(t, "hard", compile.Nofile)
+}

@@ -55,6 +55,7 @@ type execParams struct {
 	env        []string
 	tmpDir     string
 	tmpHome    string
+	rlimits    Rlimits
 }
 
 func resolveSignal(exitCode int, logOutput string) *string {
@@ -88,6 +89,7 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 		env:         params.env,
 		tmpDir:      params.tmpDir,
 		tmpHome:     params.tmpHome,
+		rlimits:     params.rlimits,
 	}
 
 	args := e.buildArgs()
@@ -160,6 +162,7 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 			env:        cr.CompileEnv(),
 			tmpDir:     tmpDir,
 			tmpHome:    tmpHome,
+			rlimits:    cr.CompileRlimits(),
 		})
 		if err != nil {
 			return RunOutput{}, fmt.Errorf("compile: %w", err)
@@ -177,6 +180,7 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 		env:        rt.Env(),
 		tmpDir:     tmpDir,
 		tmpHome:    tmpHome,
+		rlimits:    rt.Rlimits(),
 	})
 	if err != nil {
 		return RunOutput{}, fmt.Errorf("run: %w", err)

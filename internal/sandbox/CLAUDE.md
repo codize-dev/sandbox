@@ -10,9 +10,10 @@ Core execution logic split across three files.
 
 ## Runtime (runtime.go)
 
-- `Runtime` interface (`Command`, `BindMounts`, `Env`, `PrepareDir` methods)
-- `CompiledRuntime` optional interface (`CompileCommand`, `CompileBindMounts`, `CompileEnv` methods; checked via type assertion)
+- `Runtime` interface (`Command`, `BindMounts`, `Env`, `PrepareDir`, `Rlimits` methods)
+- `CompiledRuntime` optional interface (`CompileCommand`, `CompileBindMounts`, `CompileEnv`, `CompileRlimits` methods; checked via type assertion)
 - `BindMount` struct and `LookupRuntime` function
+- `Rlimits` struct and `Rlimits()` / `CompileRlimits()` methods for per-runtime nsjail resource limits
 - Concrete implementations: `nodeRuntime`, `rubyRuntime`, `goRuntime` (unexported)
 
 ## Execution (execution.go)
@@ -35,9 +36,7 @@ The sandbox uses nsjail (`/bin/nsjail`) with these key properties:
 - `--time_limit`: configurable via `--timeout` CLI flag (default 30s); Go-level exec timeout is nsjail limit + 10s for interpreted runtimes, or 2 × nsjail limit + 10s for compiled runtimes (compile + run)
 - Read-only bind mounts for system libraries (`/lib`, `/usr`, and `/lib64` if it exists), the selected runtime, `/dev/null`, `/dev/urandom`, and `/proc` (via `-m`)
 - Read-write bind mount for the user code directory (`/code`) and a separate temp directory mounted as `/tmp`
-- Address space limited to system hard limit (`--rlimit_as hard`)
-- File size limited to 1 GiB (`--rlimit_fsize 1024`)
-- Open file descriptors limited to system hard limit (`--rlimit_nofile hard`)
+- Resource limits (`--rlimit_as`, `--rlimit_fsize`, `--rlimit_nofile`) are configured per runtime via `Rlimits()` (run step) and `CompileRlimits()` (compile step). Current defaults for all runtimes: `--rlimit_as hard`, `--rlimit_fsize 1024`, `--rlimit_nofile hard`.
 - Environment: runtime-specific variables (typically `PATH` set to runtime bin dir), plus `HOME=/tmp` always appended
 - Symlink mount for `/dev/fd` via `/proc/self/fd` (`-s /proc/self/fd:/dev/fd`)
 - Combined output limit enforced by Go: configurable via `--output-limit` CLI flag (default 1 MiB). When exceeded, the jailed process is killed and status is set to `OUTPUT_LIMIT_EXCEEDED`.
