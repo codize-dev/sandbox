@@ -40,8 +40,8 @@ type Runtime interface {
 	// (e.g. "PATH=/mise/installs/node/24.14.0/bin").
 	Env() []string
 
-	// Rlimits returns the nsjail resource limits for the run step.
-	Rlimits() Rlimits
+	// Limits returns the nsjail resource limits for the run step.
+	Limits() Limits
 
 	// RestrictedFiles returns file names that users are not allowed to submit
 	// for this runtime (e.g. managed dependency files like go.mod).
@@ -60,8 +60,8 @@ type CompiledRuntime interface {
 	// CompileEnv returns environment variables for the compilation sandbox in "KEY=VALUE" format.
 	CompileEnv() []string
 
-	// CompileRlimits returns the nsjail resource limits for the compile step.
-	CompileRlimits() Rlimits
+	// CompileLimits returns the nsjail resource limits for the compile step.
+	CompileLimits() Limits
 }
 
 var _ CompiledRuntime = goRuntime{}
@@ -72,14 +72,28 @@ type BindMount struct {
 	Dst string
 }
 
-// Rlimits holds nsjail resource limit flags for a single execution step.
+// Rlimits holds nsjail POSIX resource limit flags for a single execution step.
 // Each field corresponds to a --rlimit_* nsjail flag.
-// Valid values are a numeric string (e.g. "1024") or "hard" (system hard limit).
+// Valid values are a numeric string (e.g. "1024") or "hard" (inherit system hard limit).
 type Rlimits struct {
 	AS     string // --rlimit_as (MiB or "hard")
 	Fsize  string // --rlimit_fsize (MiB or "hard")
 	Nofile string // --rlimit_nofile (count or "hard")
 	Nproc  string // --rlimit_nproc (count or "hard")
+}
+
+// Cgroups holds nsjail cgroup limit flags for a single execution step.
+// Each field corresponds to a --cgroup_* nsjail flag.
+// Valid values are a numeric string (e.g. "64"); 0 disables the limit.
+type Cgroups struct {
+	PidsMax string // --cgroup_pids_max (count; 0 = disabled)
+}
+
+// Limits combines POSIX resource limits and cgroup limits for a single
+// nsjail execution step.
+type Limits struct {
+	Rlimits Rlimits
+	Cgroups Cgroups
 }
 
 // DefaultFile represents a file that should be written to the working directory
@@ -155,17 +169,25 @@ func (nodeRuntime) Env() []string {
 	return []string{"PATH=/mise/installs/node/24.14.0/bin"}
 }
 
-// Rlimits returns resource limits for Node.js execution.
-// AS 4096 MiB: V8 uses mmap for heap management and requires a large virtual address space.
-// Fsize 64 MiB: sufficient for typical output files.
-// Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and V8 engine file descriptors.
-// Nproc 64: V8 starts ~7 threads (main + libuv pool + internals) plus DNS; 64 provides ample headroom.
-func (nodeRuntime) Rlimits() Rlimits {
-	return Rlimits{
-		AS:     "4096",
-		Fsize:  "64",
-		Nofile: "64",
-		Nproc:  "64",
+// Limits returns resource limits for Node.js execution.
+// Rlimits:
+//   - AS 4096 MiB: V8 uses mmap for heap management and requires a large virtual address space.
+//   - Fsize 64 MiB: sufficient for typical output files.
+//   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and V8 engine file descriptors.
+//   - Nproc 64: V8 starts ~7 threads (main + libuv pool + internals) plus DNS; 64 provides ample headroom.
+// Cgroups:
+//   - PidsMax 64: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
+func (nodeRuntime) Limits() Limits {
+	return Limits{
+		Rlimits: Rlimits{
+			AS:     "4096",
+			Fsize:  "64",
+			Nofile: "64",
+			Nproc:  "64",
+		},
+		Cgroups: Cgroups{
+			PidsMax: "64",
+		},
 	}
 }
 
@@ -189,17 +211,25 @@ func (rubyRuntime) Env() []string {
 	return []string{"PATH=/mise/installs/ruby/3.4.8/bin"}
 }
 
-// Rlimits returns resource limits for Ruby execution.
-// AS 1024 MiB: sufficient for the Ruby interpreter and typical user scripts.
-// Fsize 64 MiB: sufficient for typical output files.
-// Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and Ruby runtime file descriptors.
-// Nproc 32: MRI needs ~2 threads minimum; 32 allows user Thread.new with headroom.
-func (rubyRuntime) Rlimits() Rlimits {
-	return Rlimits{
-		AS:     "1024",
-		Fsize:  "64",
-		Nofile: "64",
-		Nproc:  "32",
+// Limits returns resource limits for Ruby execution.
+// Rlimits:
+//   - AS 1024 MiB: sufficient for the Ruby interpreter and typical user scripts.
+//   - Fsize 64 MiB: sufficient for typical output files.
+//   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and Ruby runtime file descriptors.
+//   - Nproc 32: MRI needs ~2 threads minimum; 32 allows user Thread.new with headroom.
+// Cgroups:
+//   - PidsMax 32: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
+func (rubyRuntime) Limits() Limits {
+	return Limits{
+		Rlimits: Rlimits{
+			AS:     "1024",
+			Fsize:  "64",
+			Nofile: "64",
+			Nproc:  "32",
+		},
+		Cgroups: Cgroups{
+			PidsMax: "32",
+		},
 	}
 }
 
@@ -252,31 +282,47 @@ func (goRuntime) CompileEnv() []string {
 	}
 }
 
-// CompileRlimits returns resource limits for the Go compilation step.
-// AS 4096 MiB: the Go compiler and linker together consume significant virtual address space; 4 GiB provides comfortable headroom.
-// Fsize 64 MiB: sufficient for compiled binaries (typically 2-20 MiB).
-// Nofile 256: go build opens many source and object files concurrently.
-// Nproc 128: go build spawns compiler/linker processes in parallel; RLIMIT_NPROC counts both processes and threads.
-func (goRuntime) CompileRlimits() Rlimits {
-	return Rlimits{
-		AS:     "4096",
-		Fsize:  "64",
-		Nofile: "256",
-		Nproc:  "128",
+// CompileLimits returns resource limits for the Go compilation step.
+// Rlimits:
+//   - AS 4096 MiB: the Go compiler and linker together consume significant virtual address space; 4 GiB provides comfortable headroom.
+//   - Fsize 64 MiB: sufficient for compiled binaries (typically 2-20 MiB).
+//   - Nofile 256: go build opens many source and object files concurrently.
+//   - Nproc 128: go build spawns compiler/linker processes in parallel; RLIMIT_NPROC counts both processes and threads.
+// Cgroups:
+//   - PidsMax 128: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
+func (goRuntime) CompileLimits() Limits {
+	return Limits{
+		Rlimits: Rlimits{
+			AS:     "4096",
+			Fsize:  "64",
+			Nofile: "256",
+			Nproc:  "128",
+		},
+		Cgroups: Cgroups{
+			PidsMax: "128",
+		},
 	}
 }
 
-// Rlimits returns resource limits for Go runtime execution.
-// AS 1024 MiB: sufficient for typical compiled Go programs.
-// Fsize 64 MiB: sufficient for typical output files.
-// Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and minimal runtime file descriptors.
-// Nproc 64: Go runtime uses GOMAXPROCS threads + sysmon + threads for blocking syscalls.
-func (goRuntime) Rlimits() Rlimits {
-	return Rlimits{
-		AS:     "1024",
-		Fsize:  "64",
-		Nofile: "64",
-		Nproc:  "64",
+// Limits returns resource limits for Go runtime execution.
+// Rlimits:
+//   - AS 1024 MiB: sufficient for typical compiled Go programs.
+//   - Fsize 64 MiB: sufficient for typical output files.
+//   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and minimal runtime file descriptors.
+//   - Nproc 64: Go runtime uses GOMAXPROCS threads + sysmon + threads for blocking syscalls.
+// Cgroups:
+//   - PidsMax 64: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
+func (goRuntime) Limits() Limits {
+	return Limits{
+		Rlimits: Rlimits{
+			AS:     "1024",
+			Fsize:  "64",
+			Nofile: "64",
+			Nproc:  "64",
+		},
+		Cgroups: Cgroups{
+			PidsMax: "64",
+		},
 	}
 }
 

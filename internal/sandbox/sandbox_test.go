@@ -41,41 +41,45 @@ func TestLookupRuntime(t *testing.T) {
 	}
 }
 
-func TestNodeRuntimeRlimits(t *testing.T) {
+func TestNodeRuntimeLimits(t *testing.T) {
 	t.Parallel()
 	rt := nodeRuntime{}
-	got := rt.Rlimits()
-	assert.Equal(t, "4096", got.AS)
-	assert.Equal(t, "64", got.Fsize)
-	assert.Equal(t, "64", got.Nofile)
-	assert.Equal(t, "64", got.Nproc)
+	got := rt.Limits()
+	assert.Equal(t, "4096", got.Rlimits.AS)
+	assert.Equal(t, "64", got.Rlimits.Fsize)
+	assert.Equal(t, "64", got.Rlimits.Nofile)
+	assert.Equal(t, "64", got.Rlimits.Nproc)
+	assert.Equal(t, "64", got.Cgroups.PidsMax)
 }
 
-func TestRubyRuntimeRlimits(t *testing.T) {
+func TestRubyRuntimeLimits(t *testing.T) {
 	t.Parallel()
 	rt := rubyRuntime{}
-	got := rt.Rlimits()
-	assert.Equal(t, "1024", got.AS)
-	assert.Equal(t, "64", got.Fsize)
-	assert.Equal(t, "64", got.Nofile)
-	assert.Equal(t, "32", got.Nproc)
+	got := rt.Limits()
+	assert.Equal(t, "1024", got.Rlimits.AS)
+	assert.Equal(t, "64", got.Rlimits.Fsize)
+	assert.Equal(t, "64", got.Rlimits.Nofile)
+	assert.Equal(t, "32", got.Rlimits.Nproc)
+	assert.Equal(t, "32", got.Cgroups.PidsMax)
 }
 
-func TestGoRuntimeRlimits(t *testing.T) {
+func TestGoRuntimeLimits(t *testing.T) {
 	t.Parallel()
 	rt := goRuntime{}
 
-	run := rt.Rlimits()
-	assert.Equal(t, "1024", run.AS)
-	assert.Equal(t, "64", run.Fsize)
-	assert.Equal(t, "64", run.Nofile)
-	assert.Equal(t, "64", run.Nproc)
+	run := rt.Limits()
+	assert.Equal(t, "1024", run.Rlimits.AS)
+	assert.Equal(t, "64", run.Rlimits.Fsize)
+	assert.Equal(t, "64", run.Rlimits.Nofile)
+	assert.Equal(t, "64", run.Rlimits.Nproc)
+	assert.Equal(t, "64", run.Cgroups.PidsMax)
 
-	compile := rt.CompileRlimits()
-	assert.Equal(t, "4096", compile.AS)
-	assert.Equal(t, "64", compile.Fsize)
-	assert.Equal(t, "256", compile.Nofile)
-	assert.Equal(t, "128", compile.Nproc)
+	compile := rt.CompileLimits()
+	assert.Equal(t, "4096", compile.Rlimits.AS)
+	assert.Equal(t, "64", compile.Rlimits.Fsize)
+	assert.Equal(t, "256", compile.Rlimits.Nofile)
+	assert.Equal(t, "128", compile.Rlimits.Nproc)
+	assert.Equal(t, "128", compile.Cgroups.PidsMax)
 }
 
 func TestReadDefaultFiles(t *testing.T) {

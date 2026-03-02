@@ -148,3 +148,24 @@ tests:
         exit_code: 0
         status: "OK"
         signal: null
+
+  - name: "fork bomb is blocked by cgroup pids limit"
+    input:
+      runtime: ruby
+      files:
+        - name: main.rb
+          content: |
+            begin
+              loop { Process.fork { sleep 10 } }
+            rescue Errno::EAGAIN
+              puts "blocked"
+            end
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null

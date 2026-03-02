@@ -26,7 +26,7 @@ type execution struct {
 	env         []string
 	tmpDir      string
 	tmpHome     string
-	rlimits     Rlimits
+	limits      Limits
 
 	proc *os.Process
 
@@ -70,17 +70,18 @@ func (e *execution) buildArgs() []string {
 		"-B", e.tmpHome+":/tmp", // writable scratch space
 		"-m", "none:/proc:proc:ro", // fresh read-only /proc (needed for /proc/self)
 		"-s", "/proc/self/fd:/dev/fd", // symlink so /dev/fd works
-		"--rlimit_as", e.rlimits.AS,
-		"--rlimit_fsize", e.rlimits.Fsize,
-		"--rlimit_nofile", e.rlimits.Nofile,
-		"--rlimit_nproc", e.rlimits.Nproc,
+		"--rlimit_as", e.limits.Rlimits.AS,
+		"--rlimit_fsize", e.limits.Rlimits.Fsize,
+		"--rlimit_nofile", e.limits.Rlimits.Nofile,
+		"--rlimit_nproc", e.limits.Rlimits.Nproc,
 		"--rlimit_cpu", fmt.Sprintf("%d", e.timeout),
 		"--rlimit_stack", "8", // 8 MiB; explicit match of Linux default
 		"--rlimit_memlock", "0", // no legitimate reason to lock memory in a sandbox
 		"--rlimit_rtprio", "0", // real-time scheduling is unnecessary in a sandbox
 		"--rlimit_msgqueue", "0", // POSIX message queues are unnecessary in a sandbox
 		"--time_limit", fmt.Sprintf("%d", e.timeout),
-		"--detect_cgroupv2", // auto-detect cgroup v2 for cgroup-based limits
+		"--detect_cgroupv2",                          // auto-detect cgroup v2 for cgroup-based limits
+		"--cgroup_pids_max", e.limits.Cgroups.PidsMax, // per-cgroup task limit (fork bomb prevention)
 	)
 
 	for _, env := range e.env {
