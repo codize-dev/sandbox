@@ -151,15 +151,26 @@ tests:
 
   - name: "fork bomb is blocked by cgroup pids limit"
     input:
-      runtime: ruby
+      runtime: node
       files:
-        - name: main.rb
+        - name: index.js
           content: |
-            begin
-              loop { Process.fork { sleep 10 } }
-            rescue Errno::EAGAIN
-              puts "blocked"
-            end
+            const { spawn } = require("child_process");
+            function doFork() {
+              const child = spawn(process.execPath, ["-e", "setTimeout(()=>{},30000)"], { stdio: "ignore" });
+              child.on("error", (e) => {
+                if (e.code === "EAGAIN") {
+                  console.log("blocked");
+                  process.exit(0);
+                }
+                process.exit(1);
+              });
+              child.on("spawn", () => {
+                child.unref();
+                setImmediate(doFork);
+              });
+            }
+            doFork();
     output:
       status: 200
       run:
