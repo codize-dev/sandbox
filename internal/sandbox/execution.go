@@ -18,7 +18,7 @@ import (
 type execution struct {
 	runTimeout  int
 	outputLimit int
-	rtCfg       runtimeConfig
+	rt          Runtime
 	tmpDir      string
 	entryFile   string
 	tmpHome     string
@@ -52,8 +52,11 @@ func (e *execution) buildArgs() []string {
 		args = append(args, "-R", "/lib64:/lib64")
 	}
 
+	for _, m := range e.rt.BindMounts() {
+		args = append(args, "-R", m.Src+":"+m.Dst)
+	}
+
 	args = append(args,
-		"-R", e.rtCfg.installDir+":"+e.rtCfg.installDir,
 		"-R", "/dev/null:/dev/null",
 		"-R", "/dev/urandom:/dev/urandom",
 		"-B", e.tmpDir+":/code",
@@ -62,12 +65,15 @@ func (e *execution) buildArgs() []string {
 		"-s", "/proc/self/fd:/dev/fd",
 		"--rlimit_as", "hard",
 		"--time_limit", fmt.Sprintf("%d", e.runTimeout),
-		"-E", "PATH="+e.rtCfg.pathEnv,
-		"-E", "HOME=/tmp",
-		"--",
-		e.rtCfg.binaryPath,
-		"/code/"+e.entryFile,
 	)
+
+	for _, env := range e.rt.Env() {
+		args = append(args, "-E", env)
+	}
+	args = append(args, "-E", "HOME=/tmp")
+
+	args = append(args, "--")
+	args = append(args, e.rt.Command("/code/"+e.entryFile)...)
 
 	return args
 }

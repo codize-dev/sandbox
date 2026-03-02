@@ -1,13 +1,18 @@
 # internal/sandbox
 
-Core execution logic split across two files.
+Core execution logic split across three files.
 
 ## Public API (sandbox.go)
 
 - `Runner` struct (created via `NewRunner(cfg Config)`)
-- `Config`, `Runtime`, `Status`, and `Result` types
-- Runtime configuration registry (`runtimes` map)
+- `Config`, `Status`, and `Result` types
 - `Runner.Run()` orchestrates pipe creation, process execution, and result collection
+
+## Runtime (runtime.go)
+
+- `Runtime` interface (`Command`, `BindMounts`, `Env` methods)
+- `BindMount` struct and `LookupRuntime` function
+- Concrete implementations: `nodeRuntime`, `rubyRuntime` (unexported)
 
 ## Execution (execution.go)
 

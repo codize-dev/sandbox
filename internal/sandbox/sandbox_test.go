@@ -6,16 +6,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRuntime_Validate(t *testing.T) {
+func TestLookupRuntime(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name    string
-		runtime Runtime
+		runtime string
 		wantErr bool
 	}{
-		{name: "node is valid", runtime: RuntimeNode, wantErr: false},
-		{name: "ruby is valid", runtime: RuntimeRuby, wantErr: false},
+		{name: "node is valid", runtime: "node", wantErr: false},
+		{name: "ruby is valid", runtime: "ruby", wantErr: false},
 		{name: "empty string is invalid", runtime: "", wantErr: true},
 		{name: "unknown runtime is invalid", runtime: "python", wantErr: true},
 		{name: "capitalized Node is invalid", runtime: "Node", wantErr: true},
@@ -24,11 +24,13 @@ func TestRuntime_Validate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			err := tc.runtime.Validate()
+			rt, err := LookupRuntime(tc.runtime)
 			if tc.wantErr {
+				assert.Nil(t, rt)
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "invalid or missing runtime")
 			} else {
+				assert.NotNil(t, rt)
 				assert.NoError(t, err)
 			}
 		})

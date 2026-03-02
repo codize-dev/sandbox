@@ -15,13 +15,6 @@ import (
 
 const nsjailPath = "/bin/nsjail"
 
-type Runtime string
-
-const (
-	RuntimeNode Runtime = "node"
-	RuntimeRuby Runtime = "ruby"
-)
-
 type Status string
 
 const (
@@ -37,32 +30,6 @@ type Config struct {
 	RunTimeout  int
 	ExecTimeout time.Duration
 	OutputLimit int
-}
-
-type runtimeConfig struct {
-	binaryPath string
-	installDir string
-	pathEnv    string
-}
-
-var runtimes = map[Runtime]runtimeConfig{
-	RuntimeNode: {
-		binaryPath: "/mise/installs/node/24.14.0/bin/node",
-		installDir: "/mise/installs/node/24.14.0",
-		pathEnv:    "/mise/installs/node/24.14.0/bin",
-	},
-	RuntimeRuby: {
-		binaryPath: "/mise/installs/ruby/3.4.8/bin/ruby",
-		installDir: "/mise/installs/ruby/3.4.8",
-		pathEnv:    "/mise/installs/ruby/3.4.8/bin",
-	},
-}
-
-func (rt Runtime) Validate() error {
-	if _, ok := runtimes[rt]; !ok {
-		return errors.New("invalid or missing runtime: must be \"node\" or \"ruby\"")
-	}
-	return nil
 }
 
 type Result struct {
@@ -107,7 +74,7 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 	e := &execution{
 		runTimeout:  r.cfg.RunTimeout,
 		outputLimit: r.cfg.OutputLimit,
-		rtCfg:       runtimes[rt],
+		rt:          rt,
 		tmpDir:      tmpDir,
 		entryFile:   entryFile,
 		tmpHome:     tmpHome,
