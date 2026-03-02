@@ -12,7 +12,7 @@ Tool versions are managed by [mise](https://mise.jdx.dev/). Run `mise install` t
 
 - **Go**: 1.26.0 (mise.toml), module requires 1.25.0 (go.mod)
 - **golangci-lint**: 2.10.1 (installed via mise aqua backend)
-- **lefthook**: 2.1.2 (installed via mise aqua backend) — runs `golangci-lint run` as a pre-commit hook
+- **lefthook**: 2.1.2 (installed via mise aqua backend) — pre-commit hook runs `go fmt ./...` then `golangci-lint run`
 
 ## Build & Run Commands
 
@@ -52,12 +52,13 @@ POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
 ### Key Packages
 
 - **cmd/** — CLI entrypoint using Cobra.
+- **cmd/gocacheprog/** — Read-only Go module cache helper used during compilation.
 - **internal/handler/** — Request parsing and response formatting.
 - **internal/sandbox/** — Core sandbox execution logic.
 
 ### Docker Build
 
-Four-stage Dockerfile (`mise` → `base` → `builder` → `runtime`). The `base` stage uses `ghcr.io/codize-dev/nsjail` and installs language runtimes via mise. See Dockerfile for details.
+Four-stage Dockerfile (`mise` → `base` → `builder` → final). The `base` stage uses `ghcr.io/codize-dev/nsjail` and installs language runtimes via mise. The `builder` stage compiles both the main `sandbox` binary and the `gocacheprog` helper. See Dockerfile for details.
 
 ### Sister Repository
 
