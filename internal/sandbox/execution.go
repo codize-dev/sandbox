@@ -80,6 +80,7 @@ func (e *execution) buildArgs() []string {
 		"--rlimit_rtprio", "0", // real-time scheduling is unnecessary in a sandbox
 		"--rlimit_msgqueue", "0", // POSIX message queues are unnecessary in a sandbox
 		"--time_limit", fmt.Sprintf("%d", e.timeout),
+		"--detect_cgroupv2", // auto-detect cgroup v2 for cgroup-based limits
 	)
 
 	for _, env := range e.env {
