@@ -103,9 +103,8 @@ func TestExecution_buildArgs(t *testing.T) {
 		bindMounts: []BindMount{
 			{Src: "/mise/installs/node/24", Dst: "/mise/installs/node/24"},
 		},
-		env:     []string{"PATH=/usr/bin"},
-		tmpDir:  "/tmp/sandbox-code",
-		tmpHome: "/tmp/sandbox-home",
+		env:    []string{"PATH=/usr/bin"},
+		tmpDir: "/tmp/sandbox-code",
 		limits: Limits{
 			Rlimits: Rlimits{AS: "4096", Fsize: "64", Nofile: "64", Nproc: "32"},
 			Cgroups: Cgroups{PidsMax: "42", MemMax: "1000000", MemSwapMax: "0", CpuMsPerSec: "750"},
@@ -127,7 +126,7 @@ func TestExecution_buildArgs(t *testing.T) {
 		"-R", "/dev/null:/dev/null",
 		"-R", "/dev/urandom:/dev/urandom",
 		"-B", "/tmp/sandbox-code:/code",
-		"-B", "/tmp/sandbox-home:/tmp",
+		"-m", "none:/tmp:tmpfs:size=67108864",
 		"-m", "none:/proc:proc:ro",
 		"-s", "/proc/self/fd:/dev/fd",
 		"--rlimit_as", "4096",
@@ -245,11 +244,11 @@ func TestRuntime_RestrictedFiles(t *testing.T) {
 		assert.Empty(t, rt.RestrictedFiles())
 	})
 
-	t.Run("go restricts go.mod and go.sum", func(t *testing.T) {
+	t.Run("go restricts go.mod, go.sum, and main", func(t *testing.T) {
 		t.Parallel()
 		rt, err := LookupRuntime(RuntimeGo)
 		require.NoError(t, err)
 		restricted := rt.RestrictedFiles()
-		assert.ElementsMatch(t, []string{"go.mod", "go.sum"}, restricted)
+		assert.ElementsMatch(t, []string{"go.mod", "go.sum", "main"}, restricted)
 	})
 }

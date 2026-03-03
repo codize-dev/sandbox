@@ -57,7 +57,6 @@ type execParams struct {
 	bindMounts []BindMount // runtime-specific bind mounts (mounted read-only by buildArgs)
 	env        []string    // environment variables in "KEY=VALUE" format
 	tmpDir     string      // host directory bind-mounted as /code (sandbox working directory)
-	tmpHome    string      // host directory bind-mounted as /tmp (writable scratch space)
 	limits     Limits      // nsjail resource limits (rlimits + cgroups)
 	timeout    int         // nsjail --time_limit and --rlimit_cpu value for this invocation, in seconds
 }
@@ -112,7 +111,6 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 		bindMounts:  params.bindMounts,
 		env:         params.env,
 		tmpDir:      params.tmpDir,
-		tmpHome:     params.tmpHome,
 		limits:      params.limits,
 	}
 
@@ -176,12 +174,6 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 	ctx, cancel := context.WithTimeout(ctx, execTimeout)
 	defer cancel()
 
-	tmpHome, err := os.MkdirTemp("", "sandbox-tmp-*")
-	if err != nil {
-		return RunOutput{}, fmt.Errorf("failed to create tmp directory: %w", err)
-	}
-	defer func() { _ = os.RemoveAll(tmpHome) }()
-
 	defaults, err := readDefaultFiles(rt.Name())
 	if err != nil {
 		return RunOutput{}, fmt.Errorf("failed to read default files: %w", err)
@@ -198,7 +190,6 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 			bindMounts: cr.CompileBindMounts(),
 			env:        cr.CompileEnv(),
 			tmpDir:     tmpDir,
-			tmpHome:    tmpHome,
 			limits:     cr.CompileLimits(),
 			timeout:    r.cfg.CompileTimeout,
 		})
@@ -217,7 +208,6 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 		bindMounts: rt.BindMounts(),
 		env:        rt.Env(),
 		tmpDir:     tmpDir,
-		tmpHome:    tmpHome,
 		limits:     rt.Limits(),
 		timeout:    r.cfg.RunTimeout,
 	})

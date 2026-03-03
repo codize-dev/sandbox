@@ -261,7 +261,7 @@ func (goRuntime) Name() RuntimeName { return RuntimeGo }
 // Command returns the path to the compiled binary. The entryFile parameter is
 // unused because the output path is determined by CompileCommand.
 func (goRuntime) Command(_ string) []string {
-	return []string{"/tmp/main"}
+	return []string{"/code/main"}
 }
 
 // BindMounts returns nil because the compiled binary is statically linked
@@ -275,7 +275,7 @@ func (goRuntime) Env() []string {
 }
 
 func (goRuntime) CompileCommand() []string {
-	return []string{"/mise/installs/go/1.26.0/bin/go", "build", "-o", "/tmp/main", "."}
+	return []string{"/mise/installs/go/1.26.0/bin/go", "build", "-o", "/code/main", "."}
 }
 
 func (goRuntime) CompileBindMounts() []BindMount {
@@ -359,6 +359,8 @@ func (goRuntime) Limits() Limits {
 
 // RestrictedFiles prevents users from overriding go.mod and go.sum, which
 // must match the pre-downloaded module cache (GOPROXY=off forbids fetching).
+// "main" is also restricted because go build writes the compiled binary to
+// /code/main, which would silently overwrite a user file with that name.
 func (goRuntime) RestrictedFiles() []string {
-	return []string{"go.mod", "go.sum"}
+	return []string{"go.mod", "go.sum", "main"}
 }

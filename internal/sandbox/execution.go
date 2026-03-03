@@ -25,7 +25,6 @@ type execution struct {
 	bindMounts  []BindMount
 	env         []string
 	tmpDir      string
-	tmpHome     string
 	limits      Limits
 
 	proc *os.Process
@@ -67,7 +66,7 @@ func (e *execution) buildArgs() []string {
 		"-R", "/dev/null:/dev/null", // commonly opened by programs
 		"-R", "/dev/urandom:/dev/urandom", // needed for PRNG seeding (V8, Ruby, etc.)
 		"-B", e.tmpDir+":/code", // user code directory (read-write)
-		"-B", e.tmpHome+":/tmp", // writable scratch space
+		"-m", "none:/tmp:tmpfs:size=67108864", // ephemeral tmpfs scratch space (64 MiB)
 		"-m", "none:/proc:proc:ro", // fresh read-only /proc (needed for /proc/self)
 		"-s", "/proc/self/fd:/dev/fd", // symlink so /dev/fd works
 		"--rlimit_as", e.limits.Rlimits.AS,

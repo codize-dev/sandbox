@@ -223,3 +223,18 @@ tests:
     output:
       status: 400
       error: 'file "go.mod" is not allowed for the go runtime'
+
+  - name: "restricted file main rejected"
+    input:
+      runtime: go
+      files:
+        - name: main.go
+          content: |
+            package main
+
+            func main() {}
+        - name: main
+          content: "data"
+    output:
+      status: 400
+      error: 'file "main" is not allowed for the go runtime'
