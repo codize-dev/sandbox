@@ -85,9 +85,10 @@ type Rlimits struct {
 // Cgroups holds nsjail cgroup limit flags for a single execution step.
 // Each field corresponds to a --cgroup_* nsjail flag.
 type Cgroups struct {
-	PidsMax    string // --cgroup_pids_max (count; 0 = disabled)
-	MemMax     string // --cgroup_mem_max (bytes; 0 = disabled)
-	MemSwapMax string // --cgroup_mem_swap_max (bytes; -1 = disabled, 0 = no swap)
+	PidsMax     string // --cgroup_pids_max (count; 0 = disabled)
+	MemMax      string // --cgroup_mem_max (bytes; 0 = disabled)
+	MemSwapMax  string // --cgroup_mem_swap_max (bytes; -1 = disabled, 0 = no swap)
+	CpuMsPerSec string // --cgroup_cpu_ms_per_sec (ms per second; 0 = disabled)
 }
 
 // Limits combines POSIX resource limits and cgroup limits for a single
@@ -181,6 +182,7 @@ func (nodeRuntime) Env() []string {
 //   - PidsMax 64: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
 //   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
 //   - MemSwapMax 0: swap disabled to enforce strict memory limits.
+//   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
 func (nodeRuntime) Limits() Limits {
 	return Limits{
 		Rlimits: Rlimits{
@@ -190,9 +192,10 @@ func (nodeRuntime) Limits() Limits {
 			Nproc:  "soft",
 		},
 		Cgroups: Cgroups{
-			PidsMax:    "64",
-			MemMax:     "268435456",
-			MemSwapMax: "0",
+			PidsMax:     "64",
+			MemMax:      "268435456",
+			MemSwapMax:  "0",
+			CpuMsPerSec: "900",
 		},
 	}
 }
@@ -228,6 +231,7 @@ func (rubyRuntime) Env() []string {
 //   - PidsMax 32: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
 //   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
 //   - MemSwapMax 0: swap disabled to enforce strict memory limits.
+//   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
 func (rubyRuntime) Limits() Limits {
 	return Limits{
 		Rlimits: Rlimits{
@@ -237,9 +241,10 @@ func (rubyRuntime) Limits() Limits {
 			Nproc:  "soft",
 		},
 		Cgroups: Cgroups{
-			PidsMax:    "32",
-			MemMax:     "268435456",
-			MemSwapMax: "0",
+			PidsMax:     "32",
+			MemMax:      "268435456",
+			MemSwapMax:  "0",
+			CpuMsPerSec: "900",
 		},
 	}
 }
@@ -304,6 +309,7 @@ func (goRuntime) CompileEnv() []string {
 //   - PidsMax 128: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
 //   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
 //   - MemSwapMax 0: swap disabled to enforce strict memory limits.
+//   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
 func (goRuntime) CompileLimits() Limits {
 	return Limits{
 		Rlimits: Rlimits{
@@ -313,9 +319,10 @@ func (goRuntime) CompileLimits() Limits {
 			Nproc:  "soft",
 		},
 		Cgroups: Cgroups{
-			PidsMax:    "128",
-			MemMax:     "268435456",
-			MemSwapMax: "0",
+			PidsMax:     "128",
+			MemMax:      "268435456",
+			MemSwapMax:  "0",
+			CpuMsPerSec: "900",
 		},
 	}
 }
@@ -331,6 +338,7 @@ func (goRuntime) CompileLimits() Limits {
 //   - PidsMax 64: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
 //   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
 //   - MemSwapMax 0: swap disabled to enforce strict memory limits.
+//   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
 func (goRuntime) Limits() Limits {
 	return Limits{
 		Rlimits: Rlimits{
@@ -340,9 +348,10 @@ func (goRuntime) Limits() Limits {
 			Nproc:  "soft",
 		},
 		Cgroups: Cgroups{
-			PidsMax:    "64",
-			MemMax:     "268435456",
-			MemSwapMax: "0",
+			PidsMax:     "64",
+			MemMax:      "268435456",
+			MemSwapMax:  "0",
+			CpuMsPerSec: "900",
 		},
 	}
 }

@@ -84,6 +84,7 @@ func (e *execution) buildArgs() []string {
 		"--cgroup_pids_max", e.limits.Cgroups.PidsMax, // per-cgroup task limit (fork bomb prevention)
 		"--cgroup_mem_max", e.limits.Cgroups.MemMax, // per-cgroup physical memory limit
 		"--cgroup_mem_swap_max", e.limits.Cgroups.MemSwapMax, // per-cgroup swap limit (0 = no swap)
+		"--cgroup_cpu_ms_per_sec", e.limits.Cgroups.CpuMsPerSec, // per-cgroup CPU throttle (ms per second)
 	)
 
 	for _, env := range e.env {
