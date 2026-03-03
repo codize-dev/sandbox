@@ -1,0 +1,67 @@
+tests:
+  - name: "sandbox runs as uid=65534 gid=65534 (node)"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            console.log(`uid=${process.getuid()} gid=${process.getgid()}`);
+    output:
+      status: 200
+      run:
+        stdout: "uid=65534 gid=65534\n"
+        stderr: ""
+        output: "uid=65534 gid=65534\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "sandbox runs as uid=65534 gid=65534 (ruby)"
+    input:
+      runtime: ruby
+      files:
+        - name: main.rb
+          content: |
+            puts "uid=#{Process.uid} gid=#{Process.gid}"
+    output:
+      status: 200
+      run:
+        stdout: "uid=65534 gid=65534\n"
+        stderr: ""
+        output: "uid=65534 gid=65534\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "sandbox runs as uid=65534 gid=65534 (go)"
+    input:
+      runtime: go
+      files:
+        - name: main.go
+          content: |
+            package main
+
+            import (
+            	"fmt"
+            	"os"
+            )
+
+            func main() {
+            	fmt.Printf("uid=%d gid=%d\n", os.Getuid(), os.Getgid())
+            }
+    output:
+      status: 200
+      compile:
+        stdout: ""
+        stderr: ""
+        output: ""
+        exit_code: 0
+        status: "OK"
+        signal: null
+      run:
+        stdout: "uid=65534 gid=65534\n"
+        stderr: ""
+        output: "uid=65534 gid=65534\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
