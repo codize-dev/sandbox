@@ -45,7 +45,30 @@ tests:
         status: "OK"
         signal: null
 
-  - name: "/usr/bin is read-only"
+  - name: "/lib is read-only"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const fs = require("fs");
+            try {
+              fs.writeFileSync("/lib/test", "x");
+              console.log("allowed");
+            } catch (e) {
+              console.log(e.code === "EROFS" ? "blocked" : "error: " + e.code);
+            }
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "/usr is read-only"
     input:
       runtime: node
       files:
@@ -58,6 +81,150 @@ tests:
             } catch (e) {
               console.log(e.code === "EROFS" ? "blocked" : "error: " + e.code);
             }
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "/lib64 is read-only or absent"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const fs = require("fs");
+            try {
+              fs.writeFileSync("/lib64/test", "x");
+              console.log("allowed");
+            } catch (e) {
+              const blocked = e.code === "EROFS" || e.code === "ENOENT" || e.code === "ENOTDIR";
+              console.log(blocked ? "blocked" : "error: " + e.code);
+            }
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "/dev/null is accessible"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const fs = require("fs");
+            try {
+              const fd = fs.openSync("/dev/null", "r");
+              fs.closeSync(fd);
+              console.log("ok");
+            } catch (e) {
+              console.log("error: " + e.code);
+            }
+    output:
+      status: 200
+      run:
+        stdout: "ok\n"
+        stderr: ""
+        output: "ok\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "/dev/urandom is accessible"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const fs = require("fs");
+            try {
+              const buf = Buffer.alloc(16);
+              const fd = fs.openSync("/dev/urandom", "r");
+              const n = fs.readSync(fd, buf, 0, 16, null);
+              fs.closeSync(fd);
+              console.log(n === 16 ? "ok" : "short read");
+            } catch (e) {
+              console.log("error: " + e.code);
+            }
+    output:
+      status: 200
+      run:
+        stdout: "ok\n"
+        stderr: ""
+        output: "ok\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "/proc is read-only"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const fs = require("fs");
+            try {
+              fs.writeFileSync("/proc/self/oom_score_adj", "0");
+              console.log("allowed");
+            } catch (e) {
+              console.log(e.code === "EROFS" ? "blocked" : "error: " + e.code);
+            }
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "node runtime directory is read-only"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const fs = require("fs");
+            try {
+              fs.writeFileSync("/mise/installs/node/24.14.0/test", "x");
+              console.log("allowed");
+            } catch (e) {
+              console.log(e.code === "EROFS" ? "blocked" : "error: " + e.code);
+            }
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "ruby runtime directory is read-only"
+    input:
+      runtime: ruby
+      files:
+        - name: main.rb
+          content: |
+            begin
+              File.write("/mise/installs/ruby/3.4.8/test", "x")
+              puts "allowed"
+            rescue Errno::EROFS
+              puts "blocked"
+            rescue => e
+              puts "error: #{e.class}"
+            end
     output:
       status: 200
       run:
