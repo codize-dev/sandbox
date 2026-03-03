@@ -71,6 +71,10 @@ Four-stage Dockerfile (`mise` → `base` → `builder` → final). The `base` st
 
 The nsjail Docker base image is built from the `codize-dev/nsjail` repository and published to `ghcr.io/codize-dev/nsjail`.
 
+### nsjail Reference Docs
+
+Comprehensive nsjail reference documentation lives in `.context/docs/nsjail/`. Covers execution modes, namespaces, filesystem isolation, networking, Seccomp-BPF, Kafel policy language, cgroups, resource limits, security features, process lifecycle, configuration reference, and CLI reference. Consult these docs when modifying nsjail settings or hardening the sandbox.
+
 ## API
 
 ### POST /v1/run
