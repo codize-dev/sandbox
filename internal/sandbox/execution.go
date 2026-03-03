@@ -71,7 +71,7 @@ func (e *execution) buildArgs() []string {
 		"-B", e.tmpDir+":/code", // user code directory (read-write)
 		"-m", "none:/proc:proc:ro", // fresh read-only /proc (needed for /proc/self)
 		"-s", "/proc/self/fd:/dev/fd", // symlink so /dev/fd works
-		"-s", "/usr/bin:/bin",         // usrmerge compat: /bin/sh etc.
+		"-s", "/usr/bin:/bin", // usrmerge compat: /bin/sh etc.
 		"--rlimit_as", e.limits.Rlimits.AS,
 		"--rlimit_fsize", e.limits.Rlimits.Fsize,
 		"--rlimit_nofile", e.limits.Rlimits.Nofile,
