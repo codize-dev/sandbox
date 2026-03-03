@@ -45,7 +45,7 @@ tests:
         status: "OK"
         signal: null
 
-  - name: "/lib is read-only"
+  - name: "/lib write is blocked (symlink to read-only /usr/lib)"
     input:
       runtime: node
       files:

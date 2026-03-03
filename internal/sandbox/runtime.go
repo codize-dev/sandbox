@@ -281,8 +281,9 @@ func (goRuntime) CompileCommand() []string {
 func (goRuntime) CompileBindMounts() []BindMount {
 	return []BindMount{
 		{Src: "/mise/installs/go/1.26.0", Dst: "/mise/installs/go/1.26.0"},
-		{Src: "/mise/go-cache", Dst: "/mise/go-cache"},       // pre-built Go stdlib cache (read-only)
-		{Src: "/mise/go-modcache", Dst: "/mise/go-modcache"}, // pre-downloaded module cache (read-only)
+		{Src: "/mise/go-cache", Dst: "/mise/go-cache"},                         // pre-built Go stdlib cache (read-only)
+		{Src: "/mise/go-modcache", Dst: "/mise/go-modcache"},                   // pre-downloaded module cache (read-only)
+		{Src: "/usr/local/bin/gocacheprog", Dst: "/usr/local/bin/gocacheprog"}, // cache helper binary; /usr/local/bin is not mounted by the base config
 	}
 }
 
