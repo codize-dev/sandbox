@@ -61,7 +61,8 @@ POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
 - **cmd/** — CLI entrypoint using Cobra.
 - **cmd/gocacheprog/** — Read-only Go module cache helper used during compilation.
 - **internal/handler/** — Request parsing and response formatting.
-- **internal/sandbox/** — Core sandbox execution logic.
+- **internal/sandbox/** — Core sandbox execution logic; `configs/nsjail.cfg` holds the static nsjail protobuf config.
+- **e2e/** — YAML-driven E2E test suite. Test cases live under `e2e/tests/runtime/` and `e2e/tests/security/`.
 
 ### Docker Build
 
