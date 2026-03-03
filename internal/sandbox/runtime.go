@@ -74,12 +74,13 @@ type BindMount struct {
 
 // Rlimits holds nsjail POSIX resource limit flags for a single execution step.
 // Each field corresponds to a --rlimit_* nsjail flag.
-// Valid values are a numeric string (e.g. "1024") or "hard" (inherit system hard limit).
+// Valid values are a numeric string (e.g. "1024"), "soft" (inherit system soft limit),
+// "hard" (inherit system hard limit), or "inf" (no limit).
 type Rlimits struct {
 	AS     string // --rlimit_as (MiB or "hard")
 	Fsize  string // --rlimit_fsize (MiB or "hard")
 	Nofile string // --rlimit_nofile (count or "hard")
-	Nproc  string // --rlimit_nproc (count or "hard")
+	Nproc  string // --rlimit_nproc (count, "soft", or "hard")
 }
 
 // Cgroups holds nsjail cgroup limit flags for a single execution step.
@@ -179,7 +180,7 @@ func (nodeRuntime) Env() []string {
 //   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
 //
 // Cgroups:
-//   - PidsMax 64: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
+//   - PidsMax 64: per-cgroup task limit (processes + threads); limits fork bombs and runaway thread creation.
 //   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
 //   - MemSwapMax 0: swap disabled to enforce strict memory limits.
 //   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
@@ -228,7 +229,7 @@ func (rubyRuntime) Env() []string {
 //   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
 //
 // Cgroups:
-//   - PidsMax 32: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
+//   - PidsMax 32: per-cgroup task limit (processes + threads); limits fork bombs and runaway thread creation.
 //   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
 //   - MemSwapMax 0: swap disabled to enforce strict memory limits.
 //   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
@@ -306,7 +307,7 @@ func (goRuntime) CompileEnv() []string {
 //   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
 //
 // Cgroups:
-//   - PidsMax 128: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
+//   - PidsMax 128: per-cgroup task limit (processes + threads); limits fork bombs and runaway thread creation.
 //   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
 //   - MemSwapMax 0: swap disabled to enforce strict memory limits.
 //   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
@@ -335,7 +336,7 @@ func (goRuntime) CompileLimits() Limits {
 //   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
 //
 // Cgroups:
-//   - PidsMax 64: per-cgroup task limit (processes + threads); set equal to Nproc for consistency.
+//   - PidsMax 64: per-cgroup task limit (processes + threads); limits fork bombs and runaway thread creation.
 //   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
 //   - MemSwapMax 0: swap disabled to enforce strict memory limits.
 //   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).

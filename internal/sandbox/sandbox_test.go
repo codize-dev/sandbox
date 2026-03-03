@@ -108,7 +108,7 @@ func TestExecution_buildArgs(t *testing.T) {
 		tmpHome: "/tmp/sandbox-home",
 		limits: Limits{
 			Rlimits: Rlimits{AS: "4096", Fsize: "64", Nofile: "64", Nproc: "32"},
-			Cgroups: Cgroups{PidsMax: "42", MemMax: "1000000", MemSwapMax: "0", CpuMsPerSec: "900"},
+			Cgroups: Cgroups{PidsMax: "42", MemMax: "1000000", MemSwapMax: "0", CpuMsPerSec: "750"},
 		},
 	}
 
@@ -144,7 +144,7 @@ func TestExecution_buildArgs(t *testing.T) {
 		"--cgroup_pids_max", "42",
 		"--cgroup_mem_max", "1000000",
 		"--cgroup_mem_swap_max", "0",
-		"--cgroup_cpu_ms_per_sec", "900",
+		"--cgroup_cpu_ms_per_sec", "750",
 		"-E", "PATH=/usr/bin",
 		"-E", "HOME=/tmp",
 		"--",
