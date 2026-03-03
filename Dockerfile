@@ -9,7 +9,7 @@ RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "x64") && \
 
 # ---
 
-FROM ghcr.io/codize-dev/nsjail:83d63e1fc0bddd5cff3b077a4ece89515cb8a482@sha256:536e7c0d8b591bb3a12b86fdbbaee617e503d7058606a48a10b189d20a5cfb09 AS base
+FROM ghcr.io/codize-dev/nsjail:87716b96b01ba350d9da7c672699189bac903db3@sha256:b31501a1b81d6e5b199f92e50834e238eb5dfc96bfc284c8007fe27275e84f6d AS base
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
