@@ -56,3 +56,76 @@ tests:
         exit_code: 0
         status: "OK"
         signal: null
+
+  - name: "loopback interface is disabled inside sandbox"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const net = require("net");
+            const socket = new net.Socket();
+            socket.connect(1234, "127.0.0.1", () => {
+              console.log("allowed");
+              socket.destroy();
+            });
+            socket.on("error", (e) => {
+              if (e.code === "EADDRNOTAVAIL" || e.code === "ENETUNREACH") {
+                console.log("blocked");
+              } else {
+                console.error(e.message);
+                process.exit(1);
+              }
+            });
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "connecting to loopback server is blocked inside sandbox"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const net = require("net");
+            const server = net.createServer();
+            server.listen(1234, "127.0.0.1", () => {
+              const client = new net.Socket();
+              client.connect(1234, "127.0.0.1", () => {
+                console.log("allowed");
+                client.destroy();
+                server.close();
+              });
+              client.on("error", (e) => {
+                server.close();
+                if (e.code === "EADDRNOTAVAIL" || e.code === "ENETUNREACH") {
+                  console.log("blocked");
+                } else {
+                  console.error(e.message);
+                  process.exit(1);
+                }
+              });
+            });
+            server.on("error", (e) => {
+              if (e.code === "EADDRNOTAVAIL" || e.code === "ENETUNREACH") {
+                console.log("blocked");
+              } else {
+                console.error(e.message);
+                process.exit(1);
+              }
+            });
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
