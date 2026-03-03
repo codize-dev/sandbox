@@ -112,6 +112,7 @@ func TestExecution_buildArgs(t *testing.T) {
 	}
 
 	want := []string{
+		"-C", "/etc/nsjail/nsjail.cfg",
 		"-Mo",
 		"--log_fd", "3",
 		"-D", "/code",
@@ -126,7 +127,6 @@ func TestExecution_buildArgs(t *testing.T) {
 		"-R", "/dev/null:/dev/null",
 		"-R", "/dev/urandom:/dev/urandom",
 		"-B", "/tmp/sandbox-code:/code",
-		"-m", "none:/tmp:tmpfs:size=67108864",
 		"-m", "none:/proc:proc:ro",
 		"-s", "/proc/self/fd:/dev/fd",
 		"--rlimit_as", "4096",

@@ -1,0 +1,79 @@
+tests:
+  - name: "/tmp is mounted with nosuid and nodev"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const fs = require("fs");
+            const mounts = fs.readFileSync("/proc/mounts", "utf8");
+            const tmp = mounts.split("\n").find(l => l.includes(" /tmp "));
+            if (tmp && tmp.includes("nosuid") && tmp.includes("nodev")) {
+              console.log("blocked");
+            } else {
+              console.log("allowed");
+            }
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "device node creation on /tmp is blocked"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const { spawnSync } = require("child_process");
+            const r = spawnSync("/usr/bin/mknod", ["/tmp/urandom", "c", "1", "9"]);
+            if (r.status !== 0) {
+              console.log("blocked");
+            } else {
+              const d = spawnSync("/usr/bin/dd", ["if=/tmp/urandom", "bs=1", "count=1"]);
+              console.log(d.stdout.length > 0 ? "allowed" : "blocked");
+            }
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "SUID privilege escalation on /tmp is blocked"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const { spawnSync } = require("child_process");
+            const fs = require("fs");
+            const cp = spawnSync("/usr/bin/cp", ["/usr/bin/id", "/tmp/suid-id"]);
+            if (cp.status !== 0) {
+              console.error(cp.stderr.toString());
+              process.exit(1);
+            }
+            fs.chmodSync("/tmp/suid-id", 0o4755);
+            const id = spawnSync("/tmp/suid-id");
+            const output = id.stdout.toString();
+            if (output.includes("euid=0") && !output.includes("uid=0")) {
+              console.log("allowed");
+            } else {
+              console.log("blocked");
+            }
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null

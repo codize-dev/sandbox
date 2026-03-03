@@ -43,6 +43,9 @@ type execution struct {
 
 func (e *execution) buildArgs() []string {
 	args := []string{
+		// Load config file first so CLI flags below take precedence on any overlap.
+		// Config defines: /tmp tmpfs mount with nosuid + nodev.
+		"-C", "/etc/nsjail/nsjail.cfg",
 		"-Mo", // once mode: run the process once and exit
 		// Capture nsjail logs via a pipe (fd 3) to detect timeout kills.
 		// ExtraFiles[0] is always mapped to fd 3 in the child process.
@@ -66,7 +69,6 @@ func (e *execution) buildArgs() []string {
 		"-R", "/dev/null:/dev/null", // commonly opened by programs
 		"-R", "/dev/urandom:/dev/urandom", // needed for PRNG seeding (V8, Ruby, etc.)
 		"-B", e.tmpDir+":/code", // user code directory (read-write)
-		"-m", "none:/tmp:tmpfs:size=67108864", // ephemeral tmpfs scratch space (64 MiB)
 		"-m", "none:/proc:proc:ro", // fresh read-only /proc (needed for /proc/self)
 		"-s", "/proc/self/fd:/dev/fd", // symlink so /dev/fd works
 		"--rlimit_as", e.limits.Rlimits.AS,
