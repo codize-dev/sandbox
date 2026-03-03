@@ -66,7 +66,7 @@ POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
 
 ### Docker Build
 
-Four-stage Dockerfile (`mise` → `base` → `builder` → final). The `base` stage uses `ghcr.io/codize-dev/nsjail` and installs language runtimes via mise. The `builder` stage compiles both the main `sandbox` binary and the `gocacheprog` helper. See Dockerfile for details.
+Four-stage Dockerfile (`mise` → `base` → `builder` → final). The `base` stage uses `ghcr.io/codize-dev/nsjail` (based on `debian:bookworm-slim`) and installs language runtimes via mise. The `builder` stage compiles both the main `sandbox` binary and the `gocacheprog` helper. See Dockerfile for details.
 
 ### Sister Repository
 
