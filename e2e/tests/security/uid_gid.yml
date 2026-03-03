@@ -65,3 +65,25 @@ tests:
         exit_code: 0
         status: "OK"
         signal: null
+
+  - name: "setuid(0) is rejected inside the sandbox (node)"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            try {
+              process.setuid(0);
+              console.log("allowed");
+            } catch (e) {
+              console.log("blocked");
+            }
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null

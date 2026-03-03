@@ -47,7 +47,7 @@ tests:
         status: "OK"
         signal: null
 
-  - name: "SUID privilege escalation on /tmp is blocked"
+  - name: "SUID bit on /tmp does not grant new privileges"
     input:
       runtime: node
       files:
@@ -63,10 +63,14 @@ tests:
             fs.chmodSync("/tmp/suid-id", 0o4755);
             const id = spawnSync("/tmp/suid-id");
             const output = id.stdout.toString();
-            if (output.includes("euid=0") && !output.includes("uid=0")) {
-              console.log("allowed");
-            } else {
+            const uidMatch = output.match(/uid=(\d+)/);
+            const euidMatch = output.match(/euid=(\d+)/);
+            // id(1) omits euid when it equals uid, so euidMatch being null
+            // means no escalation occurred.
+            if (uidMatch && (!euidMatch || uidMatch[1] === euidMatch[1])) {
               console.log("blocked");
+            } else {
+              console.log("allowed");
             }
     output:
       status: 200
