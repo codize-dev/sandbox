@@ -113,43 +113,22 @@ func TestExecution_buildArgs(t *testing.T) {
 
 	want := []string{
 		"-C", "/etc/nsjail/nsjail.cfg",
-		"-Mo",
-		"--log_fd", "3",
-		"-D", "/code",
-		"-R", "/lib:/lib",
-		"-R", "/usr:/usr",
-	}
-	if _, err := os.Stat("/lib64"); err == nil {
-		want = append(want, "-R", "/lib64:/lib64")
-	}
-	want = append(want,
 		"-R", "/mise/installs/node/24:/mise/installs/node/24",
-		"-R", "/dev/null:/dev/null",
-		"-R", "/dev/urandom:/dev/urandom",
 		"-B", "/tmp/sandbox-code:/code",
-		"-m", "none:/proc:proc:ro",
-		"-s", "/proc/self/fd:/dev/fd",
-		"-s", "/usr/bin:/bin",
 		"--rlimit_as", "4096",
 		"--rlimit_fsize", "64",
 		"--rlimit_nofile", "64",
 		"--rlimit_nproc", "32",
 		"--rlimit_cpu", "10",
-		"--rlimit_stack", "8",
-		"--rlimit_memlock", "0",
-		"--rlimit_rtprio", "0",
-		"--rlimit_msgqueue", "0",
 		"--time_limit", "10",
-		"--detect_cgroupv2",
 		"--cgroup_pids_max", "42",
 		"--cgroup_mem_max", "1000000",
 		"--cgroup_mem_swap_max", "0",
 		"--cgroup_cpu_ms_per_sec", "750",
 		"-E", "PATH=/usr/bin",
-		"-E", "HOME=/tmp",
 		"--",
 		"/usr/bin/node", "/code/index.js",
-	)
+	}
 
 	assert.Equal(t, want, e.buildArgs())
 }

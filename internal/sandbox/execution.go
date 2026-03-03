@@ -43,61 +43,41 @@ type execution struct {
 
 func (e *execution) buildArgs() []string {
 	args := []string{
-		// Load config file first so CLI flags below take precedence on any overlap.
-		// Config defines: /tmp tmpfs mount with nosuid + nodev.
+		// Load static config (execution mode, logging, cwd, environment,
+		// static rlimits, and filesystem mounts). CLI flags below override
+		// or append per-invocation settings.
 		"-C", "/etc/nsjail/nsjail.cfg",
-		"-Mo", // once mode: run the process once and exit
-		// Capture nsjail logs via a pipe (fd 3) to detect timeout kills.
-		// ExtraFiles[0] is always mapped to fd 3 in the child process.
-		"--log_fd", "3",
-		"-D", "/code", // initial working directory inside the sandbox
-		// System libraries required by the dynamic linker and language runtimes.
-		// -R = read-only bind mount, -B = read-write bind mount.
-		"-R", "/lib:/lib",
-		"-R", "/usr:/usr",
 	}
 
-	if _, err := os.Stat("/lib64"); err == nil {
-		args = append(args, "-R", "/lib64:/lib64")
-	}
-
+	// Runtime-specific read-only bind mounts (e.g. the language runtime
+	// install directory, Go module cache). Appended to the config mount list.
 	for _, m := range e.bindMounts {
 		args = append(args, "-R", m.Src+":"+m.Dst)
 	}
 
 	args = append(args,
-		"-R", "/dev/null:/dev/null", // commonly opened by programs
-		"-R", "/dev/urandom:/dev/urandom", // needed for PRNG seeding (V8, Ruby, etc.)
-		"-B", e.tmpDir+":/code", // user code directory (read-write)
-		"-m", "none:/proc:proc:ro", // fresh read-only /proc (needed for /proc/self)
-		"-s", "/proc/self/fd:/dev/fd", // symlink so /dev/fd works
-		"-s", "/usr/bin:/bin", // usrmerge compat: /bin/sh etc.
+		"-B", e.tmpDir+":/code", // user code directory (read-write, per-invocation)
+		// Per-invocation resource limits: vary by runtime and execution step.
 		"--rlimit_as", e.limits.Rlimits.AS,
 		"--rlimit_fsize", e.limits.Rlimits.Fsize,
 		"--rlimit_nofile", e.limits.Rlimits.Nofile,
 		"--rlimit_nproc", e.limits.Rlimits.Nproc,
 		"--rlimit_cpu", fmt.Sprintf("%d", e.timeout),
-		"--rlimit_stack", "8", // 8 MiB; explicit match of Linux default
-		"--rlimit_memlock", "0", // no legitimate reason to lock memory in a sandbox
-		"--rlimit_rtprio", "0", // real-time scheduling is unnecessary in a sandbox
-		"--rlimit_msgqueue", "0", // POSIX message queues are unnecessary in a sandbox
 		"--time_limit", fmt.Sprintf("%d", e.timeout),
-		"--detect_cgroupv2",                           // auto-detect cgroup v2 for cgroup-based limits
-		"--cgroup_pids_max", e.limits.Cgroups.PidsMax, // per-cgroup task limit (fork bomb prevention)
-		"--cgroup_mem_max", e.limits.Cgroups.MemMax, // per-cgroup physical memory limit
-		"--cgroup_mem_swap_max", e.limits.Cgroups.MemSwapMax, // per-cgroup swap limit (0 = no swap)
-		"--cgroup_cpu_ms_per_sec", e.limits.Cgroups.CpuMsPerSec, // per-cgroup CPU throttle (ms per second)
+		"--cgroup_pids_max", e.limits.Cgroups.PidsMax,
+		"--cgroup_mem_max", e.limits.Cgroups.MemMax,
+		"--cgroup_mem_swap_max", e.limits.Cgroups.MemSwapMax,
+		"--cgroup_cpu_ms_per_sec", e.limits.Cgroups.CpuMsPerSec,
 	)
 
+	// Runtime-specific environment variables (e.g. PATH, GOROOT).
+	// HOME=/tmp is set in the config file.
 	for _, env := range e.env {
 		args = append(args, "-E", env)
 	}
-	// HOME must be set because many tools read it for config/cache paths.
-	args = append(args, "-E", "HOME=/tmp")
 
 	args = append(args, "--")
 	args = append(args, e.command...)
-
 	return args
 }
 
