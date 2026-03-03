@@ -129,6 +129,7 @@ func TestExecution_buildArgs(t *testing.T) {
 		"-B", "/tmp/sandbox-code:/code",
 		"-m", "none:/proc:proc:ro",
 		"-s", "/proc/self/fd:/dev/fd",
+		"-s", "/usr/bin:/bin",
 		"--rlimit_as", "4096",
 		"--rlimit_fsize", "64",
 		"--rlimit_nofile", "64",

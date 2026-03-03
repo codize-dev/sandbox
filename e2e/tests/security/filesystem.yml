@@ -1,0 +1,69 @@
+tests:
+  - name: "bare command name resolves via PATH"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const { spawnSync } = require("child_process");
+            const r = spawnSync("id");
+            if (r.error) {
+              console.log("error: " + r.error.message);
+            } else {
+              console.log("ok");
+            }
+    output:
+      status: 200
+      run:
+        stdout: "ok\n"
+        stderr: ""
+        output: "ok\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "/bin/sh is accessible via symlink"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const fs = require("fs");
+            try {
+              const stat = fs.statSync("/bin/sh");
+              console.log(stat.isFile() ? "ok" : "not a file");
+            } catch (e) {
+              console.log("error: " + e.code);
+            }
+    output:
+      status: 200
+      run:
+        stdout: "ok\n"
+        stderr: ""
+        output: "ok\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "/usr/bin is read-only"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const fs = require("fs");
+            try {
+              fs.writeFileSync("/usr/bin/test", "x");
+              console.log("allowed");
+            } catch (e) {
+              console.log(e.code === "EROFS" ? "blocked" : "error: " + e.code);
+            }
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null

@@ -37,7 +37,7 @@ type Runtime interface {
 	BindMounts() []BindMount
 
 	// Env returns environment variables for the sandbox in "KEY=VALUE" format
-	// (e.g. "PATH=/mise/installs/node/24.14.0/bin").
+	// (e.g. "PATH=/mise/installs/node/24.14.0/bin:/usr/bin").
 	Env() []string
 
 	// Limits returns the nsjail resource limits for the run step.
@@ -169,7 +169,7 @@ func (nodeRuntime) BindMounts() []BindMount {
 }
 
 func (nodeRuntime) Env() []string {
-	return []string{"PATH=/mise/installs/node/24.14.0/bin"}
+	return []string{"PATH=/mise/installs/node/24.14.0/bin:/usr/bin"}
 }
 
 // Limits returns resource limits for Node.js execution.
@@ -218,7 +218,7 @@ func (rubyRuntime) BindMounts() []BindMount {
 }
 
 func (rubyRuntime) Env() []string {
-	return []string{"PATH=/mise/installs/ruby/3.4.8/bin"}
+	return []string{"PATH=/mise/installs/ruby/3.4.8/bin:/usr/bin"}
 }
 
 // Limits returns resource limits for Ruby execution.
@@ -271,7 +271,7 @@ func (goRuntime) BindMounts() []BindMount {
 }
 
 func (goRuntime) Env() []string {
-	return nil
+	return []string{"PATH=/usr/bin"}
 }
 
 func (goRuntime) CompileCommand() []string {
@@ -288,7 +288,7 @@ func (goRuntime) CompileBindMounts() []BindMount {
 
 func (goRuntime) CompileEnv() []string {
 	return []string{
-		"PATH=/mise/installs/go/1.26.0/bin",
+		"PATH=/mise/installs/go/1.26.0/bin:/usr/bin",
 		"GOROOT=/mise/installs/go/1.26.0",
 		"GOPATH=/tmp/gopath",                                    // writable location for module metadata and build artifacts
 		"GOMODCACHE=/mise/go-modcache",                          // read-only pre-downloaded module cache from Docker image
