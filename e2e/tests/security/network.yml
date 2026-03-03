@@ -1,0 +1,58 @@
+tests:
+  - name: "outbound network access is blocked by network namespace"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            const net = require("net");
+            const socket = new net.Socket();
+            socket.connect(80, "8.8.8.8", () => {
+              console.log("allowed");
+              socket.destroy();
+            });
+            socket.on("error", (e) => {
+              if (e.code === "ENETUNREACH") {
+                console.log("blocked");
+              } else {
+                console.error(e.message);
+                process.exit(1);
+              }
+            });
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
+
+  - name: "outbound HTTP request via fetch is blocked by network namespace"
+    input:
+      runtime: node
+      files:
+        - name: index.js
+          content: |
+            fetch("http://example.com")
+              .then(() => {
+                console.log("allowed");
+              })
+              .catch((e) => {
+                if (e.cause && e.cause.code === "EAI_AGAIN") {
+                  console.log("blocked");
+                } else {
+                  console.error(e.message);
+                  process.exit(1);
+                }
+              });
+    output:
+      status: 200
+      run:
+        stdout: "blocked\n"
+        stderr: ""
+        output: "blocked\n"
+        exit_code: 0
+        status: "OK"
+        signal: null
