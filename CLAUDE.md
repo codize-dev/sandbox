@@ -61,7 +61,7 @@ POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
 - **cmd/** — CLI entrypoint using Cobra.
 - **cmd/gocacheprog/** — Read-only Go module cache helper used during compilation.
 - **internal/handler/** — Request parsing and response formatting.
-- **internal/sandbox/** — Core sandbox execution logic; `configs/nsjail.cfg` holds the static nsjail protobuf config.
+- **internal/sandbox/** — Core sandbox execution logic; `configs/nsjail.cfg` holds the static nsjail protobuf config; `configs/seccomp.kafel` holds the Seccomp-BPF syscall filtering policy.
 - **e2e/** — YAML-driven E2E test suite. Test cases live under `e2e/tests/runtime/` and `e2e/tests/security/`. See `e2e/CLAUDE.md` for testing guidelines.
 
 ### Docker Build
@@ -92,4 +92,4 @@ Response:
 
 Possible `status` values: `"OK"`, `"TIMEOUT"`, `"OUTPUT_LIMIT_EXCEEDED"`.
 
-`compile`: Compilation step result (same schema as `run`). `null` for non-compiled runtimes (node, ruby). When compilation fails, `run` is `null`.
+`compile`: Compilation step result (same schema as `run`). `null` for non-compiled runtimes (node, ruby, bash). When compilation fails, `run` is `null`.
