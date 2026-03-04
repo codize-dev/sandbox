@@ -20,6 +20,7 @@ func Test_LookupRuntime(t *testing.T) {
 		{name: "node is valid", runtime: RuntimeNode, wantErr: false},
 		{name: "ruby is valid", runtime: RuntimeRuby, wantErr: false},
 		{name: "go is valid", runtime: RuntimeGo, wantErr: false},
+		{name: "bash is valid", runtime: RuntimeBash, wantErr: false},
 		{name: "empty string is invalid", runtime: "", wantErr: true},
 		{name: "unknown runtime is invalid", runtime: "python", wantErr: true},
 		{name: "capitalized Node is invalid", runtime: "Node", wantErr: true},
@@ -94,6 +95,20 @@ func TestGoRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "900", compile.Cgroups.CpuMsPerSec)
 }
 
+func TestBashRuntime_Limits(t *testing.T) {
+	t.Parallel()
+	rt := bashRuntime{}
+	got := rt.Limits()
+	assert.Equal(t, "512", got.Rlimits.AS)
+	assert.Equal(t, "64", got.Rlimits.Fsize)
+	assert.Equal(t, "64", got.Rlimits.Nofile)
+	assert.Equal(t, "soft", got.Rlimits.Nproc)
+	assert.Equal(t, "32", got.Cgroups.PidsMax)
+	assert.Equal(t, "268435456", got.Cgroups.MemMax)
+	assert.Equal(t, "0", got.Cgroups.MemSwapMax)
+	assert.Equal(t, "900", got.Cgroups.CpuMsPerSec)
+}
+
 func TestExecution_buildArgs(t *testing.T) {
 	t.Parallel()
 
@@ -158,6 +173,13 @@ func Test_readDefaultFiles(t *testing.T) {
 	t.Run("ruby has no defaults", func(t *testing.T) {
 		t.Parallel()
 		files, err := readDefaultFiles(RuntimeRuby)
+		assert.NoError(t, err)
+		assert.Empty(t, files)
+	})
+
+	t.Run("bash has no defaults", func(t *testing.T) {
+		t.Parallel()
+		files, err := readDefaultFiles(RuntimeBash)
 		assert.NoError(t, err)
 		assert.Empty(t, files)
 	})
@@ -230,5 +252,12 @@ func TestRuntime_RestrictedFiles(t *testing.T) {
 		require.NoError(t, err)
 		restricted := rt.RestrictedFiles()
 		assert.ElementsMatch(t, []string{"go.mod", "go.sum", "main"}, restricted)
+	})
+
+	t.Run("bash has no restricted files", func(t *testing.T) {
+		t.Parallel()
+		rt, err := LookupRuntime(RuntimeBash)
+		require.NoError(t, err)
+		assert.Empty(t, rt.RestrictedFiles())
 	})
 }

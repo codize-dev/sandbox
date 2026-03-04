@@ -19,6 +19,7 @@ const (
 	RuntimeNode RuntimeName = "node"
 	RuntimeRuby RuntimeName = "ruby"
 	RuntimeGo   RuntimeName = "go"
+	RuntimeBash RuntimeName = "bash"
 )
 
 // Runtime defines the interface that all sandbox runtimes must implement.
@@ -138,6 +139,7 @@ var runtimes = map[RuntimeName]Runtime{
 	RuntimeNode: nodeRuntime{},
 	RuntimeRuby: rubyRuntime{},
 	RuntimeGo:   goRuntime{},
+	RuntimeBash: bashRuntime{},
 }
 
 // LookupRuntime returns the Runtime for the given name, or an error if unknown.
@@ -365,3 +367,62 @@ func (goRuntime) Limits() Limits {
 func (goRuntime) RestrictedFiles() []string {
 	return []string{"go.mod", "go.sum", "main"}
 }
+
+// --- Bash ---
+
+type bashRuntime struct{}
+
+func (bashRuntime) Name() RuntimeName { return RuntimeBash }
+
+func (bashRuntime) Command(entryFile string) []string {
+	return []string{"/usr/bin/bash", entryFile}
+}
+
+// BindMounts returns nil because bash and all standard utilities are
+// already available via the static /usr/bin bind mount in nsjail.cfg.
+func (bashRuntime) BindMounts() []BindMount {
+	return nil
+}
+
+func (bashRuntime) Env() []string {
+	return []string{"PATH=/usr/bin"}
+}
+
+// Limits returns resource limits for bash execution.
+// Rlimits:
+//   - AS 512 MiB: bash itself uses only ~4 MiB of VAS, but command substitution
+//     ($(...)) stores captured output in heap memory, requiring ~2.8× the output
+//     size in VAS. 512 MiB supports capturing up to ~180 MB of pipeline output.
+//     Physical memory is constrained by cgroup_mem_max (256 MiB); VAS beyond
+//     physical memory is harmless (unmapped pages consume no RAM).
+//   - Fsize 64 MiB: sufficient for typical output files.
+//   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and pipe fds
+//     created by shell pipelines.
+//   - Nproc soft: inherits the system soft limit; per-sandbox process limiting
+//     is handled by cgroup_pids_max.
+//
+// Cgroups:
+//   - PidsMax 32: per-cgroup task limit (processes + threads); limits fork bombs
+//     and runaway subprocess creation from shell pipelines and subshells.
+//   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM
+//     from affecting the host.
+//   - MemSwapMax 0: swap disabled to enforce strict memory limits.
+//   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
+func (bashRuntime) Limits() Limits {
+	return Limits{
+		Rlimits: Rlimits{
+			AS:     "512",
+			Fsize:  "64",
+			Nofile: "64",
+			Nproc:  "soft",
+		},
+		Cgroups: Cgroups{
+			PidsMax:     "32",
+			MemMax:      "268435456",
+			MemSwapMax:  "0",
+			CpuMsPerSec: "900",
+		},
+	}
+}
+
+func (bashRuntime) RestrictedFiles() []string { return nil }

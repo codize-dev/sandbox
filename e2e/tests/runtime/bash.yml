@@ -1,0 +1,115 @@
+tests:
+  - name: "hello world"
+    input:
+      runtime: bash
+      files:
+        - name: main.sh
+          content: |
+            echo "Hello, World!"
+    output:
+      status: 200
+      body:
+        run:
+          stdout: "Hello, World!\n"
+          stderr: ""
+          output: "Hello, World!\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
+
+  - name: "stderr output"
+    input:
+      runtime: bash
+      files:
+        - name: main.sh
+          content: |
+            echo "error message" >&2
+    output:
+      status: 200
+      body:
+        run:
+          stdout: ""
+          stderr: "error message\n"
+          output: "error message\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
+
+  - name: "non-zero exit code"
+    input:
+      runtime: bash
+      files:
+        - name: main.sh
+          content: |
+            exit 1
+    output:
+      status: 200
+      body:
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 1
+          status: "OK"
+          signal: null
+
+  - name: "stderr with non-zero exit code"
+    input:
+      runtime: bash
+      files:
+        - name: main.sh
+          content: |
+            echo "error occurred" >&2
+            exit 2
+    output:
+      status: 200
+      body:
+        run:
+          stdout: ""
+          stderr: "error occurred\n"
+          output: "error occurred\n"
+          exit_code: 2
+          status: "OK"
+          signal: null
+
+  - name: "pipeline"
+    input:
+      runtime: bash
+      files:
+        - name: main.sh
+          content: |
+            echo "hello world" | tr 'a-z' 'A-Z'
+    output:
+      status: 200
+      body:
+        run:
+          stdout: "HELLO WORLD\n"
+          stderr: ""
+          output: "HELLO WORLD\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
+
+  - name: "multiple files with source"
+    input:
+      runtime: bash
+      files:
+        - name: main.sh
+          content: |
+            . ./helper.sh
+            greet "World"
+        - name: helper.sh
+          content: |
+            greet() {
+              echo "Hello, $1!"
+            }
+    output:
+      status: 200
+      body:
+        run:
+          stdout: "Hello, World!\n"
+          stderr: ""
+          output: "Hello, World!\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
