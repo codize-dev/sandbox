@@ -1,0 +1,91 @@
+tests:
+  - name: "ptrace is blocked by seccomp (ruby)"
+    input:
+      runtime: ruby
+      files:
+        - name: main.rb
+          content: |
+            nr = RUBY_PLATFORM.include?('aarch64') ? 117 : 101
+            syscall(nr)
+    output:
+      status: 200
+      body:
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 159
+          status: "OK"
+          signal: "SIGSYS"
+
+  - name: "mount is blocked by seccomp (ruby)"
+    input:
+      runtime: ruby
+      files:
+        - name: main.rb
+          content: |
+            nr = RUBY_PLATFORM.include?('aarch64') ? 40 : 165
+            syscall(nr)
+    output:
+      status: 200
+      body:
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 159
+          status: "OK"
+          signal: "SIGSYS"
+
+  - name: "ptrace is blocked by seccomp (go)"
+    input:
+      runtime: go
+      files:
+        - name: main.go
+          content: |
+            package main
+
+            import "syscall"
+
+            func main() {
+            	syscall.RawSyscall(syscall.SYS_PTRACE, 0, 0, 0)
+            }
+    output:
+      status: 200
+      body:
+        compile:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 0
+          status: "OK"
+          signal: null
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 159
+          status: "OK"
+          signal: "SIGSYS"
+
+  - name: "io_uring_setup returns ENOSYS instead of killing process (ruby)"
+    input:
+      runtime: ruby
+      files:
+        - name: main.rb
+          content: |
+            begin
+              syscall(425)
+            rescue Errno::ENOSYS
+              puts "ENOSYS"
+            end
+    output:
+      status: 200
+      body:
+        run:
+          stdout: "ENOSYS\n"
+          stderr: ""
+          output: "ENOSYS\n"
+          exit_code: 0
+          status: "OK"
+          signal: null

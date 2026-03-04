@@ -1,0 +1,148 @@
+// seccomp-bpf blacklist policy for the code execution sandbox.
+//
+// Approach: DEFAULT ALLOW with dangerous syscalls blocked.
+// This is a defense-in-depth layer on top of nsjail's namespace isolation,
+// cgroup limits, rlimits, UID mapping, and filesystem restrictions.
+
+POLICY blocked {
+    // io_uring is the single largest source of kernel LPE CVEs in recent
+    // years (CVE-2023-21400, CVE-2024-0582, etc.). Google disables it on
+    // production servers, ChromeOS, and Android. Docker 25.0+ blocks by default.
+    // ERRNO(ENOSYS) instead of KILL_PROCESS because libuv (Node.js) probes
+    // io_uring_setup at startup and falls back to epoll on failure. Using
+    // KILL_PROCESS would kill Node.js before it can execute user code.
+    // 38 = ENOSYS on Linux (both x86_64 and aarch64).
+    ERRNO(38) {
+        io_uring_setup,
+        io_uring_enter,
+        io_uring_register
+    },
+
+    KILL_PROCESS {
+        // -- Kernel attack surface --
+        // eBPF program loading allows kernel memory read/write and data structure
+        // manipulation. Major container escape vector (CVE-2021-31440, CVE-2023-2163).
+        bpf,
+
+        // Userspace page fault handling enables precise timing control for
+        // kernel use-after-free exploits.
+        userfaultfd,
+
+        // Performance monitoring exposes side-channel attacks (Spectre family)
+        // and leaks kernel addresses.
+        perf_event_open,
+
+        // -- Kernel module operations --
+        // Loading/unloading kernel modules allows arbitrary kernel code execution
+        // and disabling of security modules (AppArmor, SELinux).
+        init_module,
+        finit_module,
+        delete_module,
+
+        // -- Mount operations --
+        // Mounting filesystems can break filesystem isolation and override
+        // read-only restrictions. Both the traditional mount API and the new
+        // mount API (Linux 5.2+) must be blocked.
+        mount,
+        umount,
+        fsopen,
+        fsconfig,
+        fsmount,
+        fspick,
+        move_mount,
+        open_tree,
+        mount_setattr,
+
+        // -- Namespace / container escape --
+        // Creating or joining namespaces can escalate privileges (CVE-2022-0185)
+        // or escape the sandbox container.
+        unshare,
+        setns,
+        pivot_root,
+
+        // -- Kernel operations --
+        // Replacing the running kernel or rebooting the system.
+        kexec_load,
+        kexec_file_load,
+        reboot,
+
+        // -- Cross-process memory access --
+        // Reading/writing other processes' memory or registers enables sandbox
+        // escape and information leakage.
+        ptrace,
+        process_vm_readv,
+        process_vm_writev,
+        // Comparing kernel resources between processes leaks FD and memory
+        // mapping information.
+        kcmp,
+
+        // -- Kernel keyring --
+        // The kernel keyring is not namespaced and can leak information between
+        // containers. Also used in kernel exploit chains.
+        keyctl,
+        add_key,
+        request_key,
+
+        // -- Time manipulation --
+        // System time is not namespaced; changes affect the host.
+        clock_settime,
+        clock_adjtime,
+        settimeofday,
+        adjtimex,
+
+        // -- Resource / system configuration --
+        // Process accounting can write to arbitrary files.
+        acct,
+        // Disk quota manipulation.
+        quotactl,
+        quotactl_fd,
+        // Swap control.
+        swapon,
+        swapoff,
+        // Reading the kernel ring buffer leaks kernel addresses and other
+        // sensitive information.
+        syslog,
+
+        // -- NUMA memory policy --
+        // move_pages can probe page residency of other processes, leaking memory
+        // access patterns. History of kernel memory read vulnerabilities
+        // (CVE-2010-0415).
+        mbind,
+        set_mempolicy,
+        get_mempolicy,
+        move_pages,
+
+        // -- Execution domain --
+        // personality() can disable ASLR (ADDR_NO_RANDOMIZE), making exploits
+        // significantly easier to develop.
+        personality,
+
+        // -- File handle --
+        // Opening files by handle bypasses directory permissions. Used in the
+        // Shocker container escape (2014).
+        open_by_handle_at,
+
+        // -- Seccomp self-manipulation --
+        // Prevent sandboxed processes from installing their own seccomp filters.
+        // Stacked filters cannot weaken existing ones (most restrictive action
+        // always wins), but block as defense-in-depth.
+        seccomp,
+
+        // -- I/O privilege (x86_64 only) --
+        // Direct I/O port access bypasses all OS-level protection.
+        ioperm ON x86_64,
+        iopl ON x86_64,
+
+        // -- Legacy syscalls (x86_64 only) --
+        // Deprecated but still have live kernel handlers on x86_64. Unmaintained
+        // code paths carry elevated risk of undiscovered vulnerabilities.
+        ustat ON x86_64,
+        sysfs ON x86_64,
+        // LDT modification enables 16-bit/segmented code execution.
+        // CVE history (CVE-2017-17053). Not blocked by Docker's default
+        // seccomp profile.
+        modify_ldt ON x86_64
+    }
+}
+
+USE blocked DEFAULT ALLOW
