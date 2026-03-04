@@ -101,8 +101,9 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/code/main.sh: line 1: /lib64/test: Not a directory\n"
-              output: "/code/main.sh: line 1: /lib64/test: Not a directory\n"
+              # Error message differs by architecture: see nsjail.cfg /lib64 comments.
+              stderr: "/^/code/main\\.sh: line 1: /lib64/test: (Not a directory|Read-only file system)\n$/"
+              output: "/^/code/main\\.sh: line 1: /lib64/test: (Not a directory|Read-only file system)\n$/"
               exit_code: 1
               status: "OK"
               signal: null
