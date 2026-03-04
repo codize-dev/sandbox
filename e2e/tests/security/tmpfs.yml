@@ -1,24 +1,26 @@
 tests:
   - name: "/tmp write is blocked by tmpfs size limit"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            for i in $(seq 0 9); do
-              dd if=/dev/zero of=/tmp/file$i bs=1M count=10 2>/dev/null || {
-                echo "blocked"
-                exit 0
-              }
-            done
-            echo "allowed"
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                for i in $(seq 0 9); do
+                  dd if=/dev/zero of=/tmp/file$i bs=1M count=10 2>/dev/null || {
+                    echo "blocked"
+                    exit 0
+                  }
+                done
+                echo "allowed"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

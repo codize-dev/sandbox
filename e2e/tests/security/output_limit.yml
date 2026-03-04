@@ -1,18 +1,20 @@
 tests:
   - name: "output limit exceeded"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            yes AAAAAAAAAA
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: -1
-          status: "OUTPUT_LIMIT_EXCEEDED"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                yes AAAAAAAAAA
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: -1
+              status: "OUTPUT_LIMIT_EXCEEDED"
+              signal: null

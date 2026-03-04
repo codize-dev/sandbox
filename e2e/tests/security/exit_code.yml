@@ -1,72 +1,80 @@
 tests:
   - name: "user exit with signal-like code"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            exit 137
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 137
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                exit 137
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 137
+              status: "OK"
+              signal: null
 
   - name: "user exit with SIGSEGV-like code"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            exit 139
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 139
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                exit 139
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 139
+              status: "OK"
+              signal: null
 
   - name: "user exit with SIGTERM-like code"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            exit 143
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 143
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                exit 143
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 143
+              status: "OK"
+              signal: null
 
   - name: "user exit with SIGINT-like code"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            exit 130
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 130
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                exit 130
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 130
+              status: "OK"
+              signal: null

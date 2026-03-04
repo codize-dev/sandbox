@@ -1,197 +1,209 @@
 tests:
   - name: "mlock is blocked"
-    input:
-      runtime: go
-      files:
-        - name: main.go
-          content: |
-            package main
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
 
-            import (
-            	"fmt"
-            	"syscall"
-            )
+                import (
+                	"fmt"
+                	"syscall"
+                )
 
-            func main() {
-            	b := make([]byte, 4096)
-            	if err := syscall.Mlock(b); err != nil {
-            		fmt.Println("blocked")
-            	} else {
-            		fmt.Println("allowed")
-            	}
-            }
-    output:
-      status: 200
-      body:
-        compile:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 0
-          status: "OK"
-          signal: null
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+                func main() {
+                	b := make([]byte, 4096)
+                	if err := syscall.Mlock(b); err != nil {
+                		fmt.Println("blocked")
+                	} else {
+                		fmt.Println("allowed")
+                	}
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "real-time scheduling is blocked"
-    input:
-      runtime: go
-      files:
-        - name: main.go
-          content: |
-            package main
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
 
-            import (
-            	"fmt"
-            	"syscall"
-            	"unsafe"
-            )
+                import (
+                	"fmt"
+                	"syscall"
+                	"unsafe"
+                )
 
-            func main() {
-            	type schedParam struct {
-            		priority int32
-            	}
-            	param := schedParam{priority: 1}
-            	_, _, errno := syscall.RawSyscall(
-            		syscall.SYS_SCHED_SETSCHEDULER,
-            		0, // self
-            		1, // SCHED_FIFO
-            		uintptr(unsafe.Pointer(&param)),
-            	)
-            	if errno != 0 {
-            		fmt.Println("blocked")
-            	} else {
-            		fmt.Println("allowed")
-            	}
-            }
-    output:
-      status: 200
-      body:
-        compile:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 0
-          status: "OK"
-          signal: null
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+                func main() {
+                	type schedParam struct {
+                		priority int32
+                	}
+                	param := schedParam{priority: 1}
+                	_, _, errno := syscall.RawSyscall(
+                		syscall.SYS_SCHED_SETSCHEDULER,
+                		0, // self
+                		1, // SCHED_FIFO
+                		uintptr(unsafe.Pointer(&param)),
+                	)
+                	if errno != 0 {
+                		fmt.Println("blocked")
+                	} else {
+                		fmt.Println("allowed")
+                	}
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "POSIX message queue creation is blocked"
-    input:
-      runtime: go
-      files:
-        - name: main.go
-          content: |
-            package main
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
 
-            import (
-            	"fmt"
-            	"syscall"
-            	"unsafe"
-            )
+                import (
+                	"fmt"
+                	"syscall"
+                	"unsafe"
+                )
 
-            func main() {
-            	name := []byte("/test\x00")
-            	_, _, errno := syscall.Syscall6(
-            		syscall.SYS_MQ_OPEN,
-            		uintptr(unsafe.Pointer(&name[0])),
-            		syscall.O_CREAT|syscall.O_RDWR,
-            		0644,
-            		0, 0, 0,
-            	)
-            	if errno != 0 {
-            		fmt.Println("blocked")
-            	} else {
-            		fmt.Println("allowed")
-            	}
-            }
-    output:
-      status: 200
-      body:
-        compile:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 0
-          status: "OK"
-          signal: null
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+                func main() {
+                	name := []byte("/test\x00")
+                	_, _, errno := syscall.Syscall6(
+                		syscall.SYS_MQ_OPEN,
+                		uintptr(unsafe.Pointer(&name[0])),
+                		syscall.O_CREAT|syscall.O_RDWR,
+                		0644,
+                		0, 0, 0,
+                	)
+                	if errno != 0 {
+                		fmt.Println("blocked")
+                	} else {
+                		fmt.Println("allowed")
+                	}
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "stack exhaustion is safely handled"
-    input:
-      runtime: node
-      files:
-        - name: index.js
-          content: |
-            function f() { f(); }
-            try { f(); } catch (e) { console.log("blocked"); }
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                function f() { f(); }
+                try { f(); } catch (e) { console.log("blocked"); }
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "fork bomb is blocked by cgroup pids limit"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            for i in {1..100}; do
-              sleep 1 &
-            done 2>/tmp/err
-            if [ -s /tmp/err ]; then
-              echo "blocked"
-            else
-              echo "not blocked"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                for i in {1..100}; do
+                  sleep 1 &
+                done 2>/tmp/err
+                if [ -s /tmp/err ]; then
+                  echo "blocked"
+                else
+                  echo "not blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "classic fork bomb is contained by cgroup pids limit"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            :(){ :|:& };: 2>/dev/null
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                :(){ :|:& };: 2>/dev/null
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null

@@ -1,93 +1,103 @@
 tests:
   - name: "hello world"
-    input:
-      runtime: ruby
-      files:
-        - name: main.rb
-          content: |
-            puts "Hello, World!"
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "Hello, World!\n"
-          stderr: ""
-          output: "Hello, World!\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                puts "Hello, World!"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "Hello, World!\n"
+              stderr: ""
+              output: "Hello, World!\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "stderr output"
-    input:
-      runtime: ruby
-      files:
-        - name: main.rb
-          content: |
-            $stderr.puts "error message"
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: "error message\n"
-          output: "error message\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                $stderr.puts "error message"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "error message\n"
+              output: "error message\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "stdout and stderr"
-    input:
-      runtime: ruby
-      files:
-        - name: main.rb
-          content: |
-            $stdout.sync = true
-            puts "out"
-            $stderr.puts "err"
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "out\n"
-          stderr: "err\n"
-          output: "out\nerr\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                $stdout.sync = true
+                puts "out"
+                $stderr.puts "err"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "out\n"
+              stderr: "err\n"
+              output: "out\nerr\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "non-zero exit code"
-    input:
-      runtime: ruby
-      files:
-        - name: main.rb
-          content: |
-            exit(1)
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 1
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                exit(1)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 1
+              status: "OK"
+              signal: null
 
   - name: "stderr with non-zero exit code"
-    input:
-      runtime: ruby
-      files:
-        - name: main.rb
-          content: |
-            $stderr.puts "error occurred"
-            exit(2)
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: "error occurred\n"
-          output: "error occurred\n"
-          exit_code: 2
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                $stderr.puts "error occurred"
+                exit(2)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "error occurred\n"
+              output: "error occurred\n"
+              exit_code: 2
+              status: "OK"
+              signal: null

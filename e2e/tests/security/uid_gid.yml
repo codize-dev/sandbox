@@ -1,41 +1,45 @@
 tests:
   - name: "sandbox runs as uid=65534 gid=65534"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            echo "uid=$(id -u) gid=$(id -g)"
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "uid=65534 gid=65534\n"
-          stderr: ""
-          output: "uid=65534 gid=65534\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                echo "uid=$(id -u) gid=$(id -g)"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "uid=65534 gid=65534\n"
+              stderr: ""
+              output: "uid=65534 gid=65534\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "setuid(0) is rejected inside the sandbox (node)"
-    input:
-      runtime: node
-      files:
-        - name: index.js
-          content: |
-            try {
-              process.setuid(0);
-              console.log("allowed");
-            } catch (e) {
-              console.log("blocked");
-            }
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                try {
+                  process.setuid(0);
+                  console.log("allowed");
+                } catch (e) {
+                  console.log("blocked");
+                }
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

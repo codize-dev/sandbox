@@ -1,225 +1,245 @@
 tests:
   - name: "bare command name resolves via PATH"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            if id > /dev/null 2>&1; then
-              echo "ok"
-            else
-              echo "error"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "ok\n"
-          stderr: ""
-          output: "ok\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if id > /dev/null 2>&1; then
+                  echo "ok"
+                else
+                  echo "error"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "ok\n"
+              stderr: ""
+              output: "ok\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "/bin/sh is accessible via symlink"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            if [ -f /bin/sh ]; then
-              echo "ok"
-            else
-              echo "error"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "ok\n"
-          stderr: ""
-          output: "ok\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if [ -f /bin/sh ]; then
+                  echo "ok"
+                else
+                  echo "error"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "ok\n"
+              stderr: ""
+              output: "ok\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "/lib write is blocked (symlink to read-only /usr/lib)"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            if { echo x > /lib/test; } 2>/dev/null; then
-              echo "allowed"
-            else
-              echo "blocked"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if { echo x > /lib/test; } 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "/usr is read-only"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            if { echo x > /usr/bin/test; } 2>/dev/null; then
-              echo "allowed"
-            else
-              echo "blocked"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if { echo x > /usr/bin/test; } 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "/lib64 is read-only or absent"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            if { echo x > /lib64/test; } 2>/dev/null; then
-              echo "allowed"
-            else
-              echo "blocked"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if { echo x > /lib64/test; } 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "/dev/null is accessible"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            if echo test > /dev/null; then
-              echo "ok"
-            else
-              echo "error"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "ok\n"
-          stderr: ""
-          output: "ok\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if echo test > /dev/null; then
+                  echo "ok"
+                else
+                  echo "error"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "ok\n"
+              stderr: ""
+              output: "ok\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "/dev/urandom is accessible"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            if head -c 16 /dev/urandom > /dev/null 2>&1; then
-              echo "ok"
-            else
-              echo "error"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "ok\n"
-          stderr: ""
-          output: "ok\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if head -c 16 /dev/urandom > /dev/null 2>&1; then
+                  echo "ok"
+                else
+                  echo "error"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "ok\n"
+              stderr: ""
+              output: "ok\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "/proc is read-only"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            if { echo 0 > /proc/self/oom_score_adj; } 2>/dev/null; then
-              echo "allowed"
-            else
-              echo "blocked"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if { echo 0 > /proc/self/oom_score_adj; } 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "node runtime directory is read-only"
-    input:
-      runtime: node
-      files:
-        - name: index.js
-          content: |
-            const fs = require("fs");
-            try {
-              fs.writeFileSync("/mise/installs/node/24.14.0/test", "x");
-              console.log("allowed");
-            } catch (e) {
-              console.log(e.code === "EROFS" ? "blocked" : "error: " + e.code);
-            }
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const fs = require("fs");
+                try {
+                  fs.writeFileSync("/mise/installs/node/24.14.0/test", "x");
+                  console.log("allowed");
+                } catch (e) {
+                  console.log(e.code === "EROFS" ? "blocked" : "error: " + e.code);
+                }
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "ruby runtime directory is read-only"
-    input:
-      runtime: ruby
-      files:
-        - name: main.rb
-          content: |
-            begin
-              File.write("/mise/installs/ruby/3.4.8/test", "x")
-              puts "allowed"
-            rescue Errno::EROFS
-              puts "blocked"
-            rescue => e
-              puts "error: #{e.class}"
-            end
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                begin
+                  File.write("/mise/installs/ruby/3.4.8/test", "x")
+                  puts "allowed"
+                rescue Errno::EROFS
+                  puts "blocked"
+                rescue => e
+                  puts "error: #{e.class}"
+                end
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

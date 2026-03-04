@@ -1,18 +1,20 @@
 tests:
   - name: "CPU affinity is restricted to 1 core"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            nproc
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "1\n"
-          stderr: ""
-          output: "1\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                nproc
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "1\n"
+              stderr: ""
+              output: "1\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

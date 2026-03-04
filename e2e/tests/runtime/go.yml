@@ -1,250 +1,272 @@
 tests:
   - name: "hello world"
-    input:
-      runtime: go
-      files:
-        - name: main.go
-          content: |
-            package main
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
 
-            import "fmt"
+                import "fmt"
 
-            func main() {
-                fmt.Println("Hello, World!")
-            }
-    output:
-      status: 200
-      body:
-        compile:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 0
-          status: "OK"
-          signal: null
-        run:
-          stdout: "Hello, World!\n"
-          stderr: ""
-          output: "Hello, World!\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+                func main() {
+                    fmt.Println("Hello, World!")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "Hello, World!\n"
+              stderr: ""
+              output: "Hello, World!\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "compile error"
-    input:
-      runtime: go
-      files:
-        - name: main.go
-          content: |
-            package main
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
 
-            func main() {
-                undefined_variable
-            }
-    output:
-      status: 200
-      body:
-        compile:
-          stdout: ""
-          stderr: "# sandbox\n./main.go:4:5: undefined: undefined_variable\n"
-          output: "# sandbox\n./main.go:4:5: undefined: undefined_variable\n"
-          exit_code: 1
-          status: "OK"
-          signal: null
+                func main() {
+                    undefined_variable
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: "# sandbox\n./main.go:4:5: undefined: undefined_variable\n"
+              output: "# sandbox\n./main.go:4:5: undefined: undefined_variable\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
 
   - name: "stderr output"
-    input:
-      runtime: go
-      files:
-        - name: main.go
-          content: |
-            package main
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
 
-            import (
-                "fmt"
-                "os"
-            )
+                import (
+                    "fmt"
+                    "os"
+                )
 
-            func main() {
-                fmt.Fprintln(os.Stderr, "error message")
-            }
-    output:
-      status: 200
-      body:
-        compile:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 0
-          status: "OK"
-          signal: null
-        run:
-          stdout: ""
-          stderr: "error message\n"
-          output: "error message\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+                func main() {
+                    fmt.Fprintln(os.Stderr, "error message")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "error message\n"
+              output: "error message\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "non-zero exit code"
-    input:
-      runtime: go
-      files:
-        - name: main.go
-          content: |
-            package main
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
 
-            import "os"
+                import "os"
 
-            func main() {
-                os.Exit(1)
-            }
-    output:
-      status: 200
-      body:
-        compile:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 0
-          status: "OK"
-          signal: null
-        run:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 1
-          status: "OK"
-          signal: null
+                func main() {
+                    os.Exit(1)
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 1
+              status: "OK"
+              signal: null
 
   - name: "stderr with non-zero exit code"
-    input:
-      runtime: go
-      files:
-        - name: main.go
-          content: |
-            package main
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
 
-            import (
-                "fmt"
-                "os"
-            )
+                import (
+                    "fmt"
+                    "os"
+                )
 
-            func main() {
-                fmt.Fprintln(os.Stderr, "error occurred")
-                os.Exit(2)
-            }
-    output:
-      status: 200
-      body:
-        compile:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 0
-          status: "OK"
-          signal: null
-        run:
-          stdout: ""
-          stderr: "error occurred\n"
-          output: "error occurred\n"
-          exit_code: 2
-          status: "OK"
-          signal: null
+                func main() {
+                    fmt.Fprintln(os.Stderr, "error occurred")
+                    os.Exit(2)
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "error occurred\n"
+              output: "error occurred\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
 
   - name: "pre-installed package golang.org/x/text"
-    input:
-      runtime: go
-      files:
-        - name: main.go
-          content: |
-            package main
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
 
-            import (
-                "fmt"
+                import (
+                    "fmt"
 
-                "golang.org/x/text/cases"
-                "golang.org/x/text/language"
-            )
+                    "golang.org/x/text/cases"
+                    "golang.org/x/text/language"
+                )
 
-            func main() {
-                c := cases.Title(language.English)
-                fmt.Println(c.String("hello world"))
-            }
-    output:
-      status: 200
-      body:
-        compile:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 0
-          status: "OK"
-          signal: null
-        run:
-          stdout: "Hello World\n"
-          stderr: ""
-          output: "Hello World\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+                func main() {
+                    c := cases.Title(language.English)
+                    fmt.Println(c.String("hello world"))
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "Hello World\n"
+              stderr: ""
+              output: "Hello World\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "restricted file go.mod rejected"
-    input:
-      runtime: go
-      files:
-        - name: go.mod
-          content: |
-            module sandbox
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: go.mod
+              type: raw
+              content: |
+                module sandbox
 
-            go 1.26
-    output:
-      status: 400
-      body:
-        error: 'file "go.mod" is not allowed for the go runtime'
+                go 1.26
+        output:
+          status: 400
+          body:
+            error: 'file "go.mod" is not allowed for the go runtime'
 
   - name: "restricted file go.sum rejected"
-    input:
-      runtime: go
-      files:
-        - name: go.sum
-          content: ""
-    output:
-      status: 400
-      body:
-        error: 'file "go.sum" is not allowed for the go runtime'
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: go.sum
+              type: raw
+              content: ""
+        output:
+          status: 400
+          body:
+            error: 'file "go.sum" is not allowed for the go runtime'
 
   - name: "restricted file go.mod rejected even with valid main.go"
-    input:
-      runtime: go
-      files:
-        - name: main.go
-          content: |
-            package main
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
 
-            func main() {}
-        - name: go.mod
-          content: |
-            module sandbox
+                func main() {}
+            - name: go.mod
+              type: raw
+              content: |
+                module sandbox
 
-            go 1.26
-    output:
-      status: 400
-      body:
-        error: 'file "go.mod" is not allowed for the go runtime'
+                go 1.26
+        output:
+          status: 400
+          body:
+            error: 'file "go.mod" is not allowed for the go runtime'
 
   - name: "restricted file main rejected"
-    input:
-      runtime: go
-      files:
-        - name: main.go
-          content: |
-            package main
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
 
-            func main() {}
-        - name: main
-          content: "data"
-    output:
-      status: 400
-      body:
-        error: 'file "main" is not allowed for the go runtime'
+                func main() {}
+            - name: main
+              type: raw
+              content: "data"
+        output:
+          status: 400
+          body:
+            error: 'file "main" is not allowed for the go runtime'

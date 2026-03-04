@@ -27,15 +27,29 @@ type testFile struct {
 	Tests []testCase `yaml:"tests"`
 }
 
-type testCase struct {
-	Name   string     `yaml:"name"`
-	Input  testInput  `yaml:"input"`
-	Output testOutput `yaml:"output"`
-}
+type fileType string
+
+const (
+	fileTypeRaw  fileType = "raw"
+	fileTypeFill fileType = "fill"
+)
 
 type testInputFile struct {
-	Name    string `yaml:"name"`
-	Content string `yaml:"content"`
+	Name    string   `yaml:"name"`
+	Type    fileType `yaml:"type"`
+	Content string   `yaml:"content"`
+	Size    int      `yaml:"size"`
+}
+
+func (f testInputFile) resolveContent() (string, error) {
+	switch f.Type {
+	case fileTypeRaw, "":
+		return f.Content, nil
+	case fileTypeFill:
+		return strings.Repeat("A", f.Size), nil
+	default:
+		return "", fmt.Errorf("unknown file type: %q", f.Type)
+	}
 }
 
 type testInput struct {
@@ -61,6 +75,16 @@ type runOutput struct {
 	ExitCode int     `yaml:"exit_code"`
 	Status   string  `yaml:"status"`
 	Signal   *string `yaml:"signal"`
+}
+
+type testRequest struct {
+	Input  testInput  `yaml:"input"`
+	Output testOutput `yaml:"output"`
+}
+
+type testCase struct {
+	Name     string        `yaml:"name"`
+	Requests []testRequest `yaml:"requests"`
 }
 
 type apiRequest struct {
@@ -126,63 +150,69 @@ func TestE2E(t *testing.T) {
 		for i, tc := range tf.Tests {
 			t.Run(fmt.Sprintf("%s/%d/%s", testPath, i, tc.Name), func(t *testing.T) {
 				t.Parallel()
-				files := make([]apiFile, len(tc.Input.Files))
-				for i, f := range tc.Input.Files {
-					files[i] = apiFile{
-						Name:    f.Name,
-						Content: base64.StdEncoding.EncodeToString([]byte(f.Content)),
-					}
-				}
+				for ri, req := range tc.Requests {
+					func() {
+						files := make([]apiFile, len(req.Input.Files))
+						for fi, f := range req.Input.Files {
+							content, err := f.resolveContent()
+							require.NoError(t, err, "[request %d] failed to resolve content for file %q", ri, f.Name)
+							files[fi] = apiFile{
+								Name:    f.Name,
+								Content: base64.StdEncoding.EncodeToString([]byte(content)),
+							}
+						}
 
-				reqBody := apiRequest{
-					Runtime: tc.Input.Runtime,
-					Files:   files,
-				}
+						reqBody := apiRequest{
+							Runtime: req.Input.Runtime,
+							Files:   files,
+						}
 
-				bodyBytes, err := json.Marshal(reqBody)
-				require.NoError(t, err, "failed to marshal request body")
+						bodyBytes, err := json.Marshal(reqBody)
+						require.NoError(t, err, "[request %d] failed to marshal request body", ri)
 
-				url := fmt.Sprintf("%s/v1/run", serverURL)
-				resp, err := http.Post(url, "application/json", bytes.NewReader(bodyBytes))
-				require.NoError(t, err, "failed to send request to %s", url)
-				defer func() { _ = resp.Body.Close() }()
+						url := fmt.Sprintf("%s/v1/run", serverURL)
+						resp, err := http.Post(url, "application/json", bytes.NewReader(bodyBytes))
+						require.NoError(t, err, "[request %d] failed to send request to %s", ri, url)
+						defer func() { _ = resp.Body.Close() }()
 
-				require.Equal(t, tc.Output.Status, resp.StatusCode, "unexpected HTTP status code")
+						require.Equal(t, req.Output.Status, resp.StatusCode, "[request %d] unexpected HTTP status code", ri)
 
-				if tc.Output.Body.Error != "" {
-					var errResp apiErrorResponse
-					err = json.NewDecoder(resp.Body).Decode(&errResp)
-					require.NoError(t, err, "failed to decode error response body")
+						if req.Output.Body.Error != "" {
+							var errResp apiErrorResponse
+							err = json.NewDecoder(resp.Body).Decode(&errResp)
+							require.NoError(t, err, "[request %d] failed to decode error response body", ri)
 
-					assert.Equal(t, tc.Output.Body.Error, errResp.Error, "error message mismatch")
-				} else {
-					var apiResp apiResponse
-					err = json.NewDecoder(resp.Body).Decode(&apiResp)
-					require.NoError(t, err, "failed to decode response body")
+							assert.Equal(t, req.Output.Body.Error, errResp.Error, "[request %d] error message mismatch", ri)
+						} else {
+							var apiResp apiResponse
+							err = json.NewDecoder(resp.Body).Decode(&apiResp)
+							require.NoError(t, err, "[request %d] failed to decode response body", ri)
 
-					if tc.Output.Body.Compile == nil {
-						assert.Nil(t, apiResp.Compile, "compile should be null")
-					} else {
-						require.NotNil(t, apiResp.Compile, "compile should not be null")
-						assert.Equal(t, tc.Output.Body.Compile.Stdout, decodeBase64(t, apiResp.Compile.Stdout, "compile stdout"), "compile stdout mismatch")
-						assert.Equal(t, tc.Output.Body.Compile.Stderr, decodeBase64(t, apiResp.Compile.Stderr, "compile stderr"), "compile stderr mismatch")
-						assert.Equal(t, tc.Output.Body.Compile.Output, decodeBase64(t, apiResp.Compile.Output, "compile output"), "compile output mismatch")
-						assert.Equal(t, tc.Output.Body.Compile.ExitCode, apiResp.Compile.ExitCode, "compile exit_code mismatch")
-						assert.Equal(t, tc.Output.Body.Compile.Status, apiResp.Compile.Status, "compile status mismatch")
-						assert.Equal(t, tc.Output.Body.Compile.Signal, apiResp.Compile.Signal, "compile signal mismatch")
-					}
+							if req.Output.Body.Compile == nil {
+								assert.Nil(t, apiResp.Compile, "[request %d] compile should be null", ri)
+							} else {
+								require.NotNil(t, apiResp.Compile, "[request %d] compile should not be null", ri)
+								assert.Equal(t, req.Output.Body.Compile.Stdout, decodeBase64(t, apiResp.Compile.Stdout, "compile stdout"), "[request %d] compile stdout mismatch", ri)
+								assert.Equal(t, req.Output.Body.Compile.Stderr, decodeBase64(t, apiResp.Compile.Stderr, "compile stderr"), "[request %d] compile stderr mismatch", ri)
+								assert.Equal(t, req.Output.Body.Compile.Output, decodeBase64(t, apiResp.Compile.Output, "compile output"), "[request %d] compile output mismatch", ri)
+								assert.Equal(t, req.Output.Body.Compile.ExitCode, apiResp.Compile.ExitCode, "[request %d] compile exit_code mismatch", ri)
+								assert.Equal(t, req.Output.Body.Compile.Status, apiResp.Compile.Status, "[request %d] compile status mismatch", ri)
+								assert.Equal(t, req.Output.Body.Compile.Signal, apiResp.Compile.Signal, "[request %d] compile signal mismatch", ri)
+							}
 
-					if tc.Output.Body.Run == nil {
-						assert.Nil(t, apiResp.Run, "run should be null")
-					} else {
-						require.NotNil(t, apiResp.Run, "run should not be null")
-						assert.Equal(t, tc.Output.Body.Run.Stdout, decodeBase64(t, apiResp.Run.Stdout, "run stdout"), "run stdout mismatch")
-						assert.Equal(t, tc.Output.Body.Run.Stderr, decodeBase64(t, apiResp.Run.Stderr, "run stderr"), "run stderr mismatch")
-						assert.Equal(t, tc.Output.Body.Run.Output, decodeBase64(t, apiResp.Run.Output, "run output"), "run output mismatch")
-						assert.Equal(t, tc.Output.Body.Run.ExitCode, apiResp.Run.ExitCode, "run exit_code mismatch")
-						assert.Equal(t, tc.Output.Body.Run.Status, apiResp.Run.Status, "run status mismatch")
-						assert.Equal(t, tc.Output.Body.Run.Signal, apiResp.Run.Signal, "run signal mismatch")
-					}
+							if req.Output.Body.Run == nil {
+								assert.Nil(t, apiResp.Run, "[request %d] run should be null", ri)
+							} else {
+								require.NotNil(t, apiResp.Run, "[request %d] run should not be null", ri)
+								assert.Equal(t, req.Output.Body.Run.Stdout, decodeBase64(t, apiResp.Run.Stdout, "run stdout"), "[request %d] run stdout mismatch", ri)
+								assert.Equal(t, req.Output.Body.Run.Stderr, decodeBase64(t, apiResp.Run.Stderr, "run stderr"), "[request %d] run stderr mismatch", ri)
+								assert.Equal(t, req.Output.Body.Run.Output, decodeBase64(t, apiResp.Run.Output, "run output"), "[request %d] run output mismatch", ri)
+								assert.Equal(t, req.Output.Body.Run.ExitCode, apiResp.Run.ExitCode, "[request %d] run exit_code mismatch", ri)
+								assert.Equal(t, req.Output.Body.Run.Status, apiResp.Run.Status, "[request %d] run status mismatch", ri)
+								assert.Equal(t, req.Output.Body.Run.Signal, apiResp.Run.Signal, "[request %d] run signal mismatch", ri)
+							}
+						}
+					}()
 				}
 			})
 		}

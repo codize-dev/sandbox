@@ -1,0 +1,50 @@
+tests:
+  - name: "fill file is correctly generated with expected size and content"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                size=$(wc -c < payload.bin)
+                head -c 1 payload.bin
+                tail -c 1 payload.bin
+                echo ""
+                echo "size=$size"
+            - name: payload.bin
+              type: fill
+              size: 1024
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "AA\nsize=1024\n"
+              stderr: ""
+              output: "AA\nsize=1024\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "large fill file dumped to stdout exceeds output limit"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                cat payload.bin
+            - name: payload.bin
+              type: fill
+              size: 2097152
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: -1
+              status: "OUTPUT_LIMIT_EXCEEDED"
+              signal: null

@@ -1,92 +1,102 @@
 tests:
   - name: "hello world"
-    input:
-      runtime: node
-      files:
-        - name: index.js
-          content: |
-            console.log("Hello, World!");
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "Hello, World!\n"
-          stderr: ""
-          output: "Hello, World!\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                console.log("Hello, World!");
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "Hello, World!\n"
+              stderr: ""
+              output: "Hello, World!\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "stderr output"
-    input:
-      runtime: node
-      files:
-        - name: index.js
-          content: |
-            console.error("error message");
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: "error message\n"
-          output: "error message\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                console.error("error message");
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "error message\n"
+              output: "error message\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "stdout and stderr"
-    input:
-      runtime: node
-      files:
-        - name: index.js
-          content: |
-            console.log("out");
-            console.error("err");
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "out\n"
-          stderr: "err\n"
-          output: "out\nerr\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                console.log("out");
+                console.error("err");
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "out\n"
+              stderr: "err\n"
+              output: "out\nerr\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "non-zero exit code"
-    input:
-      runtime: node
-      files:
-        - name: index.js
-          content: |
-            process.exit(1);
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 1
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                process.exit(1);
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 1
+              status: "OK"
+              signal: null
 
   - name: "stderr with non-zero exit code"
-    input:
-      runtime: node
-      files:
-        - name: index.js
-          content: |
-            console.error("error occurred");
-            process.exit(2);
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: "error occurred\n"
-          output: "error occurred\n"
-          exit_code: 2
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                console.error("error occurred");
+                process.exit(2);
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "error occurred\n"
+              output: "error occurred\n"
+              exit_code: 2
+              status: "OK"
+              signal: null

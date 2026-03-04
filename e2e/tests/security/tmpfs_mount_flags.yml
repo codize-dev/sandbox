@@ -1,70 +1,76 @@
 tests:
   - name: "/tmp is mounted with nosuid and nodev"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            line=$(grep ' /tmp ' /proc/mounts)
-            if echo "$line" | grep -q nosuid && echo "$line" | grep -q nodev; then
-              echo "blocked"
-            else
-              echo "allowed"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                line=$(grep ' /tmp ' /proc/mounts)
+                if echo "$line" | grep -q nosuid && echo "$line" | grep -q nodev; then
+                  echo "blocked"
+                else
+                  echo "allowed"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "device node creation on /tmp is blocked"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            if mknod /tmp/urandom c 1 9 2>/dev/null; then
-              echo "allowed"
-            else
-              echo "blocked"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if mknod /tmp/urandom c 1 9 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
 
   - name: "SUID bit on /tmp does not grant new privileges"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            cp /usr/bin/id /tmp/suid-id
-            chmod 4755 /tmp/suid-id
-            output=$(/tmp/suid-id)
-            if echo "$output" | grep -q "euid="; then
-              echo "allowed"
-            else
-              echo "blocked"
-            fi
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "blocked\n"
-          stderr: ""
-          output: "blocked\n"
-          exit_code: 0
-          status: "OK"
-          signal: null
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                cp /usr/bin/id /tmp/suid-id
+                chmod 4755 /tmp/suid-id
+                output=$(/tmp/suid-id)
+                if echo "$output" | grep -q "euid="; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

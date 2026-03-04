@@ -1,37 +1,41 @@
 tests:
   - name: "execution timeout"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            sleep 60
-    output:
-      status: 200
-      body:
-        run:
-          stdout: ""
-          stderr: ""
-          output: ""
-          exit_code: 137
-          status: "TIMEOUT"
-          signal: "SIGKILL"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                sleep 60
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 137
+              status: "TIMEOUT"
+              signal: "SIGKILL"
 
   - name: "timeout with partial output"
-    input:
-      runtime: bash
-      files:
-        - name: main.sh
-          content: |
-            echo "started"
-            sleep 60
-    output:
-      status: 200
-      body:
-        run:
-          stdout: "started\n"
-          stderr: ""
-          output: "started\n"
-          exit_code: 137
-          status: "TIMEOUT"
-          signal: "SIGKILL"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                echo "started"
+                sleep 60
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "started\n"
+              stderr: ""
+              output: "started\n"
+              exit_code: 137
+              status: "TIMEOUT"
+              signal: "SIGKILL"
