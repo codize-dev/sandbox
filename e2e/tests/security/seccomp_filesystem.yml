@@ -1,5 +1,5 @@
 tests:
-  - name: "ptrace is blocked by seccomp (ruby)"
+  - name: "open_by_handle_at (Shocker attack) is blocked by seccomp (ruby)"
     requests:
       - input:
           runtime: ruby
@@ -7,8 +7,8 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 117 : 101
-                syscall(nr)
+                nr = RUBY_PLATFORM.include?('aarch64') ? 265 : 304
+                syscall(nr, 0, 0, 0)
         output:
           status: 200
           body:
@@ -20,7 +20,7 @@ tests:
               status: "OK"
               signal: "SIGSYS"
 
-  - name: "mount is blocked by seccomp (ruby)"
+  - name: "fsopen (new mount API) is blocked by seccomp (ruby)"
     requests:
       - input:
           runtime: ruby
@@ -28,8 +28,7 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 40 : 165
-                syscall(nr)
+                syscall(430, "tmpfs", 0)
         output:
           status: 200
           body:
@@ -41,31 +40,18 @@ tests:
               status: "OK"
               signal: "SIGSYS"
 
-  - name: "ptrace is blocked by seccomp (go)"
+  - name: "fsconfig is blocked by seccomp (ruby)"
     requests:
       - input:
-          runtime: go
+          runtime: ruby
           files:
-            - name: main.go
+            - name: main.rb
               type: raw
               content: |
-                package main
-
-                import "syscall"
-
-                func main() {
-                	syscall.RawSyscall(syscall.SYS_PTRACE, 0, 0, 0)
-                }
+                syscall(431, 0, 0, 0, 0, 0)
         output:
           status: 200
           body:
-            compile:
-              stdout: ""
-              stderr: ""
-              output: ""
-              exit_code: 0
-              status: "OK"
-              signal: null
             run:
               stdout: ""
               stderr: ""
@@ -74,7 +60,7 @@ tests:
               status: "OK"
               signal: "SIGSYS"
 
-  - name: "io_uring_setup returns ENOSYS instead of killing process (ruby)"
+  - name: "fsmount is blocked by seccomp (ruby)"
     requests:
       - input:
           runtime: ruby
@@ -82,23 +68,19 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                begin
-                  syscall(425)
-                rescue Errno::ENOSYS
-                  puts "ENOSYS"
-                end
+                syscall(432, 0, 0, 0)
         output:
           status: 200
           body:
             run:
-              stdout: "ENOSYS\n"
+              stdout: ""
               stderr: ""
-              output: "ENOSYS\n"
-              exit_code: 0
+              output: ""
+              exit_code: 159
               status: "OK"
-              signal: null
+              signal: "SIGSYS"
 
-  - name: "io_uring_enter returns ENOSYS instead of killing process (ruby)"
+  - name: "fspick is blocked by seccomp (ruby)"
     requests:
       - input:
           runtime: ruby
@@ -106,23 +88,19 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                begin
-                  syscall(426, 0, 0, 0, 0, 0)
-                rescue Errno::ENOSYS
-                  puts "ENOSYS"
-                end
+                syscall(433, 0, "", 0)
         output:
           status: 200
           body:
             run:
-              stdout: "ENOSYS\n"
+              stdout: ""
               stderr: ""
-              output: "ENOSYS\n"
-              exit_code: 0
+              output: ""
+              exit_code: 159
               status: "OK"
-              signal: null
+              signal: "SIGSYS"
 
-  - name: "io_uring_register returns ENOSYS instead of killing process (ruby)"
+  - name: "move_mount is blocked by seccomp (ruby)"
     requests:
       - input:
           runtime: ruby
@@ -130,18 +108,54 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                begin
-                  syscall(427, 0, 0, 0)
-                rescue Errno::ENOSYS
-                  puts "ENOSYS"
-                end
+                syscall(429, 0, "", 0, "", 0)
         output:
           status: 200
           body:
             run:
-              stdout: "ENOSYS\n"
+              stdout: ""
               stderr: ""
-              output: "ENOSYS\n"
-              exit_code: 0
+              output: ""
+              exit_code: 159
               status: "OK"
-              signal: null
+              signal: "SIGSYS"
+
+  - name: "open_tree is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(428, 0, "", 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "mount_setattr is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(442, 0, "", 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"

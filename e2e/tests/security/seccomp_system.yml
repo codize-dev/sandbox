@@ -1,0 +1,251 @@
+tests:
+  - name: "reboot is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 142 : 169
+                syscall(nr, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "acct is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 89 : 163
+                syscall(nr, "/tmp/acct")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "swapon is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 224 : 167
+                syscall(nr, "/tmp/swap", 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "swapoff is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 225 : 168
+                syscall(nr, "/tmp/swap")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "syslog is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 116 : 103
+                syscall(nr, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "quotactl is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 60 : 179
+                syscall(nr, 0, "/", 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "quotactl_fd is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(443, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "clock_settime is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 112 : 227
+                syscall(nr, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "clock_adjtime is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 266 : 305
+                syscall(nr, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "settimeofday is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 170 : 164
+                syscall(nr, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "adjtimex is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 171 : 159
+                syscall(nr, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "umount is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 39 : 166
+                syscall(nr, "/", 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"

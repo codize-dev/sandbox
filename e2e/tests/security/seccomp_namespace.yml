@@ -1,0 +1,96 @@
+tests:
+  - name: "unshare is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 97 : 272
+                syscall(nr, 0x10000000)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "setns is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 268 : 308
+                syscall(nr, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "pivot_root is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 41 : 155
+                syscall(nr, "/", "/")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "unshare is blocked by seccomp (go)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import "syscall"
+
+                func main() {
+                	syscall.RawSyscall(syscall.SYS_UNSHARE, 0x10000000, 0, 0)
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"

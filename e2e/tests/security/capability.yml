@@ -1,0 +1,99 @@
+tests:
+  - name: "chown to root is blocked (no CAP_CHOWN)"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                touch /tmp/captest
+                if chown 0:0 /tmp/captest 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "setting hostname is blocked (no CAP_SYS_ADMIN)"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if hostname attacker 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "all effective capabilities are zero"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                capeff=$(sed -n 's/^CapEff:[[:space:]]*//p' /proc/self/status)
+                if [ "$capeff" = "0000000000000000" ]; then
+                  echo "blocked"
+                else
+                  echo "allowed"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "no_new_privs is set"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                nnp=$(sed -n 's/^NoNewPrivs:[[:space:]]*//p' /proc/self/status)
+                if [ "$nnp" = "1" ]; then
+                  echo "blocked"
+                else
+                  echo "allowed"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

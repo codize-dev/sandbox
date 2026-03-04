@@ -1,0 +1,100 @@
+tests:
+  - name: "AF_PACKET raw socket creation is blocked (no CAP_NET_RAW)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                require 'socket'
+                begin
+                  Socket.new(17, 3, 0)
+                  puts "allowed"
+                rescue Errno::EPERM, Errno::EAFNOSUPPORT, Errno::EACCES
+                  puts "blocked"
+                end
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "Unix domain socket to Docker socket path is not reachable"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                require 'socket'
+                begin
+                  UNIXSocket.new("/run/docker.sock")
+                  puts "allowed"
+                rescue Errno::ENOENT, Errno::ECONNREFUSED, Errno::EACCES
+                  puts "blocked"
+                end
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "UDP outbound is blocked by network namespace"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const dgram = require("dgram");
+                const client = dgram.createSocket("udp4");
+                client.send("test", 53, "8.8.8.8", (err) => {
+                  console.log(err ? "blocked" : "allowed");
+                  client.close();
+                });
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "DNS resolution is blocked by network namespace"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const dns = require("dns");
+                dns.lookup("example.com", (err) => {
+                  console.log(err ? "blocked" : "allowed");
+                });
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

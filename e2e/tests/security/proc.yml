@@ -1,0 +1,97 @@
+tests:
+  - name: "/proc/sysrq-trigger write is blocked"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if { echo b > /proc/sysrq-trigger; } 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "/proc/self/mem write is blocked"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if { echo x > /proc/self/mem; } 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "/proc/sys/kernel write is blocked"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if { echo 0 > /proc/sys/kernel/randomize_va_space; } 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "only sandbox PIDs are visible (PID namespace isolation)"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                count=$(ls /proc | grep -cE '^[0-9]+$')
+                if [ "$count" -lt 10 ]; then
+                  echo "blocked"
+                else
+                  echo "allowed"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

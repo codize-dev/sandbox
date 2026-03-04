@@ -1,0 +1,50 @@
+tests:
+  - name: "SIGKILL to PID 1 is blocked inside PID namespace"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                kill -9 1 2>/dev/null
+                if kill -0 1 2>/dev/null; then
+                  echo "blocked"
+                else
+                  echo "allowed"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "SIGSTOP to PID 1 is blocked inside PID namespace"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                kill -STOP 1 2>/dev/null
+                if kill -0 1 2>/dev/null; then
+                  echo "blocked"
+                else
+                  echo "allowed"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

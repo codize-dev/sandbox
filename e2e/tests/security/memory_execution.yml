@@ -1,0 +1,98 @@
+tests:
+  - name: "/dev/shm is not accessible (not mounted in sandbox)"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if [ -d /dev/shm ]; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "mmap with PROT_WRITE|PROT_EXEC is permitted (no W^X enforcement)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	b, err := syscall.Mmap(-1, 0, 4096,
+                		syscall.PROT_READ|syscall.PROT_WRITE|syscall.PROT_EXEC,
+                		syscall.MAP_PRIVATE|syscall.MAP_ANONYMOUS)
+                	if err != nil {
+                		fmt.Println("blocked")
+                		return
+                	}
+                	_ = b
+                	fmt.Println("allowed")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "allowed\n"
+              stderr: ""
+              output: "allowed\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "memfd_create is not blocked by seccomp"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 279 : 319
+                begin
+                  fd = syscall(nr, "test", 0)
+                  if fd >= 0
+                    puts "allowed"
+                  else
+                    puts "error"
+                  end
+                rescue Errno::ENOSYS
+                  puts "enosys"
+                end
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "allowed\n"
+              stderr: ""
+              output: "allowed\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

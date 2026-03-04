@@ -1,0 +1,129 @@
+tests:
+  - name: "symlink in /tmp pointing outside sandbox cannot reach host files"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                ln -s /etc/shadow /tmp/escape_link
+                if cat /tmp/escape_link 2>/dev/null | grep -q .; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "device node creation in /code is blocked (no CAP_MKNOD)"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                if mknod /code/urandom c 1 9 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "SUID bit set in /code does not grant elevated privileges"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                cp /usr/bin/id /code/suid-id
+                chmod 4755 /code/suid-id 2>/dev/null
+                output=$(/code/suid-id 2>/dev/null)
+                if echo "$output" | grep -q "euid=0"; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "hardlink across filesystem boundaries is blocked"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                echo test > /tmp/srcfile
+                if ln /tmp/srcfile /code/crosslink 2>/dev/null; then
+                  echo "allowed"
+                else
+                  echo "blocked"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "named pipe (FIFO) communication works within sandbox"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                mkfifo /tmp/testpipe
+                echo "hello" > /tmp/testpipe &
+                result=$(cat /tmp/testpipe)
+                wait
+                if [ "$result" = "hello" ]; then
+                  echo "ok"
+                else
+                  echo "error"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "ok\n"
+              stderr: ""
+              output: "ok\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

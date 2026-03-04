@@ -1,0 +1,74 @@
+tests:
+  - name: "file descriptor exhaustion is enforced by rlimit_nofile"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const fs = require("fs");
+                let count = 0;
+                try {
+                  for (let i = 0; i < 200; i++) {
+                    fs.openSync("/dev/null", "r");
+                    count++;
+                  }
+                } catch (e) {}
+                console.log(count < 200 ? "blocked" : "allowed");
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "tmpfs inode exhaustion is bounded by size limit"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                for i in $(seq 1 100000); do
+                  echo x > /tmp/f$i 2>/dev/null || { echo "blocked"; exit 0; }
+                done
+                echo "allowed"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "blocked\n"
+              stderr: ""
+              output: "blocked\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "CPU spin with multiple processes is terminated by timeout"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                for i in 1 2 3 4; do
+                  while true; do :; done &
+                done
+                wait
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 137
+              status: "TIMEOUT"
+              signal: "SIGKILL"
