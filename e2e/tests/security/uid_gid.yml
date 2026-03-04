@@ -31,7 +31,7 @@ tests:
                   process.setuid(0);
                   console.log("allowed");
                 } catch (e) {
-                  console.log("blocked");
+                  console.log(e.code === "EINVAL" ? "blocked" : "error: " + e.code);
                 }
         output:
           status: 200

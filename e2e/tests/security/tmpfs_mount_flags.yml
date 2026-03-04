@@ -32,19 +32,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                if mknod /tmp/urandom c 1 9 2>/dev/null; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                mknod /tmp/urandom c 1 9
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "mknod: /tmp/urandom: Operation not permitted\n"
+              output: "mknod: /tmp/urandom: Operation not permitted\n"
+              exit_code: 1
               status: "OK"
               signal: null
 

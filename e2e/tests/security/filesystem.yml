@@ -55,19 +55,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                if { echo x > /lib/test; } 2>/dev/null; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                echo x > /lib/test
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "/code/main.sh: line 1: /lib/test: Read-only file system\n"
+              output: "/code/main.sh: line 1: /lib/test: Read-only file system\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -79,19 +75,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                if { echo x > /usr/bin/test; } 2>/dev/null; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                echo x > /usr/bin/test
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "/code/main.sh: line 1: /usr/bin/test: Read-only file system\n"
+              output: "/code/main.sh: line 1: /usr/bin/test: Read-only file system\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -103,19 +95,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                if { echo x > /lib64/test; } 2>/dev/null; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                echo x > /lib64/test
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "/code/main.sh: line 1: /lib64/test: Not a directory\n"
+              output: "/code/main.sh: line 1: /lib64/test: Not a directory\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -175,19 +163,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                if { echo 0 > /proc/self/oom_score_adj; } 2>/dev/null; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                echo 0 > /proc/self/oom_score_adj
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "/code/main.sh: line 1: /proc/self/oom_score_adj: Read-only file system\n"
+              output: "/code/main.sh: line 1: /proc/self/oom_score_adj: Read-only file system\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -200,20 +184,15 @@ tests:
               type: raw
               content: |
                 const fs = require("fs");
-                try {
-                  fs.writeFileSync("/mise/installs/node/24.14.0/test", "x");
-                  console.log("allowed");
-                } catch (e) {
-                  console.log(e.code === "EROFS" ? "blocked" : "error: " + e.code);
-                }
+                fs.writeFileSync("/mise/installs/node/24.14.0/test", "x");
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "/EROFS: read-only file system/"
+              output: "/EROFS: read-only file system/"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -225,21 +204,14 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                begin
-                  File.write("/mise/installs/ruby/3.4.8/test", "x")
-                  puts "allowed"
-                rescue Errno::EROFS
-                  puts "blocked"
-                rescue => e
-                  puts "error: #{e.class}"
-                end
+                File.write("/mise/installs/ruby/3.4.8/test", "x")
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "/Read-only file system.*Errno::EROFS/"
+              output: "/Read-only file system.*Errno::EROFS/"
+              exit_code: 1
               status: "OK"
               signal: null

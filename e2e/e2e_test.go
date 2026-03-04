@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -122,6 +123,23 @@ func decodeBase64(t *testing.T, encoded, field string) string {
 	return string(decoded)
 }
 
+func assertStringField(t *testing.T, expected, actual string, msgAndArgs ...interface{}) {
+	t.Helper()
+	if len(expected) >= 2 && expected[0] == '/' && expected[len(expected)-1] == '/' {
+		pattern := expected[1 : len(expected)-1]
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			t.Errorf("invalid regex pattern %q: %v", pattern, err)
+			return
+		}
+		if !re.MatchString(actual) {
+			assert.Fail(t, fmt.Sprintf("regex mismatch: pattern %q did not match %q", pattern, actual), msgAndArgs...)
+		}
+	} else {
+		assert.Equal(t, expected, actual, msgAndArgs...)
+	}
+}
+
 func TestE2E(t *testing.T) {
 	var files []string
 	err := fs.WalkDir(testFiles, "tests", func(p string, d fs.DirEntry, walkErr error) error {
@@ -192,9 +210,9 @@ func TestE2E(t *testing.T) {
 								assert.Nil(t, apiResp.Compile, "[request %d] compile should be null", ri)
 							} else {
 								require.NotNil(t, apiResp.Compile, "[request %d] compile should not be null", ri)
-								assert.Equal(t, req.Output.Body.Compile.Stdout, decodeBase64(t, apiResp.Compile.Stdout, "compile stdout"), "[request %d] compile stdout mismatch", ri)
-								assert.Equal(t, req.Output.Body.Compile.Stderr, decodeBase64(t, apiResp.Compile.Stderr, "compile stderr"), "[request %d] compile stderr mismatch", ri)
-								assert.Equal(t, req.Output.Body.Compile.Output, decodeBase64(t, apiResp.Compile.Output, "compile output"), "[request %d] compile output mismatch", ri)
+								assertStringField(t, req.Output.Body.Compile.Stdout, decodeBase64(t, apiResp.Compile.Stdout, "compile stdout"), "[request %d] compile stdout mismatch", ri)
+								assertStringField(t, req.Output.Body.Compile.Stderr, decodeBase64(t, apiResp.Compile.Stderr, "compile stderr"), "[request %d] compile stderr mismatch", ri)
+								assertStringField(t, req.Output.Body.Compile.Output, decodeBase64(t, apiResp.Compile.Output, "compile output"), "[request %d] compile output mismatch", ri)
 								assert.Equal(t, req.Output.Body.Compile.ExitCode, apiResp.Compile.ExitCode, "[request %d] compile exit_code mismatch", ri)
 								assert.Equal(t, req.Output.Body.Compile.Status, apiResp.Compile.Status, "[request %d] compile status mismatch", ri)
 								assert.Equal(t, req.Output.Body.Compile.Signal, apiResp.Compile.Signal, "[request %d] compile signal mismatch", ri)
@@ -204,9 +222,9 @@ func TestE2E(t *testing.T) {
 								assert.Nil(t, apiResp.Run, "[request %d] run should be null", ri)
 							} else {
 								require.NotNil(t, apiResp.Run, "[request %d] run should not be null", ri)
-								assert.Equal(t, req.Output.Body.Run.Stdout, decodeBase64(t, apiResp.Run.Stdout, "run stdout"), "[request %d] run stdout mismatch", ri)
-								assert.Equal(t, req.Output.Body.Run.Stderr, decodeBase64(t, apiResp.Run.Stderr, "run stderr"), "[request %d] run stderr mismatch", ri)
-								assert.Equal(t, req.Output.Body.Run.Output, decodeBase64(t, apiResp.Run.Output, "run output"), "[request %d] run output mismatch", ri)
+								assertStringField(t, req.Output.Body.Run.Stdout, decodeBase64(t, apiResp.Run.Stdout, "run stdout"), "[request %d] run stdout mismatch", ri)
+								assertStringField(t, req.Output.Body.Run.Stderr, decodeBase64(t, apiResp.Run.Stderr, "run stderr"), "[request %d] run stderr mismatch", ri)
+								assertStringField(t, req.Output.Body.Run.Output, decodeBase64(t, apiResp.Run.Output, "run output"), "[request %d] run output mismatch", ri)
 								assert.Equal(t, req.Output.Body.Run.ExitCode, apiResp.Run.ExitCode, "[request %d] run exit_code mismatch", ri)
 								assert.Equal(t, req.Output.Body.Run.Status, apiResp.Run.Status, "[request %d] run status mismatch", ri)
 								assert.Equal(t, req.Output.Body.Run.Signal, apiResp.Run.Signal, "[request %d] run signal mismatch", ri)

@@ -7,20 +7,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                ln -s /etc/shadow /tmp/escape_link
-                if cat /tmp/escape_link 2>/dev/null | grep -q .; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                ln -s /etc/shadow /tmp/escape_link && cat /tmp/escape_link
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "cat: /tmp/escape_link: No such file or directory\n"
+              output: "cat: /tmp/escape_link: No such file or directory\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -32,19 +27,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                if mknod /code/urandom c 1 9 2>/dev/null; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                mknod /code/urandom c 1 9
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "mknod: /code/urandom: Operation not permitted\n"
+              output: "mknod: /code/urandom: Operation not permitted\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -83,20 +74,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                echo test > /tmp/srcfile
-                if ln /tmp/srcfile /code/crosslink 2>/dev/null; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                echo test > /tmp/srcfile && ln /tmp/srcfile /code/crosslink
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "ln: failed to create hard link '/code/crosslink' => '/tmp/srcfile': Invalid cross-device link\n"
+              output: "ln: failed to create hard link '/code/crosslink' => '/tmp/srcfile': Invalid cross-device link\n"
+              exit_code: 1
               status: "OK"
               signal: null
 

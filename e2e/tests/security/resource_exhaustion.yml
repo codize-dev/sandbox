@@ -36,17 +36,16 @@ tests:
               type: raw
               content: |
                 for i in $(seq 1 100000); do
-                  echo x > /tmp/f$i 2>/dev/null || { echo "blocked"; exit 0; }
+                  echo x > /tmp/f$i || exit 1
                 done
-                echo "allowed"
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "/No space left on device/"
+              output: "/No space left on device/"
+              exit_code: 1
               status: "OK"
               signal: null
 

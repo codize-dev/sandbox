@@ -61,6 +61,24 @@ tests:
 - `raw` (default): File content is provided inline via the `content` field.
 - `fill`: Generates a file of the specified `size` bytes, filled with the character `A`.
 
+### Regex Matching
+
+String fields (`stdout`, `stderr`, `output`) support regex matching via `/pattern/` syntax. When a value starts and ends with `/`, the inner content is treated as a Go regular expression and matched against the actual value using partial match (`regexp.MatchString`).
+
+Use regex only when exact match is technically impossible (e.g., non-deterministic timing output, variable iteration numbers):
+
+```yaml
+run:
+  stdout: ""
+  stderr: "/No space left on device/"
+  output: "/No space left on device/"
+  exit_code: 1
+  status: "OK"
+  signal: null
+```
+
+Exact match is the default and preferred mode. All fields are required — never omit a field to skip its assertion. Use regex only when exact match is technically impossible (e.g., non-deterministic output that varies across kernel versions or runs).
+
 ### Multiple Requests
 
 A single test case can send multiple sequential requests by adding entries to the `requests` array.

@@ -7,20 +7,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                touch /tmp/captest
-                if chown 0:0 /tmp/captest 2>/dev/null; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                touch /tmp/captest && chown 0:0 /tmp/captest
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "chown: changing ownership of '/tmp/captest': Invalid argument\n"
+              output: "chown: changing ownership of '/tmp/captest': Invalid argument\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -32,19 +27,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                if hostname attacker 2>/dev/null; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                hostname attacker
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "hostname: you must be root to change the host name\n"
+              output: "hostname: you must be root to change the host name\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
