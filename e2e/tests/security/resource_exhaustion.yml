@@ -43,8 +43,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/No space left on device/"
-              output: "/No space left on device/"
+              stderr: "/^/code/main\\.sh: line \\d+: echo: write error: No space left on device\n$/"
+              output: "/^/code/main\\.sh: line \\d+: echo: write error: No space left on device\n$/"
               exit_code: 1
               status: "OK"
               signal: null

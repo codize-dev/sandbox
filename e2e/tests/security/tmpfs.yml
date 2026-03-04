@@ -15,8 +15,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/dd: error writing '/tmp/file\\d+': No space left on device/"
-              output: "/dd: error writing '/tmp/file\\d+': No space left on device/"
+              stderr: "/^dd: error writing '/tmp/file\\d+': No space left on device\n$/"
+              output: "/^dd: error writing '/tmp/file\\d+': No space left on device\n$/"
               exit_code: 1
               status: "OK"
               signal: null

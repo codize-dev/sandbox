@@ -190,8 +190,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/EROFS: read-only file system/"
-              output: "/EROFS: read-only file system/"
+              stderr: "/^node:fs:\\d+\\n[\\s\\S]*Error: EROFS: read-only file system, open '/mise/installs/node/[\\d.]+/test'[\\s\\S]*Node\\.js v[\\d.]+\\n$/"
+              output: "/^node:fs:\\d+\\n[\\s\\S]*Error: EROFS: read-only file system, open '/mise/installs/node/[\\d.]+/test'[\\s\\S]*Node\\.js v[\\d.]+\\n$/"
               exit_code: 1
               status: "OK"
               signal: null
@@ -210,8 +210,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/Read-only file system.*Errno::EROFS/"
-              output: "/Read-only file system.*Errno::EROFS/"
+              stderr: "/^/code/main\\.rb:\\d+:.*Read-only file system @ rb_sysopen - /mise/installs/ruby/[\\d.]+/test \\(Errno::EROFS\\)\\n\\tfrom /code/main\\.rb:\\d+:.*\\n$/"
+              output: "/^/code/main\\.rb:\\d+:.*Read-only file system @ rb_sysopen - /mise/installs/ruby/[\\d.]+/test \\(Errno::EROFS\\)\\n\\tfrom /code/main\\.rb:\\d+:.*\\n$/"
               exit_code: 1
               status: "OK"
               signal: null
