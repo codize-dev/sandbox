@@ -14,20 +14,21 @@ tests:
             }
     output:
       status: 200
-      compile:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 0
-        status: "OK"
-        signal: null
-      run:
-        stdout: "Hello, World!\n"
-        stderr: ""
-        output: "Hello, World!\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        compile:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 0
+          status: "OK"
+          signal: null
+        run:
+          stdout: "Hello, World!\n"
+          stderr: ""
+          output: "Hello, World!\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "compile error"
     input:
@@ -42,13 +43,14 @@ tests:
             }
     output:
       status: 200
-      compile:
-        stdout: ""
-        stderr: "# sandbox\n./main.go:4:5: undefined: undefined_variable\n"
-        output: "# sandbox\n./main.go:4:5: undefined: undefined_variable\n"
-        exit_code: 1
-        status: "OK"
-        signal: null
+      body:
+        compile:
+          stdout: ""
+          stderr: "# sandbox\n./main.go:4:5: undefined: undefined_variable\n"
+          output: "# sandbox\n./main.go:4:5: undefined: undefined_variable\n"
+          exit_code: 1
+          status: "OK"
+          signal: null
 
   - name: "stderr output"
     input:
@@ -68,20 +70,21 @@ tests:
             }
     output:
       status: 200
-      compile:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 0
-        status: "OK"
-        signal: null
-      run:
-        stdout: ""
-        stderr: "error message\n"
-        output: "error message\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        compile:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 0
+          status: "OK"
+          signal: null
+        run:
+          stdout: ""
+          stderr: "error message\n"
+          output: "error message\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "non-zero exit code"
     input:
@@ -98,20 +101,21 @@ tests:
             }
     output:
       status: 200
-      compile:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 0
-        status: "OK"
-        signal: null
-      run:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 1
-        status: "OK"
-        signal: null
+      body:
+        compile:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 0
+          status: "OK"
+          signal: null
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 1
+          status: "OK"
+          signal: null
 
   - name: "stderr with non-zero exit code"
     input:
@@ -132,20 +136,21 @@ tests:
             }
     output:
       status: 200
-      compile:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 0
-        status: "OK"
-        signal: null
-      run:
-        stdout: ""
-        stderr: "error occurred\n"
-        output: "error occurred\n"
-        exit_code: 2
-        status: "OK"
-        signal: null
+      body:
+        compile:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 0
+          status: "OK"
+          signal: null
+        run:
+          stdout: ""
+          stderr: "error occurred\n"
+          output: "error occurred\n"
+          exit_code: 2
+          status: "OK"
+          signal: null
 
   - name: "pre-installed package golang.org/x/text"
     input:
@@ -168,20 +173,21 @@ tests:
             }
     output:
       status: 200
-      compile:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 0
-        status: "OK"
-        signal: null
-      run:
-        stdout: "Hello World\n"
-        stderr: ""
-        output: "Hello World\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        compile:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 0
+          status: "OK"
+          signal: null
+        run:
+          stdout: "Hello World\n"
+          stderr: ""
+          output: "Hello World\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "restricted file go.mod rejected"
     input:
@@ -194,7 +200,8 @@ tests:
             go 1.26
     output:
       status: 400
-      error: 'file "go.mod" is not allowed for the go runtime'
+      body:
+        error: 'file "go.mod" is not allowed for the go runtime'
 
   - name: "restricted file go.sum rejected"
     input:
@@ -204,7 +211,8 @@ tests:
           content: ""
     output:
       status: 400
-      error: 'file "go.sum" is not allowed for the go runtime'
+      body:
+        error: 'file "go.sum" is not allowed for the go runtime'
 
   - name: "restricted file go.mod rejected even with valid main.go"
     input:
@@ -222,7 +230,8 @@ tests:
             go 1.26
     output:
       status: 400
-      error: 'file "go.mod" is not allowed for the go runtime'
+      body:
+        error: 'file "go.mod" is not allowed for the go runtime'
 
   - name: "restricted file main rejected"
     input:
@@ -237,4 +246,5 @@ tests:
           content: "data"
     output:
       status: 400
-      error: 'file "main" is not allowed for the go runtime'
+      body:
+        error: 'file "main" is not allowed for the go runtime'

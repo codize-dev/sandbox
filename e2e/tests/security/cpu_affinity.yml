@@ -12,10 +12,11 @@ tests:
             console.log(count);
     output:
       status: 200
-      run:
-        stdout: "1\n"
-        stderr: ""
-        output: "1\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "1\n"
+          stderr: ""
+          output: "1\n"
+          exit_code: 0
+          status: "OK"
+          signal: null

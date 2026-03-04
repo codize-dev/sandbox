@@ -19,17 +19,18 @@ tests:
             }
     output:
       status: 200
-      compile:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 0
-        status: "OK"
-        signal: null
-      run:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 137
-        status: "OK"
-        signal: "SIGKILL"
+      body:
+        compile:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 0
+          status: "OK"
+          signal: null
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 137
+          status: "OK"
+          signal: "SIGKILL"

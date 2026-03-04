@@ -22,20 +22,21 @@ tests:
             }
     output:
       status: 200
-      compile:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 0
-        status: "OK"
-        signal: null
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        compile:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 0
+          status: "OK"
+          signal: null
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "real-time scheduling is blocked"
     input:
@@ -70,20 +71,21 @@ tests:
             }
     output:
       status: 200
-      compile:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 0
-        status: "OK"
-        signal: null
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        compile:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 0
+          status: "OK"
+          signal: null
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "POSIX message queue creation is blocked"
     input:
@@ -116,20 +118,21 @@ tests:
             }
     output:
       status: 200
-      compile:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 0
-        status: "OK"
-        signal: null
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        compile:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 0
+          status: "OK"
+          signal: null
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "stack exhaustion is safely handled"
     input:
@@ -141,13 +144,14 @@ tests:
             try { f(); } catch (e) { console.log("blocked"); }
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "fork bomb is blocked by cgroup pids limit"
     input:
@@ -173,10 +177,11 @@ tests:
             doFork();
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null

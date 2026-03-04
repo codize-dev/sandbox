@@ -21,13 +21,14 @@ tests:
             });
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "outbound HTTP request via fetch is blocked by network namespace"
     input:
@@ -49,13 +50,14 @@ tests:
               });
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "loopback interface is disabled inside sandbox"
     input:
@@ -79,13 +81,14 @@ tests:
             });
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "connecting to loopback server is blocked inside sandbox"
     input:
@@ -122,10 +125,11 @@ tests:
             });
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null

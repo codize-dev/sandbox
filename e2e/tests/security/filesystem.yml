@@ -14,13 +14,14 @@ tests:
             }
     output:
       status: 200
-      run:
-        stdout: "ok\n"
-        stderr: ""
-        output: "ok\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "ok\n"
+          stderr: ""
+          output: "ok\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "/bin/sh is accessible via symlink"
     input:
@@ -37,13 +38,14 @@ tests:
             }
     output:
       status: 200
-      run:
-        stdout: "ok\n"
-        stderr: ""
-        output: "ok\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "ok\n"
+          stderr: ""
+          output: "ok\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "/lib write is blocked (symlink to read-only /usr/lib)"
     input:
@@ -60,13 +62,14 @@ tests:
             }
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "/usr is read-only"
     input:
@@ -83,13 +86,14 @@ tests:
             }
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "/lib64 is read-only or absent"
     input:
@@ -107,13 +111,14 @@ tests:
             }
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "/dev/null is accessible"
     input:
@@ -131,13 +136,14 @@ tests:
             }
     output:
       status: 200
-      run:
-        stdout: "ok\n"
-        stderr: ""
-        output: "ok\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "ok\n"
+          stderr: ""
+          output: "ok\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "/dev/urandom is accessible"
     input:
@@ -157,13 +163,14 @@ tests:
             }
     output:
       status: 200
-      run:
-        stdout: "ok\n"
-        stderr: ""
-        output: "ok\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "ok\n"
+          stderr: ""
+          output: "ok\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "/proc is read-only"
     input:
@@ -180,13 +187,14 @@ tests:
             }
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "node runtime directory is read-only"
     input:
@@ -203,13 +211,14 @@ tests:
             }
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
 
   - name: "ruby runtime directory is read-only"
     input:
@@ -227,10 +236,11 @@ tests:
             end
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null

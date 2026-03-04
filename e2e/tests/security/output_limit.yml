@@ -8,10 +8,11 @@ tests:
             console.log("AAAAAAAAAA".repeat(10000000))
     output:
       status: 200
-      run:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: -1
-        status: "OUTPUT_LIMIT_EXCEEDED"
-        signal: null
+      body:
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: -1
+          status: "OUTPUT_LIMIT_EXCEEDED"
+          signal: null

@@ -8,13 +8,14 @@ tests:
             process.exit(137);
     output:
       status: 200
-      run:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 137
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 137
+          status: "OK"
+          signal: null
 
   - name: "user exit with SIGSEGV-like code"
     input:
@@ -25,13 +26,14 @@ tests:
             process.exit(139);
     output:
       status: 200
-      run:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 139
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 139
+          status: "OK"
+          signal: null
 
   - name: "user exit with SIGTERM-like code"
     input:
@@ -42,13 +44,14 @@ tests:
             process.exit(143);
     output:
       status: 200
-      run:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 143
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 143
+          status: "OK"
+          signal: null
 
   - name: "user exit with SIGINT-like code"
     input:
@@ -59,10 +62,11 @@ tests:
             process.exit(130);
     output:
       status: 200
-      run:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 130
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 130
+          status: "OK"
+          signal: null

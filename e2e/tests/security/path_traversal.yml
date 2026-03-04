@@ -8,7 +8,8 @@ tests:
             console.log("escaped");
     output:
       status: 400
-      error: 'file name "../escape.js" contains invalid characters'
+      body:
+        error: 'file name "../escape.js" contains invalid characters'
 
   - name: "deep path traversal"
     input:
@@ -19,7 +20,8 @@ tests:
             console.log("escaped");
     output:
       status: 400
-      error: 'file name "../../etc/passwd" contains invalid characters'
+      body:
+        error: 'file name "../../etc/passwd" contains invalid characters'
 
   - name: "subdirectory slash rejected"
     input:
@@ -30,4 +32,5 @@ tests:
             console.log("escaped");
     output:
       status: 400
-      error: 'file name "a/b.js" contains invalid characters'
+      body:
+        error: 'file name "a/b.js" contains invalid characters'

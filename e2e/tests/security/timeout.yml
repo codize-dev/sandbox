@@ -8,13 +8,14 @@ tests:
             setTimeout(() => {}, 60000);
     output:
       status: 200
-      run:
-        stdout: ""
-        stderr: ""
-        output: ""
-        exit_code: 137
-        status: "TIMEOUT"
-        signal: "SIGKILL"
+      body:
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 137
+          status: "TIMEOUT"
+          signal: "SIGKILL"
 
   - name: "timeout with partial output"
     input:
@@ -26,10 +27,11 @@ tests:
             setTimeout(() => {}, 60000);
     output:
       status: 200
-      run:
-        stdout: "started\n"
-        stderr: ""
-        output: "started\n"
-        exit_code: 137
-        status: "TIMEOUT"
-        signal: "SIGKILL"
+      body:
+        run:
+          stdout: "started\n"
+          stderr: ""
+          output: "started\n"
+          exit_code: 137
+          status: "TIMEOUT"
+          signal: "SIGKILL"

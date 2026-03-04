@@ -21,10 +21,11 @@ tests:
             }
     output:
       status: 200
-      run:
-        stdout: "blocked\n"
-        stderr: ""
-        output: "blocked\n"
-        exit_code: 0
-        status: "OK"
-        signal: null
+      body:
+        run:
+          stdout: "blocked\n"
+          stderr: ""
+          output: "blocked\n"
+          exit_code: 0
+          status: "OK"
+          signal: null
