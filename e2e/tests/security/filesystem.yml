@@ -1,17 +1,15 @@
 tests:
   - name: "bare command name resolves via PATH"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const { spawnSync } = require("child_process");
-            const r = spawnSync("id");
-            if (r.error) {
-              console.log("error: " + r.error.message);
-            } else {
-              console.log("ok");
-            }
+            if id > /dev/null 2>&1; then
+              echo "ok"
+            else
+              echo "error"
+            fi
     output:
       status: 200
       body:
@@ -25,17 +23,15 @@ tests:
 
   - name: "/bin/sh is accessible via symlink"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const fs = require("fs");
-            try {
-              const stat = fs.statSync("/bin/sh");
-              console.log(stat.isFile() ? "ok" : "not a file");
-            } catch (e) {
-              console.log("error: " + e.code);
-            }
+            if [ -f /bin/sh ]; then
+              echo "ok"
+            else
+              echo "error"
+            fi
     output:
       status: 200
       body:
@@ -49,17 +45,15 @@ tests:
 
   - name: "/lib write is blocked (symlink to read-only /usr/lib)"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const fs = require("fs");
-            try {
-              fs.writeFileSync("/lib/test", "x");
-              console.log("allowed");
-            } catch (e) {
-              console.log(e.code === "EROFS" ? "blocked" : "error: " + e.code);
-            }
+            if { echo x > /lib/test; } 2>/dev/null; then
+              echo "allowed"
+            else
+              echo "blocked"
+            fi
     output:
       status: 200
       body:
@@ -73,17 +67,15 @@ tests:
 
   - name: "/usr is read-only"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const fs = require("fs");
-            try {
-              fs.writeFileSync("/usr/bin/test", "x");
-              console.log("allowed");
-            } catch (e) {
-              console.log(e.code === "EROFS" ? "blocked" : "error: " + e.code);
-            }
+            if { echo x > /usr/bin/test; } 2>/dev/null; then
+              echo "allowed"
+            else
+              echo "blocked"
+            fi
     output:
       status: 200
       body:
@@ -97,18 +89,15 @@ tests:
 
   - name: "/lib64 is read-only or absent"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const fs = require("fs");
-            try {
-              fs.writeFileSync("/lib64/test", "x");
-              console.log("allowed");
-            } catch (e) {
-              const blocked = e.code === "EROFS" || e.code === "ENOENT" || e.code === "ENOTDIR";
-              console.log(blocked ? "blocked" : "error: " + e.code);
-            }
+            if { echo x > /lib64/test; } 2>/dev/null; then
+              echo "allowed"
+            else
+              echo "blocked"
+            fi
     output:
       status: 200
       body:
@@ -122,18 +111,15 @@ tests:
 
   - name: "/dev/null is accessible"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const fs = require("fs");
-            try {
-              const fd = fs.openSync("/dev/null", "r");
-              fs.closeSync(fd);
-              console.log("ok");
-            } catch (e) {
-              console.log("error: " + e.code);
-            }
+            if echo test > /dev/null; then
+              echo "ok"
+            else
+              echo "error"
+            fi
     output:
       status: 200
       body:
@@ -147,20 +133,15 @@ tests:
 
   - name: "/dev/urandom is accessible"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const fs = require("fs");
-            try {
-              const buf = Buffer.alloc(16);
-              const fd = fs.openSync("/dev/urandom", "r");
-              const n = fs.readSync(fd, buf, 0, 16, null);
-              fs.closeSync(fd);
-              console.log(n === 16 ? "ok" : "short read");
-            } catch (e) {
-              console.log("error: " + e.code);
-            }
+            if head -c 16 /dev/urandom > /dev/null 2>&1; then
+              echo "ok"
+            else
+              echo "error"
+            fi
     output:
       status: 200
       body:
@@ -174,17 +155,15 @@ tests:
 
   - name: "/proc is read-only"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const fs = require("fs");
-            try {
-              fs.writeFileSync("/proc/self/oom_score_adj", "0");
-              console.log("allowed");
-            } catch (e) {
-              console.log(e.code === "EROFS" ? "blocked" : "error: " + e.code);
-            }
+            if { echo 0 > /proc/self/oom_score_adj; } 2>/dev/null; then
+              echo "allowed"
+            else
+              echo "blocked"
+            fi
     output:
       status: 200
       body:

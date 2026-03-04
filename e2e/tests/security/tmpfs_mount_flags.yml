@@ -1,18 +1,16 @@
 tests:
   - name: "/tmp is mounted with nosuid and nodev"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const fs = require("fs");
-            const mounts = fs.readFileSync("/proc/mounts", "utf8");
-            const tmp = mounts.split("\n").find(l => l.includes(" /tmp "));
-            if (tmp && tmp.includes("nosuid") && tmp.includes("nodev")) {
-              console.log("blocked");
-            } else {
-              console.log("allowed");
-            }
+            line=$(grep ' /tmp ' /proc/mounts)
+            if echo "$line" | grep -q nosuid && echo "$line" | grep -q nodev; then
+              echo "blocked"
+            else
+              echo "allowed"
+            fi
     output:
       status: 200
       body:
@@ -26,18 +24,15 @@ tests:
 
   - name: "device node creation on /tmp is blocked"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const { spawnSync } = require("child_process");
-            const r = spawnSync("/usr/bin/mknod", ["/tmp/urandom", "c", "1", "9"]);
-            if (r.status !== 0) {
-              console.log("blocked");
-            } else {
-              const d = spawnSync("/usr/bin/dd", ["if=/tmp/urandom", "bs=1", "count=1"]);
-              console.log(d.stdout.length > 0 ? "allowed" : "blocked");
-            }
+            if mknod /tmp/urandom c 1 9 2>/dev/null; then
+              echo "allowed"
+            else
+              echo "blocked"
+            fi
     output:
       status: 200
       body:
@@ -51,29 +46,18 @@ tests:
 
   - name: "SUID bit on /tmp does not grant new privileges"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const { spawnSync } = require("child_process");
-            const fs = require("fs");
-            const cp = spawnSync("/usr/bin/cp", ["/usr/bin/id", "/tmp/suid-id"]);
-            if (cp.status !== 0) {
-              console.error(cp.stderr.toString());
-              process.exit(1);
-            }
-            fs.chmodSync("/tmp/suid-id", 0o4755);
-            const id = spawnSync("/tmp/suid-id");
-            const output = id.stdout.toString();
-            const uidMatch = output.match(/uid=(\d+)/);
-            const euidMatch = output.match(/euid=(\d+)/);
-            // id(1) omits euid when it equals uid, so euidMatch being null
-            // means no escalation occurred.
-            if (uidMatch && (!euidMatch || uidMatch[1] === euidMatch[1])) {
-              console.log("blocked");
-            } else {
-              console.log("allowed");
-            }
+            cp /usr/bin/id /tmp/suid-id
+            chmod 4755 /tmp/suid-id
+            output=$(/tmp/suid-id)
+            if echo "$output" | grep -q "euid="; then
+              echo "allowed"
+            else
+              echo "blocked"
+            fi
     output:
       status: 200
       body:

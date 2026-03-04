@@ -1,15 +1,11 @@
 tests:
-  - name: "CPU affinity is restricted to 1 core (node)"
+  - name: "CPU affinity is restricted to 1 core"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const fs = require("fs");
-            const status = fs.readFileSync("/proc/self/status", "utf8");
-            const hex = status.match(/Cpus_allowed:\s+([0-9a-f,]+)/i)[1].replace(/,/g, "");
-            const count = BigInt("0x" + hex).toString(2).split("").filter(b => b === "1").length;
-            console.log(count);
+            nproc
     output:
       status: 200
       body:

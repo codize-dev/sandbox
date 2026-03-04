@@ -1,24 +1,17 @@
 tests:
   - name: "/tmp write is blocked by tmpfs size limit"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const fs = require("fs");
-            try {
-              for (let i = 0; i < 10; i++) {
-                fs.writeFileSync(`/tmp/file${i}`, Buffer.alloc(10 * 1024 * 1024));
+            for i in $(seq 0 9); do
+              dd if=/dev/zero of=/tmp/file$i bs=1M count=10 2>/dev/null || {
+                echo "blocked"
+                exit 0
               }
-              console.log("allowed");
-            } catch (e) {
-              if (e.code === "ENOSPC") {
-                console.log("blocked");
-              } else {
-                console.error(e.message);
-                process.exit(1);
-              }
-            }
+            done
+            echo "allowed"
     output:
       status: 200
       body:

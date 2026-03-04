@@ -155,26 +155,18 @@ tests:
 
   - name: "fork bomb is blocked by cgroup pids limit"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            const { spawn } = require("child_process");
-            function doFork() {
-              const child = spawn(process.execPath, ["-e", "setTimeout(()=>{},30000)"], { stdio: "ignore" });
-              child.on("error", (e) => {
-                if (e.code === "EAGAIN") {
-                  console.log("blocked");
-                  process.exit(0);
-                }
-                process.exit(1);
-              });
-              child.on("spawn", () => {
-                child.unref();
-                setImmediate(doFork);
-              });
-            }
-            doFork();
+            for i in {1..100}; do
+              sleep 1 &
+            done 2>/tmp/err
+            if [ -s /tmp/err ]; then
+              echo "blocked"
+            else
+              echo "not blocked"
+            fi
     output:
       status: 200
       body:

@@ -1,11 +1,11 @@
 tests:
   - name: "user exit with signal-like code"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            process.exit(137);
+            exit 137
     output:
       status: 200
       body:
@@ -19,11 +19,11 @@ tests:
 
   - name: "user exit with SIGSEGV-like code"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            process.exit(139);
+            exit 139
     output:
       status: 200
       body:
@@ -37,11 +37,11 @@ tests:
 
   - name: "user exit with SIGTERM-like code"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            process.exit(143);
+            exit 143
     output:
       status: 200
       body:
@@ -55,11 +55,11 @@ tests:
 
   - name: "user exit with SIGINT-like code"
     input:
-      runtime: node
+      runtime: bash
       files:
-        - name: index.js
+        - name: main.sh
           content: |
-            process.exit(130);
+            exit 130
     output:
       status: 200
       body:
