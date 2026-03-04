@@ -177,3 +177,21 @@ tests:
           exit_code: 0
           status: "OK"
           signal: null
+
+  - name: "classic fork bomb is contained by cgroup pids limit"
+    input:
+      runtime: bash
+      files:
+        - name: main.sh
+          content: |
+            :(){ :|:& };: 2>/dev/null
+    output:
+      status: 200
+      body:
+        run:
+          stdout: ""
+          stderr: ""
+          output: ""
+          exit_code: 0
+          status: "OK"
+          signal: null
