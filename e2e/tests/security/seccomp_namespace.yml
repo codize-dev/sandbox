@@ -94,3 +94,123 @@ tests:
               exit_code: 159
               status: "OK"
               signal: "SIGSYS"
+
+  - name: "clone with CLONE_NEWUSER is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 220 : 56
+                syscall(nr, 0x10000000, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "clone with CLONE_NEWNET is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 220 : 56
+                syscall(nr, 0x40000000, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "clone3 returns ENOSYS instead of killing process (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                begin
+                  syscall(435, 0, 0)
+                rescue Errno::ENOSYS
+                  puts "ENOSYS"
+                end
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "ENOSYS\n"
+              stderr: ""
+              output: "ENOSYS\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "clone with CLONE_NEWNS is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 220 : 56
+                syscall(nr, 0x00020000, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
+
+  - name: "clone with CLONE_NEWUSER is blocked by seccomp (go)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import "syscall"
+
+                func main() {
+                	syscall.RawSyscall(syscall.SYS_CLONE, 0x10000000, 0, 0)
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "OK"
+              signal: "SIGSYS"
