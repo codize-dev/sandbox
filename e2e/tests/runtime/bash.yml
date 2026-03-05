@@ -186,3 +186,286 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+
+  - name: "variables and arithmetic"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                a=10
+                b=3
+                echo $((a + b))
+                echo $((a * b))
+                echo $((a / b))
+                echo $((a % b))
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "13\n30\n3\n1\n"
+              stderr: ""
+              output: "13\n30\n3\n1\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "arrays"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                arr=(apple banana cherry)
+                echo "${arr[0]}"
+                echo "${arr[@]}"
+                echo "${#arr[@]}"
+                arr+=(date)
+                echo "${arr[-1]}"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "apple\napple banana cherry\n3\ndate\n"
+              stderr: ""
+              output: "apple\napple banana cherry\n3\ndate\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "for loop"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                sum=0
+                for i in $(seq 1 10); do
+                  sum=$((sum + i))
+                done
+                echo $sum
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "55\n"
+              stderr: ""
+              output: "55\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "while loop"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                n=1
+                while [ $n -le 5 ]; do
+                  echo -n "$n "
+                  n=$((n + 1))
+                done
+                echo
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "1 2 3 4 5 \n"
+              stderr: ""
+              output: "1 2 3 4 5 \n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "conditionals"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                x=15
+                if [ $x -gt 20 ]; then
+                  echo "large"
+                elif [ $x -gt 10 ]; then
+                  echo "medium"
+                else
+                  echo "small"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "medium\n"
+              stderr: ""
+              output: "medium\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "command substitution"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                lines=$(echo -e "a\nb\nc" | wc -l | tr -d ' ')
+                echo "count: $lines"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "count: 3\n"
+              stderr: ""
+              output: "count: 3\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "string manipulation"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                s="Hello, World!"
+                echo "${s^^}"
+                echo "${s,,}"
+                echo "${s/World/Bash}"
+                echo "${#s}"
+                echo "${s:7:5}"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "HELLO, WORLD!\nhello, world!\nHello, Bash!\n13\nWorld\n"
+              stderr: ""
+              output: "HELLO, WORLD!\nhello, world!\nHello, Bash!\n13\nWorld\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "functions"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                factorial() {
+                  local n=$1
+                  if [ $n -le 1 ]; then
+                    echo 1
+                  else
+                    local prev=$(factorial $((n - 1)))
+                    echo $((n * prev))
+                  fi
+                }
+                echo $(factorial 5)
+                echo $(factorial 10)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "120\n3628800\n"
+              stderr: ""
+              output: "120\n3628800\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "read file"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                while IFS=, read -r name age; do
+                  echo "$name is $age years old"
+                done < data.csv
+            - name: data.csv
+              type: raw
+              content: |
+                Alice,30
+                Bob,25
+                Charlie,35
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "Alice is 30 years old\nBob is 25 years old\nCharlie is 35 years old\n"
+              stderr: ""
+              output: "Alice is 30 years old\nBob is 25 years old\nCharlie is 35 years old\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "sed and grep"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                echo -e "apple\nbanana\ncherry\napricot" | grep "^a"
+                echo "---"
+                echo "Hello World" | sed 's/World/Bash/'
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "apple\napricot\n---\nHello Bash\n"
+              stderr: ""
+              output: "apple\napricot\n---\nHello Bash\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "case statement"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                classify() {
+                  case "$1" in
+                    [0-9]*) echo "number" ;;
+                    [a-z]*) echo "lowercase" ;;
+                    [A-Z]*) echo "uppercase" ;;
+                    *) echo "other" ;;
+                  esac
+                }
+                classify "42"
+                classify "hello"
+                classify "World"
+                classify "!!"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "number\nlowercase\nuppercase\nother\n"
+              stderr: ""
+              output: "number\nlowercase\nuppercase\nother\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

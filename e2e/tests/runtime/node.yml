@@ -100,3 +100,300 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+
+  - name: "multiple files with require"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const { add, multiply } = require('./math');
+                console.log(add(2, 3));
+                console.log(multiply(4, 5));
+            - name: math.js
+              type: raw
+              content: |
+                module.exports = {
+                  add: (a, b) => a + b,
+                  multiply: (a, b) => a * b,
+                };
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "5\n20\n"
+              stderr: ""
+              output: "5\n20\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "JSON parse and stringify"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const obj = JSON.parse('{"name":"Alice","age":30}');
+                obj.active = true;
+                console.log(JSON.stringify(obj));
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "{\"name\":\"Alice\",\"age\":30,\"active\":true}\n"
+              stderr: ""
+              output: "{\"name\":\"Alice\",\"age\":30,\"active\":true}\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "array map filter sort"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const nums = [3, 1, 4, 1, 5, 9, 2, 6];
+                const result = nums
+                  .filter(n => n > 3)
+                  .map(n => n * 2)
+                  .sort((a, b) => a - b);
+                console.log(result.join(","));
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "8,10,12,18\n"
+              stderr: ""
+              output: "8,10,12,18\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "async/await with Promise"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+                async function main() {
+                  await delay(10);
+                  console.log("done");
+                }
+                main();
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "done\n"
+              stderr: ""
+              output: "done\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "Promise.all"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const tasks = [1, 2, 3].map(n => Promise.resolve(n * 10));
+                Promise.all(tasks).then(results => console.log(results.join(",")));
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "10,20,30\n"
+              stderr: ""
+              output: "10,20,30\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "try/catch error handling"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                try {
+                  null.property;
+                } catch (e) {
+                  console.log(e.constructor.name);
+                }
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "TypeError\n"
+              stderr: ""
+              output: "TypeError\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "unhandled exception"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                throw new Error("something went wrong");
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/Error: something went wrong/"
+              output: "/Error: something went wrong/"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "class and inheritance"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                class Shape {
+                  constructor(name) { this.name = name; }
+                  area() { return 0; }
+                }
+                class Circle extends Shape {
+                  constructor(radius) {
+                    super("circle");
+                    this.radius = radius;
+                  }
+                  area() { return Math.PI * this.radius ** 2; }
+                }
+                const c = new Circle(5);
+                console.log(c.name);
+                console.log(c.area().toFixed(2));
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "circle\n78.54\n"
+              stderr: ""
+              output: "circle\n78.54\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "Map and Set"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const map = new Map();
+                map.set("a", 1);
+                map.set("b", 2);
+                map.set("a", 3);
+                console.log(map.size);
+                console.log(map.get("a"));
+                const set = new Set([1, 2, 2, 3, 3, 3]);
+                console.log(set.size);
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "2\n3\n3\n"
+              stderr: ""
+              output: "2\n3\n3\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "string methods"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const s = "Hello, World!";
+                console.log(s.toUpperCase());
+                console.log(s.slice(7, 12));
+                console.log(s.split(", ").join(" - "));
+                console.log(s.includes("World"));
+                console.log(s.replace("World", "Node"));
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "HELLO, WORLD!\nWorld\nHello - World!\ntrue\nHello, Node!\n"
+              stderr: ""
+              output: "HELLO, WORLD!\nWorld\nHello - World!\ntrue\nHello, Node!\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "regular expression"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const pattern = /(\d{4})-(\d{2})-(\d{2})/;
+                const match = "Date: 2025-12-25".match(pattern);
+                console.log(match[1], match[2], match[3]);
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "2025 12 25\n"
+              stderr: ""
+              output: "2025 12 25\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "destructuring and spread"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: raw
+              content: |
+                const { a, b, ...rest } = { a: 1, b: 2, c: 3, d: 4 };
+                console.log(a, b, JSON.stringify(rest));
+                const arr = [1, 2, 3];
+                const arr2 = [...arr, 4, 5];
+                console.log(arr2.join(","));
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "1 2 {\"c\":3,\"d\":4}\n1,2,3,4,5\n"
+              stderr: ""
+              output: "1 2 {\"c\":3,\"d\":4}\n1,2,3,4,5\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

@@ -270,3 +270,440 @@ tests:
           status: 400
           body:
             error: 'file "main" is not allowed for the go runtime'
+
+  - name: "multiple files"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                func main() {
+                    PrintHello()
+                }
+            - name: helper.go
+              type: raw
+              content: |
+                package main
+
+                import "fmt"
+
+                func PrintHello() {
+                    fmt.Println("Hello from helper")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "Hello from helper\n"
+              stderr: ""
+              output: "Hello from helper\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "goroutine and channel"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import "fmt"
+
+                func main() {
+                    ch := make(chan int)
+                    go func() {
+                        ch <- 42
+                    }()
+                    fmt.Println(<-ch)
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "42\n"
+              stderr: ""
+              output: "42\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "struct and method"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import "fmt"
+
+                type Rect struct {
+                    Width, Height float64
+                }
+
+                func (r Rect) Area() float64 {
+                    return r.Width * r.Height
+                }
+
+                func main() {
+                    r := Rect{Width: 3, Height: 4}
+                    fmt.Printf("%.1f\n", r.Area())
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "12.0\n"
+              stderr: ""
+              output: "12.0\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "interface"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import "fmt"
+
+                type Stringer interface {
+                    String() string
+                }
+
+                type Point struct{ X, Y int }
+
+                func (p Point) String() string {
+                    return fmt.Sprintf("(%d, %d)", p.X, p.Y)
+                }
+
+                func printIt(s Stringer) {
+                    fmt.Println(s)
+                }
+
+                func main() {
+                    printIt(Point{3, 4})
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "(3, 4)\n"
+              stderr: ""
+              output: "(3, 4)\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "error handling"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import (
+                    "errors"
+                    "fmt"
+                )
+
+                func divide(a, b float64) (float64, error) {
+                    if b == 0 {
+                        return 0, errors.New("division by zero")
+                    }
+                    return a / b, nil
+                }
+
+                func main() {
+                    result, err := divide(10, 3)
+                    fmt.Printf("%.2f %v\n", result, err)
+
+                    _, err = divide(1, 0)
+                    fmt.Println(err)
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "3.33 <nil>\ndivision by zero\n"
+              stderr: ""
+              output: "3.33 <nil>\ndivision by zero\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "defer and panic/recover"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import "fmt"
+
+                func safeDivide(a, b int) (result int, err error) {
+                    defer func() {
+                        if r := recover(); r != nil {
+                            err = fmt.Errorf("recovered: %v", r)
+                        }
+                    }()
+                    return a / b, nil
+                }
+
+                func main() {
+                    result, err := safeDivide(10, 2)
+                    fmt.Println(result, err)
+
+                    result, err = safeDivide(10, 0)
+                    fmt.Println(result, err)
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "5 <nil>\n0 recovered: runtime error: integer divide by zero\n"
+              stderr: ""
+              output: "5 <nil>\n0 recovered: runtime error: integer divide by zero\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "slice operations"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import (
+                    "fmt"
+                    "slices"
+                )
+
+                func main() {
+                    nums := []int{3, 1, 4, 1, 5, 9, 2, 6}
+                    slices.Sort(nums)
+                    fmt.Println(nums)
+
+                    filtered := []int{}
+                    for _, n := range nums {
+                        if n > 3 {
+                            filtered = append(filtered, n)
+                        }
+                    }
+                    fmt.Println(filtered)
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "[1 1 2 3 4 5 6 9]\n[4 5 6 9]\n"
+              stderr: ""
+              output: "[1 1 2 3 4 5 6 9]\n[4 5 6 9]\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "map operations"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import (
+                    "fmt"
+                    "slices"
+                )
+
+                func main() {
+                    m := map[string]int{"a": 1, "b": 2, "c": 3}
+                    keys := make([]string, 0, len(m))
+                    for k := range m {
+                        keys = append(keys, k)
+                    }
+                    slices.Sort(keys)
+                    for _, k := range keys {
+                        fmt.Printf("%s=%d\n", k, m[k])
+                    }
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "a=1\nb=2\nc=3\n"
+              stderr: ""
+              output: "a=1\nb=2\nc=3\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "string operations"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import (
+                    "fmt"
+                    "strings"
+                )
+
+                func main() {
+                    s := "Hello, World!"
+                    fmt.Println(strings.ToUpper(s))
+                    fmt.Println(strings.Replace(s, "World", "Go", 1))
+                    fmt.Println(strings.Split("a,b,c", ","))
+                    fmt.Println(strings.Contains(s, "World"))
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "HELLO, WORLD!\nHello, Go!\n[a b c]\ntrue\n"
+              stderr: ""
+              output: "HELLO, WORLD!\nHello, Go!\n[a b c]\ntrue\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "JSON marshal and unmarshal"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: raw
+              content: |
+                package main
+
+                import (
+                    "encoding/json"
+                    "fmt"
+                )
+
+                type User struct {
+                    Name string `json:"name"`
+                    Age  int    `json:"age"`
+                }
+
+                func main() {
+                    u := User{Name: "Alice", Age: 30}
+                    b, _ := json.Marshal(u)
+                    fmt.Println(string(b))
+
+                    var u2 User
+                    json.Unmarshal([]byte(`{"name":"Bob","age":25}`), &u2)
+                    fmt.Printf("%s %d\n", u2.Name, u2.Age)
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "{\"name\":\"Alice\",\"age\":30}\nBob 25\n"
+              stderr: ""
+              output: "{\"name\":\"Alice\",\"age\":30}\nBob 25\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

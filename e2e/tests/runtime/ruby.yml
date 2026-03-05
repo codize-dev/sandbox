@@ -101,3 +101,257 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+
+  - name: "multiple files with require_relative"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                require_relative './helper'
+                puts greet("World")
+            - name: helper.rb
+              type: raw
+              content: |
+                def greet(name)
+                  "Hello, #{name}!"
+                end
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "Hello, World!\n"
+              stderr: ""
+              output: "Hello, World!\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "JSON parse and generate"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                require 'json'
+                data = JSON.parse('{"name":"Alice","age":30}')
+                data["active"] = true
+                puts JSON.generate(data)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "{\"name\":\"Alice\",\"age\":30,\"active\":true}\n"
+              stderr: ""
+              output: "{\"name\":\"Alice\",\"age\":30,\"active\":true}\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "array operations"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nums = [3, 1, 4, 1, 5, 9, 2, 6]
+                result = nums.select { |n| n > 3 }.map { |n| n * 2 }.sort
+                puts result.join(",")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "8,10,12,18\n"
+              stderr: ""
+              output: "8,10,12,18\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "class and inheritance"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                class Shape
+                  attr_reader :name
+                  def initialize(name)
+                    @name = name
+                  end
+                  def area
+                    0
+                  end
+                end
+
+                class Circle < Shape
+                  def initialize(radius)
+                    super("circle")
+                    @radius = radius
+                  end
+                  def area
+                    Math::PI * @radius ** 2
+                  end
+                end
+
+                c = Circle.new(5)
+                puts c.name
+                puts format("%.2f", c.area)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "circle\n78.54\n"
+              stderr: ""
+              output: "circle\n78.54\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "begin/rescue error handling"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                begin
+                  1 / 0
+                rescue ZeroDivisionError => e
+                  puts "Caught: #{e.message}"
+                end
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "Caught: divided by 0\n"
+              stderr: ""
+              output: "Caught: divided by 0\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "unhandled exception"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                raise "something went wrong"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/something went wrong/"
+              output: "/something went wrong/"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "hash operations"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                h = { a: 1, b: 2, c: 3 }
+                puts h.keys.join(",")
+                puts h.values.join(",")
+                puts h.map { |k, v| "#{k}=#{v}" }.join(" ")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "a,b,c\n1,2,3\na=1 b=2 c=3\n"
+              stderr: ""
+              output: "a,b,c\n1,2,3\na=1 b=2 c=3\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "block and iterator"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                result = (1..5).each_with_object([]) do |n, acc|
+                  acc << n * n
+                end
+                puts result.join(",")
+
+                sum = (1..100).reduce(0, :+)
+                puts sum
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "1,4,9,16,25\n5050\n"
+              stderr: ""
+              output: "1,4,9,16,25\n5050\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "string operations"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                s = "Hello, World!"
+                puts s.upcase
+                puts s.gsub("World", "Ruby")
+                puts s.split(", ").join(" - ")
+                puts s.include?("World")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "HELLO, WORLD!\nHello, Ruby!\nHello - World!\ntrue\n"
+              stderr: ""
+              output: "HELLO, WORLD!\nHello, Ruby!\nHello - World!\ntrue\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "regular expression"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                text = "Date: 2025-12-25"
+                if text =~ /(\d{4})-(\d{2})-(\d{2})/
+                  puts "#{$1} #{$2} #{$3}"
+                end
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "2025 12 25\n"
+              stderr: ""
+              output: "2025 12 25\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
