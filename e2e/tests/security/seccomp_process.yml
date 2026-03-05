@@ -61,3 +61,23 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+
+  - name: "process_madvise is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(440, 0, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"

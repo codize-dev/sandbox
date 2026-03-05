@@ -106,6 +106,10 @@ POLICY blocked {
         // Comparing kernel resources between processes leaks FD and memory
         // mapping information.
         kcmp,
+        // Cross-process memory advice (Linux 5.10+). MADV_PAGEOUT can force
+        // pages to swap out as a DoS vector. Same rationale as
+        // process_vm_readv/process_vm_writev.
+        process_madvise,
 
         // -- Kernel keyring --
         // The kernel keyring is not namespaced and can leak information between
@@ -142,6 +146,8 @@ POLICY blocked {
         set_mempolicy,
         get_mempolicy,
         move_pages,
+        migrate_pages,
+        set_mempolicy_home_node,
 
         // -- Execution domain --
         // personality() can disable ASLR (ADDR_NO_RANDOMIZE), making exploits
@@ -165,6 +171,16 @@ POLICY blocked {
         fanotify_init,
         fanotify_mark,
 
+        // -- Secret memory (Linux 5.14+) --
+        // Creates memory invisible to the kernel (/proc/pid/mem, core dumps).
+        // No legitimate sandbox use; complicates forensic analysis.
+        memfd_secret,
+
+        // -- LSM attribute manipulation (Linux 6.8+) --
+        // Sets the calling process's LSM security attributes. New kernel code
+        // path; no legitimate sandbox use.
+        lsm_set_self_attr,
+
         // -- Seccomp self-manipulation --
         // Prevent sandboxed processes from installing their own seccomp filters.
         // Stacked filters cannot weaken existing ones (most restrictive action
@@ -181,6 +197,9 @@ POLICY blocked {
         // code paths carry elevated risk of undiscovered vulnerabilities.
         ustat ON x86_64,
         sysfs ON x86_64,
+        // Legacy shared library loader. Same rationale: unmaintained kernel
+        // code path.
+        uselib ON x86_64,
         // LDT modification enables 16-bit/segmented code execution.
         // CVE history (CVE-2017-17053). Not blocked by Docker's default
         // seccomp profile.

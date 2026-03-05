@@ -19,3 +19,50 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+
+  - name: "uselib (legacy) is blocked by seccomp on x86_64 (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                if RUBY_PLATFORM.include?('aarch64')
+                  # uselib does not exist on aarch64 (no syscall number assigned).
+                  # Trigger seccomp KILL_PROCESS via bpf (blocked, nr 280 on aarch64)
+                  # to produce a genuine kernel-level SIGSYS.
+                  syscall(280, 0, 0, 0)
+                else
+                  syscall(134, '')
+                end
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "lsm_set_self_attr is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(460, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"

@@ -103,3 +103,64 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+
+  - name: "migrate_pages is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                nr = RUBY_PLATFORM.include?('aarch64') ? 238 : 256
+                syscall(nr, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "set_mempolicy_home_node is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(450, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "memfd_secret is blocked by seccomp (ruby)"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(447, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
