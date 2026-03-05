@@ -156,6 +156,15 @@ POLICY blocked {
         open_by_handle_at,
         name_to_handle_at,
 
+        // -- Filesystem event monitoring --
+        // fanotify monitors file access patterns on mounted filesystems.
+        // FAN_CLASS_NOTIF does not require CAP_SYS_ADMIN (Linux 5.13+).
+        // Sandboxed code could observe access patterns on shared bind-mounted
+        // paths (/usr/lib, /usr/bin). Docker's default seccomp profile blocks
+        // fanotify_init.
+        fanotify_init,
+        fanotify_mark,
+
         // -- Seccomp self-manipulation --
         // Prevent sandboxed processes from installing their own seccomp filters.
         // Stacked filters cannot weaken existing ones (most restrictive action
