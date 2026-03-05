@@ -1,5 +1,6 @@
 tests:
   - name: "unshare is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -7,8 +8,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 97 : 272
-                syscall(nr, 0x10000000)
+                syscall(272, 0x10000000)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "unshare is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(97, 0x10000000)
         output:
           status: 200
           body:
@@ -21,6 +42,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "setns is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -28,8 +50,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 268 : 308
-                syscall(nr, 0, 0)
+                syscall(308, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "setns is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(268, 0, 0)
         output:
           status: 200
           body:
@@ -42,6 +84,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "pivot_root is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -49,8 +92,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 41 : 155
-                syscall(nr, "/", "/")
+                syscall(155, "/", "/")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "pivot_root is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(41, "/", "/")
         output:
           status: 200
           body:
@@ -96,6 +159,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "clone with CLONE_NEWUSER is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -103,8 +167,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 220 : 56
-                syscall(nr, 0x10000000, 0, 0, 0, 0)
+                syscall(56, 0x10000000, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "clone with CLONE_NEWUSER is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(220, 0x10000000, 0, 0, 0, 0)
         output:
           status: 200
           body:
@@ -117,6 +201,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "clone with CLONE_NEWNET is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -124,8 +209,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 220 : 56
-                syscall(nr, 0x40000000, 0, 0, 0, 0)
+                syscall(56, 0x40000000, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "clone with CLONE_NEWNET is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(220, 0x40000000, 0, 0, 0, 0)
         output:
           status: 200
           body:
@@ -162,6 +267,7 @@ tests:
               signal: null
 
   - name: "clone with CLONE_NEWNS is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -169,8 +275,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 220 : 56
-                syscall(nr, 0x00020000, 0, 0, 0, 0)
+                syscall(56, 0x00020000, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "clone with CLONE_NEWNS is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(220, 0x00020000, 0, 0, 0, 0)
         output:
           status: 200
           body:

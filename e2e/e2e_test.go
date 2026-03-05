@@ -11,6 +11,8 @@ import (
 	"io/fs"
 	"net/http"
 	"regexp"
+	"runtime"
+	"slices"
 	"strings"
 	"testing"
 
@@ -85,6 +87,7 @@ type testRequest struct {
 
 type testCase struct {
 	Name     string        `yaml:"name"`
+	Arch     []string      `yaml:"arch"`
 	Requests []testRequest `yaml:"requests"`
 }
 
@@ -168,6 +171,9 @@ func TestE2E(t *testing.T) {
 		for i, tc := range tf.Tests {
 			t.Run(fmt.Sprintf("%s/%d/%s", testPath, i, tc.Name), func(t *testing.T) {
 				t.Parallel()
+				if len(tc.Arch) > 0 && !slices.Contains(tc.Arch, runtime.GOARCH) {
+					t.Skipf("skipping: test requires arch %v, got %s", tc.Arch, runtime.GOARCH)
+				}
 				for ri, req := range tc.Requests {
 					func() {
 						files := make([]apiFile, len(req.Input.Files))

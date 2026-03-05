@@ -1,5 +1,6 @@
 tests:
   - name: "bpf is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -7,8 +8,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 280 : 321
-                syscall(nr, 0, 0, 0)
+                syscall(321, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "bpf is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(280, 0, 0, 0)
         output:
           status: 200
           body:
@@ -21,6 +42,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "userfaultfd is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -28,8 +50,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 282 : 323
-                syscall(nr, 0)
+                syscall(323, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "userfaultfd is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(282, 0)
         output:
           status: 200
           body:
@@ -42,6 +84,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "perf_event_open is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -49,8 +92,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 241 : 298
-                syscall(nr, 0, 0, 0, 0, 0)
+                syscall(298, 0, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "perf_event_open is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(241, 0, 0, 0, 0, 0)
         output:
           status: 200
           body:
@@ -63,6 +126,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "kexec_load is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -70,8 +134,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 104 : 246
-                syscall(nr, 0, 0, 0, 0)
+                syscall(246, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "kexec_load is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(104, 0, 0, 0, 0)
         output:
           status: 200
           body:
@@ -84,6 +168,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "kexec_file_load is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -91,8 +176,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 294 : 320
-                syscall(nr, 0, 0, 0, 0, 0)
+                syscall(320, 0, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "kexec_file_load is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(294, 0, 0, 0, 0, 0)
         output:
           status: 200
           body:
@@ -105,6 +210,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "init_module is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -112,8 +218,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 105 : 175
-                syscall(nr, 0, 0, "")
+                syscall(175, 0, 0, "")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "init_module is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(105, 0, 0, "")
         output:
           status: 200
           body:
@@ -126,6 +252,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "finit_module is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -133,8 +260,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 273 : 313
-                syscall(nr, 0, "", 0)
+                syscall(313, 0, "", 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "finit_module is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(273, 0, "", 0)
         output:
           status: 200
           body:
@@ -147,6 +294,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "delete_module is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -154,8 +302,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 106 : 176
-                syscall(nr, "test", 0)
+                syscall(176, "test", 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "delete_module is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(106, "test", 0)
         output:
           status: 200
           body:

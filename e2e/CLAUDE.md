@@ -25,6 +25,7 @@ Each YAML file has a top-level `tests` key containing a list of test cases:
 ```yaml
 tests:
   - name: "test case name"
+    arch: [amd64, arm64]
     requests:
       - input:
           runtime: node
@@ -54,6 +55,19 @@ tests:
               status: "OK"
               signal: null
             error: ""
+```
+
+### Architecture Filter
+
+The optional `arch` field restricts a test case to specific CPU architectures. When omitted, the test runs on all architectures. When specified, the test runs only on the listed architectures (matched against Go's `runtime.GOARCH`).
+
+```yaml
+tests:
+  - name: "amd64-only syscall test"
+    arch: [amd64]
+    requests:
+      - input:
+          # ...
 ```
 
 ### File Types

@@ -1,5 +1,6 @@
 tests:
   - name: "process_vm_readv is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -7,8 +8,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 270 : 310
-                syscall(nr, 0, 0, 0, 0, 0, 0)
+                syscall(310, 0, 0, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "process_vm_readv is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(270, 0, 0, 0, 0, 0, 0)
         output:
           status: 200
           body:
@@ -21,6 +42,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "process_vm_writev is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -28,8 +50,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 271 : 311
-                syscall(nr, 0, 0, 0, 0, 0, 0)
+                syscall(311, 0, 0, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "process_vm_writev is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(271, 0, 0, 0, 0, 0, 0)
         output:
           status: 200
           body:
@@ -42,6 +84,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "kcmp is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -49,8 +92,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 272 : 312
-                syscall(nr, 0, 0, 0, 0, 0)
+                syscall(312, 0, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "kcmp is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(272, 0, 0, 0, 0, 0)
         output:
           status: 200
           body:

@@ -87,7 +87,8 @@ tests:
               status: "OK"
               signal: null
 
-  - name: "/lib64 is read-only or absent"
+  - name: "/lib64 is read-only"
+    arch: [amd64]
     requests:
       - input:
           runtime: bash
@@ -101,9 +102,29 @@ tests:
           body:
             run:
               stdout: ""
-              # Error message differs by architecture: see nsjail.cfg /lib64 comments.
-              stderr: "/^/code/main\\.sh: line 1: /lib64/test: (Not a directory|Read-only file system)\n$/"
-              output: "/^/code/main\\.sh: line 1: /lib64/test: (Not a directory|Read-only file system)\n$/"
+              stderr: "/code/main.sh: line 1: /lib64/test: Read-only file system\n"
+              output: "/code/main.sh: line 1: /lib64/test: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "/lib64 is not accessible"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                echo x > /lib64/test
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/code/main.sh: line 1: /lib64/test: Not a directory\n"
+              output: "/code/main.sh: line 1: /lib64/test: Not a directory\n"
               exit_code: 1
               status: "OK"
               signal: null

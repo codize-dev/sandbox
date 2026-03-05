@@ -1,5 +1,6 @@
 tests:
   - name: "reboot is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -7,8 +8,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 142 : 169
-                syscall(nr, 0, 0, 0, 0)
+                syscall(169, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "reboot is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(142, 0, 0, 0, 0)
         output:
           status: 200
           body:
@@ -21,6 +42,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "acct is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -28,8 +50,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 89 : 163
-                syscall(nr, "/tmp/acct")
+                syscall(163, "/tmp/acct")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "acct is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(89, "/tmp/acct")
         output:
           status: 200
           body:
@@ -42,6 +84,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "swapon is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -49,8 +92,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 224 : 167
-                syscall(nr, "/tmp/swap", 0)
+                syscall(167, "/tmp/swap", 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "swapon is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(224, "/tmp/swap", 0)
         output:
           status: 200
           body:
@@ -63,6 +126,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "swapoff is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -70,8 +134,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 225 : 168
-                syscall(nr, "/tmp/swap")
+                syscall(168, "/tmp/swap")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "swapoff is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(225, "/tmp/swap")
         output:
           status: 200
           body:
@@ -84,6 +168,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "syslog is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -91,8 +176,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 116 : 103
-                syscall(nr, 0, 0, 0)
+                syscall(103, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "syslog is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(116, 0, 0, 0)
         output:
           status: 200
           body:
@@ -105,6 +210,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "quotactl is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -112,8 +218,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 60 : 179
-                syscall(nr, 0, "/", 0, 0)
+                syscall(179, 0, "/", 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "quotactl is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(60, 0, "/", 0, 0)
         output:
           status: 200
           body:
@@ -146,6 +272,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "clock_settime is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -153,8 +280,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 112 : 227
-                syscall(nr, 0, 0)
+                syscall(227, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "clock_settime is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(112, 0, 0)
         output:
           status: 200
           body:
@@ -167,6 +314,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "clock_adjtime is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -174,8 +322,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 266 : 305
-                syscall(nr, 0, 0)
+                syscall(305, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "clock_adjtime is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(266, 0, 0)
         output:
           status: 200
           body:
@@ -188,6 +356,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "settimeofday is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -195,8 +364,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 170 : 164
-                syscall(nr, 0, 0)
+                syscall(164, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "settimeofday is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(170, 0, 0)
         output:
           status: 200
           body:
@@ -209,6 +398,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "adjtimex is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -216,8 +406,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 171 : 159
-                syscall(nr, 0)
+                syscall(159, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "adjtimex is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(171, 0)
         output:
           status: 200
           body:
@@ -230,6 +440,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "umount is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -237,8 +448,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 39 : 166
-                syscall(nr, "/", 0)
+                syscall(166, "/", 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "umount is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(39, "/", 0)
         output:
           status: 200
           body:

@@ -1,5 +1,6 @@
 tests:
   - name: "personality (ASLR disable) is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -7,8 +8,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 92 : 135
-                syscall(nr, 0x0040000)
+                syscall(135, 0x0040000)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "personality (ASLR disable) is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(92, 0x0040000)
         output:
           status: 200
           body:
@@ -21,6 +42,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "mbind (NUMA policy) is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -28,8 +50,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 235 : 237
-                syscall(nr, 0, 0, 0, 0, 0, 0)
+                syscall(237, 0, 0, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "mbind (NUMA policy) is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(235, 0, 0, 0, 0, 0, 0)
         output:
           status: 200
           body:
@@ -42,6 +84,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "set_mempolicy is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -49,8 +92,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 237 : 238
-                syscall(nr, 0, 0, 0)
+                syscall(238, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "set_mempolicy is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(237, 0, 0, 0)
         output:
           status: 200
           body:
@@ -63,6 +126,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "get_mempolicy is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -70,8 +134,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 236 : 239
-                syscall(nr, 0, 0, 0, 0, 0)
+                syscall(239, 0, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "get_mempolicy is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(236, 0, 0, 0, 0, 0)
         output:
           status: 200
           body:
@@ -84,6 +168,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "move_pages is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -91,8 +176,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 239 : 279
-                syscall(nr, 0, 0, 0, 0, 0, 0)
+                syscall(279, 0, 0, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "move_pages is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(239, 0, 0, 0, 0, 0, 0)
         output:
           status: 200
           body:
@@ -105,6 +210,7 @@ tests:
               signal: "SIGSYS"
 
   - name: "migrate_pages is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -112,8 +218,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 238 : 256
-                syscall(nr, 0, 0, 0, 0)
+                syscall(256, 0, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "migrate_pages is blocked by seccomp (ruby)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(238, 0, 0, 0, 0)
         output:
           status: 200
           body:

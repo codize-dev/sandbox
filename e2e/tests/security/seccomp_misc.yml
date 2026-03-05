@@ -1,5 +1,6 @@
 tests:
   - name: "seccomp self-install is blocked by seccomp (ruby)"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -7,8 +8,7 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 277 : 317
-                syscall(nr, 0, 0, 0)
+                syscall(317, 0, 0, 0)
         output:
           status: 200
           body:
@@ -20,7 +20,8 @@ tests:
               status: "SIGNAL"
               signal: "SIGSYS"
 
-  - name: "uselib (legacy) is blocked by seccomp on x86_64 (ruby)"
+  - name: "seccomp self-install is blocked by seccomp (ruby)"
+    arch: [arm64]
     requests:
       - input:
           runtime: ruby
@@ -28,14 +29,28 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                if RUBY_PLATFORM.include?('aarch64')
-                  # uselib does not exist on aarch64 (no syscall number assigned).
-                  # Trigger seccomp KILL_PROCESS via bpf (blocked, nr 280 on aarch64)
-                  # to produce a genuine kernel-level SIGSYS.
-                  syscall(280, 0, 0, 0)
-                else
-                  syscall(134, '')
-                end
+                syscall(277, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "uselib (legacy) is blocked by seccomp (ruby)"
+    arch: [amd64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                syscall(134, '')
         output:
           status: 200
           body:

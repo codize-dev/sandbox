@@ -68,6 +68,7 @@ tests:
               signal: null
 
   - name: "memfd_create is not blocked by seccomp"
+    arch: [amd64]
     requests:
       - input:
           runtime: ruby
@@ -75,9 +76,38 @@ tests:
             - name: main.rb
               type: raw
               content: |
-                nr = RUBY_PLATFORM.include?('aarch64') ? 279 : 319
                 begin
-                  fd = syscall(nr, "test", 0)
+                  fd = syscall(319, "test", 0)
+                  if fd >= 0
+                    puts "allowed"
+                  else
+                    puts "error"
+                  end
+                rescue Errno::ENOSYS
+                  puts "enosys"
+                end
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "allowed\n"
+              stderr: ""
+              output: "allowed\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "memfd_create is not blocked by seccomp"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: raw
+              content: |
+                begin
+                  fd = syscall(279, "test", 0)
                   if fd >= 0
                     puts "allowed"
                   else
