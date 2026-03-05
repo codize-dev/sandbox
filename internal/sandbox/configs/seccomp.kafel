@@ -149,9 +149,12 @@ POLICY blocked {
         personality,
 
         // -- File handle --
-        // Opening files by handle bypasses directory permissions. Used in the
-        // Shocker container escape (2014).
+        // open_by_handle_at opens files by handle, bypassing directory
+        // permissions (Shocker container escape, 2014). name_to_handle_at
+        // obtains handles encoding inode numbers, leaking host filesystem
+        // layout info. Docker's default seccomp profile blocks both.
         open_by_handle_at,
+        name_to_handle_at,
 
         // -- Seccomp self-manipulation --
         // Prevent sandboxed processes from installing their own seccomp filters.
