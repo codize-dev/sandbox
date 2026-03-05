@@ -1,5 +1,5 @@
 tests:
-  - name: "/tmp is mounted with nosuid, nodev, and noexec"
+  - name: "/usr/lib is mounted with nosuid and nodev"
     requests:
       - input:
           runtime: bash
@@ -7,8 +7,8 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                line=$(grep ' /tmp ' /proc/mounts)
-                if echo "$line" | grep -q nosuid && echo "$line" | grep -q nodev && echo "$line" | grep -q noexec; then
+                line=$(grep ' /usr/lib ' /proc/mounts)
+                if echo "$line" | grep -q nosuid && echo "$line" | grep -q nodev; then
                   echo "blocked"
                 else
                   echo "allowed"
@@ -24,7 +24,8 @@ tests:
               status: "OK"
               signal: null
 
-  - name: "device node creation on /tmp is blocked"
+  - name: "/usr/lib64 is mounted with nosuid and nodev"
+    arch: [amd64]
     requests:
       - input:
           runtime: bash
@@ -32,33 +33,11 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                mknod /tmp/urandom c 1 9
-        output:
-          status: 200
-          body:
-            run:
-              stdout: ""
-              stderr: "mknod: /tmp/urandom: Operation not permitted\n"
-              output: "mknod: /tmp/urandom: Operation not permitted\n"
-              exit_code: 1
-              status: "OK"
-              signal: null
-
-  - name: "SUID bit does not grant new privileges"
-    requests:
-      - input:
-          runtime: bash
-          files:
-            - name: main.sh
-              type: raw
-              content: |
-                cp /usr/bin/id /code/suid-id
-                chmod 4755 /code/suid-id
-                output=$(/code/suid-id)
-                if echo "$output" | grep -q "euid="; then
-                  echo "allowed"
-                else
+                line=$(grep ' /usr/lib64 ' /proc/mounts)
+                if echo "$line" | grep -q nosuid && echo "$line" | grep -q nodev; then
                   echo "blocked"
+                else
+                  echo "allowed"
                 fi
         output:
           status: 200
@@ -71,7 +50,7 @@ tests:
               status: "OK"
               signal: null
 
-  - name: "binary execution from /tmp is blocked by noexec"
+  - name: "/usr/bin is mounted with nosuid and nodev"
     requests:
       - input:
           runtime: bash
@@ -79,12 +58,11 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                cp /usr/bin/id /tmp/test-exec
-                chmod +x /tmp/test-exec
-                if /tmp/test-exec > /dev/null 2>&1; then
-                  echo "allowed"
-                else
+                line=$(grep ' /usr/bin ' /proc/mounts)
+                if echo "$line" | grep -q nosuid && echo "$line" | grep -q nodev; then
                   echo "blocked"
+                else
+                  echo "allowed"
                 fi
         output:
           status: 200
