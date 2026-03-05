@@ -64,5 +64,4 @@ COPY internal/sandbox/configs/nsjail.cfg /etc/nsjail/nsjail.cfg
 COPY internal/sandbox/configs/seccomp.kafel /etc/nsjail/seccomp.kafel
 COPY --from=builder /out/gocacheprog /usr/local/bin/gocacheprog
 COPY --from=builder /out/sandbox /usr/local/bin/sandbox
-EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/sandbox", "serve"]
