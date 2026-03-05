@@ -36,6 +36,11 @@ RUN cd /tmp/preinstall && \
     GOMODCACHE=/mise/go-modcache go mod download && \
     rm -rf /tmp/preinstall
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      curl wget mawk && \
+    rm -rf /var/lib/apt/lists/*
+
 # ---
 
 FROM golang:1.25-bookworm@sha256:564e366a28ad1d70f460a2b97d1d299a562f08707eb0ecb24b659e5bd6c108e1 AS builder

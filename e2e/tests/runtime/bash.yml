@@ -126,3 +126,63 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+
+  - name: "curl is available"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                curl --version | head -1
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "/^curl /"
+              stderr: ""
+              output: "/^curl /"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "wget is available"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                wget --version | head -1
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "/^GNU Wget/"
+              stderr: ""
+              output: "/^GNU Wget/"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "awk is available"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                echo "hello world" | awk '{print $2}'
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "world\n"
+              stderr: ""
+              output: "world\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
