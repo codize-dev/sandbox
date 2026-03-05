@@ -7,19 +7,14 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                line=$(grep ' /usr/lib ' /proc/mounts)
-                if echo "$line" | grep -q nosuid && echo "$line" | grep -q nodev; then
-                  echo "blocked"
-                else
-                  echo "allowed"
-                fi
+                grep ' /usr/lib ' /proc/mounts | tr ' ' '\n' | sed -n '4p' | tr ',' '\n' | grep -E '^(nosuid|nodev)$' | sort
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
+              stdout: "nodev\nnosuid\n"
               stderr: ""
-              output: "blocked\n"
+              output: "nodev\nnosuid\n"
               exit_code: 0
               status: "OK"
               signal: null
@@ -33,19 +28,14 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                line=$(grep ' /usr/lib64 ' /proc/mounts)
-                if echo "$line" | grep -q nosuid && echo "$line" | grep -q nodev; then
-                  echo "blocked"
-                else
-                  echo "allowed"
-                fi
+                grep ' /usr/lib64 ' /proc/mounts | tr ' ' '\n' | sed -n '4p' | tr ',' '\n' | grep -E '^(nosuid|nodev)$' | sort
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
+              stdout: "nodev\nnosuid\n"
               stderr: ""
-              output: "blocked\n"
+              output: "nodev\nnosuid\n"
               exit_code: 0
               status: "OK"
               signal: null
@@ -58,19 +48,14 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                line=$(grep ' /usr/bin ' /proc/mounts)
-                if echo "$line" | grep -q nosuid && echo "$line" | grep -q nodev; then
-                  echo "blocked"
-                else
-                  echo "allowed"
-                fi
+                grep ' /usr/bin ' /proc/mounts | tr ' ' '\n' | sed -n '4p' | tr ',' '\n' | grep -E '^(nosuid|nodev)$' | sort
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
+              stdout: "nodev\nnosuid\n"
               stderr: ""
-              output: "blocked\n"
+              output: "nodev\nnosuid\n"
               exit_code: 0
               status: "OK"
               signal: null

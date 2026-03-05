@@ -8,22 +8,24 @@ tests:
               type: raw
               content: |
                 const fs = require("fs");
-                let count = 0;
+                const fds = [];
                 try {
                   for (let i = 0; i < 200; i++) {
-                    fs.openSync("/dev/null", "r");
-                    count++;
+                    fds.push(fs.openSync("/dev/null", "r"));
                   }
-                } catch (e) {}
-                console.log(count < 200 ? "blocked" : "allowed");
+                  console.log(fds.length);
+                } catch (e) {
+                  console.error(e.message);
+                  process.exit(1);
+                }
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "EMFILE: too many open files, open '/dev/null'\n"
+              output: "EMFILE: too many open files, open '/dev/null'\n"
+              exit_code: 1
               status: "OK"
               signal: null
 

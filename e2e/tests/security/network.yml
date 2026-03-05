@@ -10,25 +10,21 @@ tests:
                 const net = require("net");
                 const socket = new net.Socket();
                 socket.connect(80, "8.8.8.8", () => {
-                  console.log("allowed");
+                  console.log("connected");
                   socket.destroy();
                 });
                 socket.on("error", (e) => {
-                  if (e.code === "ENETUNREACH") {
-                    console.log("blocked");
-                  } else {
-                    console.error(e.message);
-                    process.exit(1);
-                  }
+                  console.error(e.message);
+                  process.exit(1);
                 });
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "connect ENETUNREACH 8.8.8.8:80 - Local (0.0.0.0:0)\n"
+              output: "connect ENETUNREACH 8.8.8.8:80 - Local (0.0.0.0:0)\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -41,25 +37,19 @@ tests:
               type: raw
               content: |
                 fetch("http://example.com")
-                  .then(() => {
-                    console.log("allowed");
-                  })
+                  .then(() => console.log("fetched"))
                   .catch((e) => {
-                    if (e.cause && e.cause.code === "EAI_AGAIN") {
-                      console.log("blocked");
-                    } else {
-                      console.error(e.message);
-                      process.exit(1);
-                    }
+                    console.error(e.cause ? e.cause.message : e.message);
+                    process.exit(1);
                   });
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "getaddrinfo EAI_AGAIN example.com\n"
+              output: "getaddrinfo EAI_AGAIN example.com\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -74,25 +64,21 @@ tests:
                 const net = require("net");
                 const socket = new net.Socket();
                 socket.connect(1234, "127.0.0.1", () => {
-                  console.log("allowed");
+                  console.log("connected");
                   socket.destroy();
                 });
                 socket.on("error", (e) => {
-                  if (e.code === "EADDRNOTAVAIL" || e.code === "ENETUNREACH") {
-                    console.log("blocked");
-                  } else {
-                    console.error(e.message);
-                    process.exit(1);
-                  }
+                  console.error(e.message);
+                  process.exit(1);
                 });
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "connect ENETUNREACH 127.0.0.1:1234 - Local (0.0.0.0:0)\n"
+              output: "connect ENETUNREACH 127.0.0.1:1234 - Local (0.0.0.0:0)\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -106,38 +92,30 @@ tests:
               content: |
                 const net = require("net");
                 const server = net.createServer();
+                server.on("error", (e) => {
+                  console.error(e.message);
+                  process.exit(1);
+                });
                 server.listen(1234, "127.0.0.1", () => {
                   const client = new net.Socket();
                   client.connect(1234, "127.0.0.1", () => {
-                    console.log("allowed");
+                    console.log("connected");
                     client.destroy();
                     server.close();
                   });
                   client.on("error", (e) => {
                     server.close();
-                    if (e.code === "EADDRNOTAVAIL" || e.code === "ENETUNREACH") {
-                      console.log("blocked");
-                    } else {
-                      console.error(e.message);
-                      process.exit(1);
-                    }
-                  });
-                });
-                server.on("error", (e) => {
-                  if (e.code === "EADDRNOTAVAIL" || e.code === "ENETUNREACH") {
-                    console.log("blocked");
-                  } else {
                     console.error(e.message);
                     process.exit(1);
-                  }
+                  });
                 });
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "connect ENETUNREACH 127.0.0.1:1234 - Local (0.0.0.0:0)\n"
+              output: "connect ENETUNREACH 127.0.0.1:1234 - Local (0.0.0.0:0)\n"
+              exit_code: 1
               status: "OK"
               signal: null

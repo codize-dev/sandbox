@@ -261,8 +261,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/Error: something went wrong/"
-              output: "/Error: something went wrong/"
+              stderr: "/^/code/index\\.js:1\nthrow new Error\\(\"something went wrong\"\\);\n\\^\n\nError: something went wrong\n    at Object\\.<anonymous> \\(/code/index\\.js:1:7\\)\n[\\s\\S]*Node\\.js v[\\d.]+\n$/"
+              output: "/^/code/index\\.js:1\nthrow new Error\\(\"something went wrong\"\\);\n\\^\n\nError: something went wrong\n    at Object\\.<anonymous> \\(/code/index\\.js:1:7\\)\n[\\s\\S]*Node\\.js v[\\d.]+\n$/"
               exit_code: 1
               status: "OK"
               signal: null

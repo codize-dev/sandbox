@@ -67,19 +67,14 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                count=$(ls /proc | grep -cE '^[0-9]+$')
-                if [ "$count" -lt 10 ]; then
-                  echo "blocked"
-                else
-                  echo "allowed"
-                fi
+                ls /proc | grep -cE '^[0-9]+$'
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
+              stdout: "/^[1-9]\n$/"
               stderr: ""
-              output: "blocked\n"
+              output: "/^[1-9]\n$/"
               exit_code: 0
               status: "OK"
               signal: null

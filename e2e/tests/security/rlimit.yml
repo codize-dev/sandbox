@@ -11,16 +11,17 @@ tests:
 
                 import (
                 	"fmt"
+                	"os"
                 	"syscall"
                 )
 
                 func main() {
                 	b := make([]byte, 4096)
                 	if err := syscall.Mlock(b); err != nil {
-                		fmt.Println("blocked")
-                	} else {
-                		fmt.Println("allowed")
+                		fmt.Fprintln(os.Stderr, err)
+                		os.Exit(1)
                 	}
+                	fmt.Println("allowed")
                 }
         output:
           status: 200
@@ -33,10 +34,10 @@ tests:
               status: "OK"
               signal: null
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "operation not permitted\n"
+              output: "operation not permitted\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -52,6 +53,7 @@ tests:
 
                 import (
                 	"fmt"
+                	"os"
                 	"syscall"
                 	"unsafe"
                 )
@@ -68,10 +70,10 @@ tests:
                 		uintptr(unsafe.Pointer(&param)),
                 	)
                 	if errno != 0 {
-                		fmt.Println("blocked")
-                	} else {
-                		fmt.Println("allowed")
+                		fmt.Fprintln(os.Stderr, errno)
+                		os.Exit(1)
                 	}
+                	fmt.Println("allowed")
                 }
         output:
           status: 200
@@ -84,10 +86,10 @@ tests:
               status: "OK"
               signal: null
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "operation not permitted\n"
+              output: "operation not permitted\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -103,6 +105,7 @@ tests:
 
                 import (
                 	"fmt"
+                	"os"
                 	"syscall"
                 	"unsafe"
                 )
@@ -117,10 +120,10 @@ tests:
                 		0, 0, 0,
                 	)
                 	if errno != 0 {
-                		fmt.Println("blocked")
-                	} else {
-                		fmt.Println("allowed")
+                		fmt.Fprintln(os.Stderr, errno)
+                		os.Exit(1)
                 	}
+                	fmt.Println("allowed")
                 }
         output:
           status: 200
@@ -133,10 +136,10 @@ tests:
               status: "OK"
               signal: null
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "permission denied\n"
+              output: "permission denied\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -149,15 +152,18 @@ tests:
               type: raw
               content: |
                 function f() { f(); }
-                try { f(); } catch (e) { console.log("blocked"); }
+                try { f(); } catch (e) {
+                  console.error(e.message);
+                  process.exit(1);
+                }
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "Maximum call stack size exceeded\n"
+              output: "Maximum call stack size exceeded\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -171,19 +177,14 @@ tests:
               content: |
                 for i in {1..100}; do
                   sleep 1 &
-                done 2>/tmp/err
-                if [ -s /tmp/err ]; then
-                  echo "blocked"
-                else
-                  echo "not blocked"
-                fi
+                done
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
+              stdout: ""
+              stderr: "/^(/code/main\\.sh: fork: retry: Resource temporarily unavailable\n)+$/"
+              output: "/^(/code/main\\.sh: fork: retry: Resource temporarily unavailable\n)+$/"
               exit_code: 0
               status: "OK"
               signal: null

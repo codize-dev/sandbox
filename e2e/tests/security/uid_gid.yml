@@ -31,15 +31,16 @@ tests:
                   process.setuid(0);
                   console.log("allowed");
                 } catch (e) {
-                  console.log(e.code === "EINVAL" ? "blocked" : "error: " + e.code);
+                  console.error(e.message);
+                  process.exit(1);
                 }
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "EINVAL, Invalid argument\n"
+              output: "EINVAL, Invalid argument\n"
+              exit_code: 1
               status: "OK"
               signal: null

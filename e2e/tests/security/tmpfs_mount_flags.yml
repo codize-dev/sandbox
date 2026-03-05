@@ -7,19 +7,14 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                line=$(grep ' /tmp ' /proc/mounts)
-                if echo "$line" | grep -q nosuid && echo "$line" | grep -q nodev && echo "$line" | grep -q noexec; then
-                  echo "blocked"
-                else
-                  echo "allowed"
-                fi
+                grep ' /tmp ' /proc/mounts | tr ' ' '\n' | sed -n '4p' | tr ',' '\n' | grep -E '^(nosuid|nodev|noexec)$' | sort
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
+              stdout: "nodev\nnoexec\nnosuid\n"
               stderr: ""
-              output: "blocked\n"
+              output: "nodev\nnoexec\nnosuid\n"
               exit_code: 0
               status: "OK"
               signal: null
@@ -54,19 +49,14 @@ tests:
               content: |
                 cp /usr/bin/id /code/suid-id
                 chmod 4755 /code/suid-id
-                output=$(/code/suid-id)
-                if echo "$output" | grep -q "euid="; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                /code/suid-id
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
+              stdout: "uid=65534 gid=65534 groups=65534\n"
               stderr: ""
-              output: "blocked\n"
+              output: "uid=65534 gid=65534 groups=65534\n"
               exit_code: 0
               status: "OK"
               signal: null
@@ -81,18 +71,14 @@ tests:
               content: |
                 cp /usr/bin/id /tmp/test-exec
                 chmod +x /tmp/test-exec
-                if /tmp/test-exec > /dev/null 2>&1; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                /tmp/test-exec
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "/code/main.sh: line 3: /tmp/test-exec: Permission denied\n"
+              output: "/code/main.sh: line 3: /tmp/test-exec: Permission denied\n"
+              exit_code: 126
               status: "OK"
               signal: null

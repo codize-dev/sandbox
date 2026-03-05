@@ -8,20 +8,15 @@ tests:
               type: raw
               content: |
                 require 'socket'
-                begin
-                  Socket.new(17, 3, 0)
-                  puts "allowed"
-                rescue Errno::EPERM, Errno::EAFNOSUPPORT, Errno::EACCES
-                  puts "blocked"
-                end
+                Socket.new(17, 3, 0)
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "/code/main.rb:2:in 'Socket#initialize': Operation not permitted - socket(2) (Errno::EPERM)\n\tfrom /code/main.rb:2:in 'IO.new'\n\tfrom /code/main.rb:2:in '<main>'\n"
+              output: "/code/main.rb:2:in 'Socket#initialize': Operation not permitted - socket(2) (Errno::EPERM)\n\tfrom /code/main.rb:2:in 'IO.new'\n\tfrom /code/main.rb:2:in '<main>'\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -34,20 +29,15 @@ tests:
               type: raw
               content: |
                 require 'socket'
-                begin
-                  UNIXSocket.new("/run/docker.sock")
-                  puts "allowed"
-                rescue Errno::ENOENT, Errno::ECONNREFUSED, Errno::EACCES
-                  puts "blocked"
-                end
+                UNIXSocket.new("/run/docker.sock")
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "/code/main.rb:2:in 'UNIXSocket#initialize': No such file or directory - connect(2) for /run/docker.sock (Errno::ENOENT)\n\tfrom /code/main.rb:2:in 'IO.new'\n\tfrom /code/main.rb:2:in '<main>'\n"
+              output: "/code/main.rb:2:in 'UNIXSocket#initialize': No such file or directory - connect(2) for /run/docker.sock (Errno::ENOENT)\n\tfrom /code/main.rb:2:in 'IO.new'\n\tfrom /code/main.rb:2:in '<main>'\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -62,17 +52,21 @@ tests:
                 const dgram = require("dgram");
                 const client = dgram.createSocket("udp4");
                 client.send("test", 53, "8.8.8.8", (err) => {
-                  console.log(err ? "blocked" : "allowed");
+                  if (err) {
+                    console.error(err.message);
+                    process.exit(1);
+                  }
+                  console.log("sent");
                   client.close();
                 });
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "send ENETUNREACH 8.8.8.8:53\n"
+              output: "send ENETUNREACH 8.8.8.8:53\n"
+              exit_code: 1
               status: "OK"
               signal: null
 
@@ -86,15 +80,19 @@ tests:
               content: |
                 const dns = require("dns");
                 dns.lookup("example.com", (err) => {
-                  console.log(err ? "blocked" : "allowed");
+                  if (err) {
+                    console.error(err.message);
+                    process.exit(1);
+                  }
+                  console.log("resolved");
                 });
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "getaddrinfo EAI_AGAIN example.com\n"
+              output: "getaddrinfo EAI_AGAIN example.com\n"
+              exit_code: 1
               status: "OK"
               signal: null

@@ -7,19 +7,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                kill -9 1 2>/dev/null
-                if kill -0 1 2>/dev/null; then
-                  echo "blocked"
-                else
-                  echo "allowed"
-                fi
+                kill -9 1
+                echo "survived"
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
+              stdout: "survived\n"
               stderr: ""
-              output: "blocked\n"
+              output: "survived\n"
               exit_code: 0
               status: "OK"
               signal: null
@@ -74,19 +70,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                kill -STOP 1 2>/dev/null
-                if kill -0 1 2>/dev/null; then
-                  echo "blocked"
-                else
-                  echo "allowed"
-                fi
+                kill -STOP 1
+                echo "survived"
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
+              stdout: "survived\n"
               stderr: ""
-              output: "blocked\n"
+              output: "survived\n"
               exit_code: 0
               status: "OK"
               signal: null

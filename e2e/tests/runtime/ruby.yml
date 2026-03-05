@@ -254,8 +254,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/something went wrong/"
-              output: "/something went wrong/"
+              stderr: "/code/main.rb:1:in '<main>': something went wrong (RuntimeError)\n"
+              output: "/code/main.rb:1:in '<main>': something went wrong (RuntimeError)\n"
               exit_code: 1
               status: "OK"
               signal: null

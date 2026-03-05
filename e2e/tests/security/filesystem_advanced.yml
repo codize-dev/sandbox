@@ -49,19 +49,14 @@ tests:
               content: |
                 cp /usr/bin/id /code/suid-id
                 chmod 4755 /code/suid-id 2>/dev/null
-                output=$(/code/suid-id 2>/dev/null)
-                if echo "$output" | grep -q "euid=0"; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                /code/suid-id
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
+              stdout: "uid=65534 gid=65534 groups=65534\n"
               stderr: ""
-              output: "blocked\n"
+              output: "uid=65534 gid=65534 groups=65534\n"
               exit_code: 0
               status: "OK"
               signal: null

@@ -47,19 +47,14 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                capeff=$(sed -n 's/^CapEff:[[:space:]]*//p' /proc/self/status)
-                if [ "$capeff" = "0000000000000000" ]; then
-                  echo "blocked"
-                else
-                  echo "allowed"
-                fi
+                sed -n 's/^CapEff:[[:space:]]*//p' /proc/self/status
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
+              stdout: "0000000000000000\n"
               stderr: ""
-              output: "blocked\n"
+              output: "0000000000000000\n"
               exit_code: 0
               status: "OK"
               signal: null
@@ -72,19 +67,14 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                nnp=$(sed -n 's/^NoNewPrivs:[[:space:]]*//p' /proc/self/status)
-                if [ "$nnp" = "1" ]; then
-                  echo "blocked"
-                else
-                  echo "allowed"
-                fi
+                sed -n 's/^NoNewPrivs:[[:space:]]*//p' /proc/self/status
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
+              stdout: "1\n"
               stderr: ""
-              output: "blocked\n"
+              output: "1\n"
               exit_code: 0
               status: "OK"
               signal: null

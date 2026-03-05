@@ -7,19 +7,15 @@ tests:
             - name: main.sh
               type: raw
               content: |
-                if [ -d /dev/shm ]; then
-                  echo "allowed"
-                else
-                  echo "blocked"
-                fi
+                ls /dev/shm
         output:
           status: 200
           body:
             run:
-              stdout: "blocked\n"
-              stderr: ""
-              output: "blocked\n"
-              exit_code: 0
+              stdout: ""
+              stderr: "ls: cannot access '/dev/shm': No such file or directory\n"
+              output: "ls: cannot access '/dev/shm': No such file or directory\n"
+              exit_code: 2
               status: "OK"
               signal: null
 
@@ -35,18 +31,18 @@ tests:
 
                 import (
                 	"fmt"
+                	"os"
                 	"syscall"
                 )
 
                 func main() {
-                	b, err := syscall.Mmap(-1, 0, 4096,
+                	_, err := syscall.Mmap(-1, 0, 4096,
                 		syscall.PROT_READ|syscall.PROT_WRITE|syscall.PROT_EXEC,
                 		syscall.MAP_PRIVATE|syscall.MAP_ANONYMOUS)
                 	if err != nil {
-                		fmt.Println("blocked")
-                		return
+                		fmt.Fprintln(os.Stderr, err)
+                		os.Exit(1)
                 	}
-                	_ = b
                 	fmt.Println("allowed")
                 }
         output:
