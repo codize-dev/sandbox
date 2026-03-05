@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/codize-dev/sandbox/internal/handler"
 	"github.com/codize-dev/sandbox/internal/sandbox"
@@ -15,17 +17,26 @@ var serveCmd = &cobra.Command{
 	RunE: runServe,
 }
 
+func defaultPort() int {
+	if v := os.Getenv("PORT"); v != "" {
+		if p, err := strconv.Atoi(v); err == nil {
+			return p
+		}
+	}
+	return 8080
+}
+
 func init() {
 	rootCmd.AddCommand(serveCmd)
 
-	serveCmd.Flags().String("addr", ":8080", "TCP address to listen on")
+	serveCmd.Flags().Int("port", defaultPort(), "port to listen on (default overridden by PORT env var)")
 	serveCmd.Flags().Int("run-timeout", 30, "sandbox run timeout in seconds")
 	serveCmd.Flags().Int("compile-timeout", 30, "sandbox compile timeout in seconds")
 	serveCmd.Flags().Int("output-limit", 1<<20, "maximum combined output bytes")
 }
 
 func runServe(cmd *cobra.Command, _ []string) error {
-	addr, err := cmd.Flags().GetString("addr")
+	port, err := cmd.Flags().GetInt("port")
 	if err != nil {
 		return err
 	}
@@ -64,7 +75,7 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	e.Use(middleware.RequestLogger())
 	e.POST("/v1/run", h.RunHandler)
 
-	if err := e.Start(addr); err != nil {
+	if err := e.Start(fmt.Sprintf(":%d", port)); err != nil {
 		e.Logger.Error("failed to start server", "error", err)
 	}
 	return nil

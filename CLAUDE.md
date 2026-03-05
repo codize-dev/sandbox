@@ -40,7 +40,7 @@ The container must run in **privileged mode** (required for nsjail to create Lin
 
 ### CLI Flags (`serve` subcommand)
 
-- `--addr` (default `:8080`) — TCP address to listen on
+- `--port` (default `8080`, overridden by `PORT` env var) — port to listen on
 - `--run-timeout` (default `30`) — sandbox run timeout in seconds
 - `--compile-timeout` (default `30`) — sandbox compile timeout in seconds
 - `--output-limit` (default `1048576` / 1 MiB) — maximum combined output bytes
