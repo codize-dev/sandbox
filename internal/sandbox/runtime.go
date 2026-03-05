@@ -172,7 +172,7 @@ func (nodeRuntime) BindMounts() []BindMount {
 }
 
 func (nodeRuntime) Env() []string {
-	return []string{"PATH=/mise/installs/node/24.14.0/bin:/usr/bin"}
+	return []string{"PATH=/mise/installs/node/24.14.0/bin:/usr/bin:/bin"}
 }
 
 // Limits returns resource limits for Node.js execution.
@@ -221,7 +221,7 @@ func (rubyRuntime) BindMounts() []BindMount {
 }
 
 func (rubyRuntime) Env() []string {
-	return []string{"PATH=/mise/installs/ruby/3.4.8/bin:/usr/bin"}
+	return []string{"PATH=/mise/installs/ruby/3.4.8/bin:/usr/bin:/bin"}
 }
 
 // Limits returns resource limits for Ruby execution.
@@ -274,7 +274,7 @@ func (goRuntime) BindMounts() []BindMount {
 }
 
 func (goRuntime) Env() []string {
-	return []string{"PATH=/usr/bin"}
+	return []string{"PATH=/usr/bin:/bin"}
 }
 
 func (goRuntime) CompileCommand() []string {
@@ -292,7 +292,7 @@ func (goRuntime) CompileBindMounts() []BindMount {
 
 func (goRuntime) CompileEnv() []string {
 	return []string{
-		"PATH=/mise/installs/go/1.26.0/bin:/usr/bin",
+		"PATH=/mise/installs/go/1.26.0/bin:/usr/bin:/bin",
 		"GOROOT=/mise/installs/go/1.26.0",
 		"GOPATH=/tmp/gopath",                                    // writable location for module metadata and build artifacts
 		"GOMODCACHE=/mise/go-modcache",                          // read-only pre-downloaded module cache from Docker image
@@ -386,7 +386,7 @@ func (bashRuntime) BindMounts() []BindMount {
 }
 
 func (bashRuntime) Env() []string {
-	return []string{"PATH=/usr/bin"}
+	return []string{"PATH=/usr/bin:/bin"}
 }
 
 // Limits returns resource limits for bash execution.

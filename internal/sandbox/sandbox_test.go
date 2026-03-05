@@ -118,7 +118,7 @@ func TestExecution_buildArgs(t *testing.T) {
 		bindMounts: []BindMount{
 			{Src: "/mise/installs/node/24", Dst: "/mise/installs/node/24"},
 		},
-		env:    []string{"PATH=/usr/bin"},
+		env:    []string{"PATH=/usr/bin:/bin"},
 		tmpDir: "/tmp/sandbox-code",
 		limits: Limits{
 			Rlimits: Rlimits{AS: "4096", Fsize: "64", Nofile: "64", Nproc: "32"},
@@ -140,7 +140,7 @@ func TestExecution_buildArgs(t *testing.T) {
 		"--cgroup_mem_max", "1000000",
 		"--cgroup_mem_swap_max", "0",
 		"--cgroup_cpu_ms_per_sec", "750",
-		"-E", "PATH=/usr/bin",
+		"-E", "PATH=/usr/bin:/bin",
 		"--",
 		"/usr/bin/node", "/code/index.js",
 	}
