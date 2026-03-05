@@ -204,7 +204,7 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 	}
 
 	result, err := r.exec(ctx, execParams{
-		command:    rt.Command("/code/" + entryFile),
+		command:    rt.Command(filepath.Join("/code", entryFile)),
 		bindMounts: rt.BindMounts(),
 		env:        rt.Env(),
 		tmpDir:     tmpDir,

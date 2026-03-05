@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"path"
 	"sort"
 	"strings"
 )
@@ -112,7 +113,7 @@ type DefaultFile struct {
 // Files stored with a .tmpl suffix have that suffix stripped when read (workaround for
 // the Go toolchain treating directories containing go.mod as separate modules).
 func readDefaultFiles(name RuntimeName) ([]DefaultFile, error) {
-	dir := "defaults/" + string(name)
+	dir := path.Join("defaults", string(name))
 	entries, err := defaultFiles.ReadDir(dir)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -125,7 +126,7 @@ func readDefaultFiles(name RuntimeName) ([]DefaultFile, error) {
 		if e.IsDir() {
 			continue
 		}
-		data, err := defaultFiles.ReadFile(dir + "/" + e.Name())
+		data, err := defaultFiles.ReadFile(path.Join(dir, e.Name()))
 		if err != nil {
 			return nil, fmt.Errorf("failed to read embedded default file %s/%s: %w", name, e.Name(), err)
 		}
