@@ -17,7 +17,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "mbind (NUMA policy) is blocked by seccomp (ruby)"
@@ -38,7 +38,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "set_mempolicy is blocked by seccomp (ruby)"
@@ -59,7 +59,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "get_mempolicy is blocked by seccomp (ruby)"
@@ -80,7 +80,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "move_pages is blocked by seccomp (ruby)"
@@ -101,5 +101,5 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"

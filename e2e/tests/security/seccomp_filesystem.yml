@@ -17,7 +17,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "fsopen (new mount API) is blocked by seccomp (ruby)"
@@ -37,7 +37,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "fsconfig is blocked by seccomp (ruby)"
@@ -57,7 +57,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "fsmount is blocked by seccomp (ruby)"
@@ -77,7 +77,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "fspick is blocked by seccomp (ruby)"
@@ -97,7 +97,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "move_mount is blocked by seccomp (ruby)"
@@ -117,7 +117,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "open_tree is blocked by seccomp (ruby)"
@@ -137,7 +137,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "mount_setattr is blocked by seccomp (ruby)"
@@ -157,7 +157,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "name_to_handle_at is blocked by seccomp (ruby)"
@@ -178,7 +178,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "fanotify_init is blocked by seccomp (ruby)"
@@ -199,7 +199,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "fanotify_mark is blocked by seccomp (ruby)"
@@ -220,5 +220,5 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"

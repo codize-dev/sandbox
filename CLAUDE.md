@@ -90,6 +90,6 @@ Response:
 {"compile": null, "run": {"stdout": "<base64>", "stderr": "<base64>", "output": "<base64>", "exit_code": 0, "status": "OK", "signal": null}}
 ```
 
-Possible `status` values: `"OK"`, `"TIMEOUT"`, `"OUTPUT_LIMIT_EXCEEDED"`.
+Possible `status` values: `"OK"`, `"SIGNAL"`, `"TIMEOUT"`, `"OUTPUT_LIMIT_EXCEEDED"`.
 
 `compile`: Compilation step result (same schema as `run`). `null` for non-compiled runtimes (node, ruby, bash). When compilation fails, `run` is `null`.

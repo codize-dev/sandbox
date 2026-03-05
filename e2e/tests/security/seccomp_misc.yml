@@ -17,5 +17,5 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"

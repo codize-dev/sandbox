@@ -34,5 +34,5 @@ tests:
               stderr: ""
               output: ""
               exit_code: 137
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGKILL"

@@ -24,6 +24,48 @@ tests:
               status: "OK"
               signal: null
 
+  - name: "SIGSEGV to PID 1 is ignored inside PID namespace"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                kill -SEGV $$
+                echo "survived"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "survived\n"
+              stderr: ""
+              output: "survived\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "SIGTERM to PID 1 is ignored inside PID namespace"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: raw
+              content: |
+                kill -TERM $$
+                echo "survived"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "survived\n"
+              stderr: ""
+              output: "survived\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
   - name: "SIGSTOP to PID 1 is blocked inside PID namespace"
     requests:
       - input:

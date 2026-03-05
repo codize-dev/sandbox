@@ -17,7 +17,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "setns is blocked by seccomp (ruby)"
@@ -38,7 +38,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "pivot_root is blocked by seccomp (ruby)"
@@ -59,7 +59,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "unshare is blocked by seccomp (go)"
@@ -92,7 +92,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "clone with CLONE_NEWUSER is blocked by seccomp (ruby)"
@@ -113,7 +113,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "clone with CLONE_NEWNET is blocked by seccomp (ruby)"
@@ -134,7 +134,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "clone3 returns ENOSYS instead of killing process (ruby)"
@@ -179,7 +179,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "clone with CLONE_NEWUSER is blocked by seccomp (go)"
@@ -212,5 +212,5 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"

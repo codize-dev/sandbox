@@ -17,7 +17,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "mount is blocked by seccomp (ruby)"
@@ -38,7 +38,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "ptrace is blocked by seccomp (go)"
@@ -71,7 +71,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "io_uring_setup returns ENOSYS instead of killing process (ruby)"

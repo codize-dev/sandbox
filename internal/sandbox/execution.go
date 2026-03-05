@@ -183,6 +183,8 @@ func (e *execution) collectResult(waitErr error, logStr string) (Result, error) 
 		result.Signal = resolveSignal(result.ExitCode, logStr)
 		if timedOut {
 			result.Status = StatusTimeout
+		} else if result.Signal != nil {
+			result.Status = StatusSignal
 		}
 	}
 

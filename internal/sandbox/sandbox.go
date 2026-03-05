@@ -21,6 +21,7 @@ type Status string
 
 const (
 	StatusOK                  Status = "OK"
+	StatusSignal              Status = "SIGNAL"
 	StatusTimeout             Status = "TIMEOUT"
 	StatusOutputLimitExceeded Status = "OUTPUT_LIMIT_EXCEEDED"
 )

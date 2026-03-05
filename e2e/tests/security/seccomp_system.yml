@@ -17,7 +17,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "acct is blocked by seccomp (ruby)"
@@ -38,7 +38,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "swapon is blocked by seccomp (ruby)"
@@ -59,7 +59,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "swapoff is blocked by seccomp (ruby)"
@@ -80,7 +80,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "syslog is blocked by seccomp (ruby)"
@@ -101,7 +101,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "quotactl is blocked by seccomp (ruby)"
@@ -122,7 +122,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "quotactl_fd is blocked by seccomp (ruby)"
@@ -142,7 +142,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "clock_settime is blocked by seccomp (ruby)"
@@ -163,7 +163,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "clock_adjtime is blocked by seccomp (ruby)"
@@ -184,7 +184,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "settimeofday is blocked by seccomp (ruby)"
@@ -205,7 +205,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "adjtimex is blocked by seccomp (ruby)"
@@ -226,7 +226,7 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
 
   - name: "umount is blocked by seccomp (ruby)"
@@ -247,5 +247,5 @@ tests:
               stderr: ""
               output: ""
               exit_code: 159
-              status: "OK"
+              status: "SIGNAL"
               signal: "SIGSYS"
