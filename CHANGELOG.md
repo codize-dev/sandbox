@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.0](https://github.com/codize-dev/sandbox/compare/v0.0.1...v0.1.0) (2026-03-06)
+
+
+### Features
+
+* add structured logging with slog and fix silent error handling ([5d5ddb3](https://github.com/codize-dev/sandbox/commit/5d5ddb3f4e1623e35c300d3f20a4a1a47ce178b6))
+
+
+### Bug Fixes
+
+* modernize ([bb0a299](https://github.com/codize-dev/sandbox/commit/bb0a299efd3d80a65d02afea5ea7929dded08418))
+* remove hardcoded serve subcommand from ENTRYPOINT ([bfd4a32](https://github.com/codize-dev/sandbox/commit/bfd4a322d38606ba05b98c3bf29bbd4713b46656))
+* trigger version bump on Dockerfile dependency updates via Renovate ([8de6a26](https://github.com/codize-dev/sandbox/commit/8de6a267bf3038404dd8675775128b9150d1c734))
+* use 137 exit code for output limit exceeded instead of -1 ([26aee35](https://github.com/codize-dev/sandbox/commit/26aee35fbef4ed85116b4db0a4f0a201c060eb54))
+
 ## [0.0.1](https://github.com/codize-dev/sandbox/compare/v0.0.0...v0.0.1) (2026-03-06)
 
 
