@@ -69,4 +69,4 @@ COPY internal/sandbox/configs/nsjail.cfg /etc/nsjail/nsjail.cfg
 COPY internal/sandbox/configs/seccomp.kafel /etc/nsjail/seccomp.kafel
 COPY --from=builder /out/gocacheprog /usr/local/bin/gocacheprog
 COPY --from=builder /out/sandbox /usr/local/bin/sandbox
-ENTRYPOINT ["/usr/local/bin/sandbox", "serve"]
+ENTRYPOINT ["/usr/local/bin/sandbox"]
