@@ -214,3 +214,51 @@ tests:
               errors:
                 - path: ["files", 1, "content"]
                   message: "invalid base64"
+
+  - name: "too many files"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: f01.js
+              type: plain
+              content: ""
+            - name: f02.js
+              type: plain
+              content: ""
+            - name: f03.js
+              type: plain
+              content: ""
+            - name: f04.js
+              type: plain
+              content: ""
+            - name: f05.js
+              type: plain
+              content: ""
+            - name: f06.js
+              type: plain
+              content: ""
+            - name: f07.js
+              type: plain
+              content: ""
+            - name: f08.js
+              type: plain
+              content: ""
+            - name: f09.js
+              type: plain
+              content: ""
+            - name: f10.js
+              type: plain
+              content: ""
+            - name: f11.js
+              type: plain
+              content: ""
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files"]
+                  message: "too many files (max: 10)"

@@ -36,7 +36,8 @@ type RunResponse struct {
 
 // Handler holds dependencies for the HTTP handler.
 type Handler struct {
-	Runner *sandbox.Runner
+	Runner   *sandbox.Runner
+	MaxFiles int
 }
 
 type decodedFile struct {
@@ -97,6 +98,15 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 			Message: CodeValidationError.Message(),
 			Errors: []ValidationError{
 				{Path: []any{"files"}, Message: "must not be empty"},
+			},
+		})
+	}
+	if len(req.Files) > h.MaxFiles {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    CodeValidationError,
+			Message: CodeValidationError.Message(),
+			Errors: []ValidationError{
+				{Path: []any{"files"}, Message: fmt.Sprintf("too many files (max: %d)", h.MaxFiles)},
 			},
 		})
 	}
