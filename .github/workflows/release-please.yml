@@ -43,7 +43,7 @@ jobs:
     needs: release-please
     if: needs.release-please.outputs.should-publish == 'true'
     name: Publish
-    timeout-minutes: 10
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     permissions:
       packages: write
