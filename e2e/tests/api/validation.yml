@@ -215,6 +215,53 @@ tests:
                 - path: ["files", 1, "content"]
                   message: "invalid base64"
 
+  - name: "exactly max files is accepted"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: f01.js
+              type: plain
+              content: |
+                console.log("ok");
+            - name: f02.js
+              type: plain
+              content: ""
+            - name: f03.js
+              type: plain
+              content: ""
+            - name: f04.js
+              type: plain
+              content: ""
+            - name: f05.js
+              type: plain
+              content: ""
+            - name: f06.js
+              type: plain
+              content: ""
+            - name: f07.js
+              type: plain
+              content: ""
+            - name: f08.js
+              type: plain
+              content: ""
+            - name: f09.js
+              type: plain
+              content: ""
+            - name: f10.js
+              type: plain
+              content: ""
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "ok\n"
+              stderr: ""
+              output: "ok\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
   - name: "too many files"
     requests:
       - input:
