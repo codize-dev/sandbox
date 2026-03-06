@@ -15,6 +15,6 @@ tests:
               stdout: ""
               stderr: ""
               output: ""
-              exit_code: -1
+              exit_code: 137
               status: "OUTPUT_LIMIT_EXCEEDED"
               signal: null

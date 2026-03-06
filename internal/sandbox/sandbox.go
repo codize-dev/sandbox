@@ -149,11 +149,16 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 	logStr := string(logData)
 
 	if outputLimitHit {
+		// ExitCode is hardcoded to 137 (128 + SIGKILL). The Go process
+		// kills nsjail via proc.Kill() (SIGKILL), so nsjail never gets a
+		// chance to report the child's exit status. Go's ExitCode() returns
+		// -1 for signal-terminated processes, but 137 is used here to stay
+		// consistent with other SIGKILL scenarios (timeout, OOM).
 		return Result{
 			Stdout:   "",
 			Stderr:   "",
 			Output:   "",
-			ExitCode: -1,
+			ExitCode: 137,
 			Status:   StatusOutputLimitExceeded,
 			Signal:   nil,
 		}, nil
