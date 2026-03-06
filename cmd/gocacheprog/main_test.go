@@ -10,7 +10,7 @@ import (
 
 // makeActionEntry builds a 175-byte Go cache action entry.
 func makeActionEntry(actionHex, outputHex string, size, tsNano int64) []byte {
-	return []byte(fmt.Sprintf("v1 %s %s %20d %20d\n", actionHex, outputHex, size, tsNano))
+	return fmt.Appendf(nil, "v1 %s %s %20d %20d\n", actionHex, outputHex, size, tsNano)
 }
 
 func Test_handleGet_Hit(t *testing.T) {
