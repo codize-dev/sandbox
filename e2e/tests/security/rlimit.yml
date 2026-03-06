@@ -5,7 +5,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -47,7 +47,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -99,7 +99,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -149,7 +149,7 @@ tests:
           runtime: node
           files:
             - name: index.js
-              type: raw
+              type: plain
               content: |
                 function f() { f(); }
                 try { f(); } catch (e) {
@@ -173,7 +173,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 for i in {1..100}; do
                   sleep 1 &
@@ -195,7 +195,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 :(){ :|:& };: 2>/dev/null
         output:

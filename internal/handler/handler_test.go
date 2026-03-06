@@ -9,86 +9,94 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func strPtr(s string) *string { return &s }
+
 func TestFile_Validate(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name      string
-		fileName  string
+		fileName  *string
 		wantErr   bool
 		errSubstr string
 	}{
 		{
 			name:     "simple js file",
-			fileName: "index.js",
+			fileName: strPtr("index.js"),
 		},
 		{
 			name:     "simple ruby file",
-			fileName: "main.rb",
+			fileName: strPtr("main.rb"),
 		},
 		{
 			name:     "hidden file starting with dot",
-			fileName: ".hidden",
+			fileName: strPtr(".hidden"),
 		},
 		{
 			name:     "file name with spaces",
-			fileName: "file with spaces.js",
+			fileName: strPtr("file with spaces.js"),
 		},
 		{
 			name:     "three consecutive dots",
-			fileName: "...",
+			fileName: strPtr("..."),
+		},
+		{
+			name:      "nil name",
+			fileName:  nil,
+			wantErr:   true,
+			errSubstr: "must not be empty",
 		},
 		{
 			name:      "empty name",
-			fileName:  "",
+			fileName:  strPtr(""),
 			wantErr:   true,
 			errSubstr: "must not be empty",
 		},
 		{
 			name:      "single dot",
-			fileName:  ".",
+			fileName:  strPtr("."),
 			wantErr:   true,
-			errSubstr: "is not allowed",
+			errSubstr: "not allowed",
 		},
 		{
 			name:      "double dot",
-			fileName:  "..",
+			fileName:  strPtr(".."),
 			wantErr:   true,
-			errSubstr: "is not allowed",
+			errSubstr: "not allowed",
 		},
 		{
 			name:      "path traversal with leading dotdot-slash",
-			fileName:  "../escape",
+			fileName:  strPtr("../escape"),
 			wantErr:   true,
 			errSubstr: "invalid characters",
 		},
 		{
 			name:      "deep path traversal",
-			fileName:  "../../etc/passwd",
+			fileName:  strPtr("../../etc/passwd"),
 			wantErr:   true,
 			errSubstr: "invalid characters",
 		},
 		{
 			name:      "path traversal embedded in path",
-			fileName:  "foo/../../bar",
+			fileName:  strPtr("foo/../../bar"),
 			wantErr:   true,
 			errSubstr: "invalid characters",
 		},
 		{
 			name:      "subdirectory slash",
-			fileName:  "a/b",
+			fileName:  strPtr("a/b"),
 			wantErr:   true,
 			errSubstr: "invalid characters",
 		},
 		{
 			name:      "null byte at start",
-			fileName:  "\x00hidden",
+			fileName:  strPtr("\x00hidden"),
 			wantErr:   true,
 			errSubstr: "invalid characters",
 		},
 		{
 			name:      "null byte embedded",
-			fileName:  "foo\x00bar",
+			fileName:  strPtr("foo\x00bar"),
 			wantErr:   true,
 			errSubstr: "invalid characters",
 		},

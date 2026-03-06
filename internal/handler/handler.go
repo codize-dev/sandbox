@@ -16,15 +16,15 @@ import (
 
 // RunRequest is the JSON request body for POST /v1/run.
 type RunRequest struct {
-	Runtime string `json:"runtime"`
-	Files   []File `json:"files"`
+	Runtime *string `json:"runtime"`
+	Files   []File  `json:"files"`
 }
 
 // File represents a single source file in the run request.
 // The first file in the request's Files array is used as the entrypoint.
 type File struct {
-	Name    string `json:"name"`
-	Content string `json:"content"`
+	Name    *string `json:"name"`
+	Content *string `json:"content"`
 }
 
 // RunResponse is the JSON response for POST /v1/run.
@@ -47,69 +47,140 @@ type decodedFile struct {
 func (h *Handler) RunHandler(c *echo.Context) error {
 	var req RunRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "invalid request body: " + err.Error(),
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    CodeInvalidRequestBody,
+			Message: CodeInvalidRequestBody.Message(),
 		})
 	}
 
-	rt, err := sandbox.LookupRuntime(sandbox.RuntimeName(req.Runtime))
+	if req.Runtime == nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    CodeValidationError,
+			Message: CodeValidationError.Message(),
+			Errors: []ValidationError{
+				{Path: []any{"runtime"}, Message: "required"},
+			},
+		})
+	}
+	if *req.Runtime == "" {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    CodeValidationError,
+			Message: CodeValidationError.Message(),
+			Errors: []ValidationError{
+				{Path: []any{"runtime"}, Message: "must not be empty"},
+			},
+		})
+	}
+	rt, err := sandbox.LookupRuntime(sandbox.RuntimeName(*req.Runtime))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    CodeValidationError,
+			Message: CodeValidationError.Message(),
+			Errors: []ValidationError{
+				{Path: []any{"runtime"}, Message: err.Error()},
+			},
+		})
+	}
+
+	if req.Files == nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    CodeValidationError,
+			Message: CodeValidationError.Message(),
+			Errors: []ValidationError{
+				{Path: []any{"files"}, Message: "required"},
+			},
 		})
 	}
 	if len(req.Files) == 0 {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "files must not be empty",
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    CodeValidationError,
+			Message: CodeValidationError.Message(),
+			Errors: []ValidationError{
+				{Path: []any{"files"}, Message: "must not be empty"},
+			},
 		})
 	}
 
 	files := make([]decodedFile, len(req.Files))
 	for i, f := range req.Files {
+		if f.Name == nil {
+			return c.JSON(http.StatusBadRequest, ErrorResponse{
+				Code:    CodeValidationError,
+				Message: CodeValidationError.Message(),
+				Errors: []ValidationError{
+					{Path: []any{"files", i, "name"}, Message: "required"},
+				},
+			})
+		}
+		if f.Content == nil {
+			return c.JSON(http.StatusBadRequest, ErrorResponse{
+				Code:    CodeValidationError,
+				Message: CodeValidationError.Message(),
+				Errors: []ValidationError{
+					{Path: []any{"files", i, "content"}, Message: "required"},
+				},
+			})
+		}
 		if err := f.Validate(); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": err.Error(),
+			return c.JSON(http.StatusBadRequest, ErrorResponse{
+				Code:    CodeValidationError,
+				Message: CodeValidationError.Message(),
+				Errors: []ValidationError{
+					{Path: []any{"files", i, "name"}, Message: err.Error()},
+				},
 			})
 		}
 		for _, restricted := range rt.RestrictedFiles() {
-			if f.Name == restricted {
-				return c.JSON(http.StatusBadRequest, map[string]string{
-					"error": fmt.Sprintf("file %q is not allowed for the %s runtime", f.Name, rt.Name()),
+			if *f.Name == restricted {
+				return c.JSON(http.StatusBadRequest, ErrorResponse{
+					Code:    CodeValidationError,
+					Message: CodeValidationError.Message(),
+					Errors: []ValidationError{
+						{Path: []any{"files", i, "name"}, Message: "not allowed for this runtime"},
+					},
 				})
 			}
 		}
-		content, err := base64.StdEncoding.DecodeString(f.Content)
+		content, err := base64.StdEncoding.DecodeString(*f.Content)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": fmt.Sprintf("file %q: invalid base64 content", f.Name),
+			return c.JSON(http.StatusBadRequest, ErrorResponse{
+				Code:    CodeValidationError,
+				Message: CodeValidationError.Message(),
+				Errors: []ValidationError{
+					{Path: []any{"files", i, "content"}, Message: "invalid base64"},
+				},
 			})
 		}
-		files[i] = decodedFile{name: f.Name, content: content}
+		files[i] = decodedFile{name: *f.Name, content: content}
 	}
 
 	tmpDir, err := os.MkdirTemp("", "sandbox-*")
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "failed to create temporary directory",
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Code:    CodeInternalError,
+			Message: CodeInternalError.Message(),
 		})
 	}
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	if err := writeFiles(tmpDir, files); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Code:    CodeInternalError,
+			Message: CodeInternalError.Message(),
 		})
 	}
 
 	output, err := h.Runner.Run(c.Request().Context(), rt, tmpDir, files[0].name)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			return c.JSON(http.StatusGatewayTimeout, map[string]string{
-				"error": "execution timed out",
+			return c.JSON(http.StatusGatewayTimeout, ErrorResponse{
+				Code:    CodeExecutionTimeout,
+				Message: CodeExecutionTimeout.Message(),
 			})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Code:    CodeInternalError,
+			Message: CodeInternalError.Message(),
 		})
 	}
 
@@ -128,18 +199,18 @@ func writeFiles(tmpDir string, files []decodedFile) error {
 }
 
 // Validate checks that f.Name is safe to use as a flat filename.
-// It rejects names containing '/' or null bytes, empty names, and "." / "..".
+// It rejects nil, empty names, names containing '/' or null bytes, and "." / "..".
 // Because all slashes are rejected here, writeFiles does not need a secondary
 // path traversal check after filepath.Join.
 func (f File) Validate() error {
-	if f.Name == "" {
-		return errors.New("file name must not be empty")
+	if f.Name == nil || *f.Name == "" {
+		return errors.New("must not be empty")
 	}
-	if strings.ContainsRune(f.Name, '/') || strings.ContainsRune(f.Name, 0) {
-		return fmt.Errorf("file name %q contains invalid characters", f.Name)
+	if strings.ContainsRune(*f.Name, '/') || strings.ContainsRune(*f.Name, 0) {
+		return errors.New("contains invalid characters")
 	}
-	if f.Name == "." || f.Name == ".." {
-		return fmt.Errorf("file name %q is not allowed", f.Name)
+	if *f.Name == "." || *f.Name == ".." {
+		return errors.New("not allowed")
 	}
 	return nil
 }

@@ -5,13 +5,18 @@ tests:
           runtime: node
           files:
             - name: "../escape.js"
-              type: raw
+              type: plain
               content: |
                 console.log("escaped");
         output:
           status: 400
           body:
-            error: 'file name "../escape.js" contains invalid characters'
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "contains invalid characters"
 
   - name: "deep path traversal"
     requests:
@@ -19,13 +24,18 @@ tests:
           runtime: node
           files:
             - name: "../../etc/passwd"
-              type: raw
+              type: plain
               content: |
                 console.log("escaped");
         output:
           status: 400
           body:
-            error: 'file name "../../etc/passwd" contains invalid characters'
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "contains invalid characters"
 
   - name: "subdirectory slash rejected"
     requests:
@@ -33,10 +43,15 @@ tests:
           runtime: node
           files:
             - name: "a/b.js"
-              type: raw
+              type: plain
               content: |
                 console.log("escaped");
         output:
           status: 400
           body:
-            error: 'file name "a/b.js" contains invalid characters'
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "contains invalid characters"

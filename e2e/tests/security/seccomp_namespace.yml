@@ -6,7 +6,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(272, 0x10000000)
         output:
@@ -27,7 +27,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(97, 0x10000000)
         output:
@@ -48,7 +48,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(308, 0, 0)
         output:
@@ -69,7 +69,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(268, 0, 0)
         output:
@@ -90,7 +90,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(155, "/", "/")
         output:
@@ -111,7 +111,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(41, "/", "/")
         output:
@@ -131,7 +131,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -165,7 +165,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(56, 0x10000000, 0, 0, 0, 0)
         output:
@@ -186,7 +186,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(220, 0x10000000, 0, 0, 0, 0)
         output:
@@ -207,7 +207,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(56, 0x40000000, 0, 0, 0, 0)
         output:
@@ -228,7 +228,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(220, 0x40000000, 0, 0, 0, 0)
         output:
@@ -248,7 +248,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 begin
                   syscall(435, 0, 0)
@@ -273,7 +273,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(56, 0x00020000, 0, 0, 0, 0)
         output:
@@ -294,7 +294,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(220, 0x00020000, 0, 0, 0, 0)
         output:
@@ -314,7 +314,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 

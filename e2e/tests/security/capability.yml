@@ -5,7 +5,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 touch /tmp/captest && chown 0:0 /tmp/captest
         output:
@@ -25,7 +25,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 hostname attacker
         output:
@@ -45,7 +45,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 sed -n 's/^CapEff:[[:space:]]*//p' /proc/self/status
         output:
@@ -65,7 +65,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 sed -n 's/^NoNewPrivs:[[:space:]]*//p' /proc/self/status
         output:

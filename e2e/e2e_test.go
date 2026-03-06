@@ -33,30 +33,39 @@ type testFile struct {
 type fileType string
 
 const (
-	fileTypeRaw  fileType = "raw"
-	fileTypeFill fileType = "fill"
+	fileTypePlain  fileType = "plain"
+	fileTypeFill   fileType = "fill"
+	fileTypeBase64 fileType = "base64"
 )
 
 type testInputFile struct {
-	Name    string   `yaml:"name"`
+	Name    *string  `yaml:"name"`
 	Type    fileType `yaml:"type"`
-	Content string   `yaml:"content"`
+	Content *string  `yaml:"content"`
 	Size    int      `yaml:"size"`
 }
 
 func (f testInputFile) resolveContent() (string, error) {
 	switch f.Type {
-	case fileTypeRaw, "":
-		return f.Content, nil
+	case fileTypePlain, "":
+		if f.Content == nil {
+			return "", nil
+		}
+		return *f.Content, nil
 	case fileTypeFill:
 		return strings.Repeat("A", f.Size), nil
+	case fileTypeBase64:
+		if f.Content == nil {
+			return "", nil
+		}
+		return *f.Content, nil
 	default:
 		return "", fmt.Errorf("unknown file type: %q", f.Type)
 	}
 }
 
 type testInput struct {
-	Runtime string          `yaml:"runtime"`
+	Runtime *string         `yaml:"runtime"`
 	Files   []testInputFile `yaml:"files"`
 }
 
@@ -66,9 +75,20 @@ type testOutput struct {
 }
 
 type testOutputBody struct {
-	Compile *runOutput `yaml:"compile"`
-	Run     *runOutput `yaml:"run"`
-	Error   string     `yaml:"error"`
+	Compile *runOutput       `yaml:"compile"`
+	Run     *runOutput       `yaml:"run"`
+	Error   *testOutputError `yaml:"error"`
+}
+
+type testOutputError struct {
+	Code    string                `yaml:"code"`
+	Message string                `yaml:"message"`
+	Errors  []testValidationError `yaml:"errors"`
+}
+
+type testValidationError struct {
+	Path    []any  `yaml:"path"`
+	Message string `yaml:"message"`
 }
 
 type runOutput struct {
@@ -92,13 +112,13 @@ type testCase struct {
 }
 
 type apiRequest struct {
-	Runtime string    `json:"runtime"`
+	Runtime *string   `json:"runtime"`
 	Files   []apiFile `json:"files"`
 }
 
 type apiFile struct {
-	Name    string `json:"name"`
-	Content string `json:"content"`
+	Name    *string `json:"name"`
+	Content *string `json:"content"`
 }
 
 type apiResponse struct {
@@ -116,7 +136,14 @@ type apiRunResult struct {
 }
 
 type apiErrorResponse struct {
-	Error string `json:"error"`
+	Code    string               `json:"code"`
+	Message string               `json:"message"`
+	Errors  []apiValidationError `json:"errors"`
+}
+
+type apiValidationError struct {
+	Path    []any  `json:"path"`
+	Message string `json:"message"`
 }
 
 func decodeBase64(t *testing.T, encoded, field string) string {
@@ -176,19 +203,29 @@ func TestE2E(t *testing.T) {
 				}
 				for ri, req := range tc.Requests {
 					func() {
-						files := make([]apiFile, len(req.Input.Files))
-						for fi, f := range req.Input.Files {
-							content, err := f.resolveContent()
-							require.NoError(t, err, "[request %d] failed to resolve content for file %q", ri, f.Name)
-							files[fi] = apiFile{
-								Name:    f.Name,
-								Content: base64.StdEncoding.EncodeToString([]byte(content)),
+						var apiFiles []apiFile
+						if req.Input.Files != nil {
+							apiFiles = make([]apiFile, len(req.Input.Files))
+							for fi, f := range req.Input.Files {
+								af := apiFile{Name: f.Name}
+
+								if f.Content != nil || f.Type == fileTypeFill {
+									content, err := f.resolveContent()
+									require.NoError(t, err, "[request %d] failed to resolve file content", ri)
+									encodedContent := base64.StdEncoding.EncodeToString([]byte(content))
+									if f.Type == fileTypeBase64 {
+										encodedContent = content
+									}
+									af.Content = &encodedContent
+								}
+
+								apiFiles[fi] = af
 							}
 						}
 
 						reqBody := apiRequest{
 							Runtime: req.Input.Runtime,
-							Files:   files,
+							Files:   apiFiles,
 						}
 
 						bodyBytes, err := json.Marshal(reqBody)
@@ -201,12 +238,23 @@ func TestE2E(t *testing.T) {
 
 						require.Equal(t, req.Output.Status, resp.StatusCode, "[request %d] unexpected HTTP status code", ri)
 
-						if req.Output.Body.Error != "" {
+						if req.Output.Body.Error != nil {
 							var errResp apiErrorResponse
 							err = json.NewDecoder(resp.Body).Decode(&errResp)
 							require.NoError(t, err, "[request %d] failed to decode error response body", ri)
 
-							assert.Equal(t, req.Output.Body.Error, errResp.Error, "[request %d] error message mismatch", ri)
+							assert.Equal(t, req.Output.Body.Error.Code, errResp.Code, "[request %d] error code mismatch", ri)
+							assertStringField(t, req.Output.Body.Error.Message, errResp.Message, "[request %d] error message mismatch", ri)
+
+							if len(req.Output.Body.Error.Errors) > 0 {
+								require.Len(t, errResp.Errors, len(req.Output.Body.Error.Errors), "[request %d] validation errors length mismatch", ri)
+								for vi, ve := range req.Output.Body.Error.Errors {
+									assert.Equal(t, fmt.Sprintf("%v", ve.Path), fmt.Sprintf("%v", errResp.Errors[vi].Path), "[request %d] validation error %d path mismatch", ri, vi)
+									assertStringField(t, ve.Message, errResp.Errors[vi].Message, "[request %d] validation error %d message mismatch", ri, vi)
+								}
+							} else {
+								assert.Empty(t, errResp.Errors, "[request %d] expected no validation errors", ri)
+							}
 						} else {
 							var apiResp apiResponse
 							err = json.NewDecoder(resp.Body).Decode(&apiResp)

@@ -72,6 +72,7 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	h := &handler.Handler{Runner: sandbox.NewRunner(cfg)}
 
 	e := echo.New()
+	e.HTTPErrorHandler = handler.NewHTTPErrorHandler()
 	e.Use(middleware.RequestLogger())
 	e.POST("/v1/run", h.RunHandler)
 

@@ -5,7 +5,7 @@ tests:
           runtime: node
           files:
             - name: index.js
-              type: raw
+              type: plain
               content: |
                 const fs = require("fs");
                 const fds = [];
@@ -35,7 +35,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 for i in $(seq 1 100000); do
                   echo x > /tmp/f$i || exit 1
@@ -57,7 +57,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 for i in 1 2 3 4; do
                   while true; do :; done &

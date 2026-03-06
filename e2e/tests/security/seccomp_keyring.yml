@@ -6,7 +6,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(248, "user", "test", "data", 4, -4)
         output:
@@ -27,7 +27,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(217, "user", "test", "data", 4, -4)
         output:
@@ -48,7 +48,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(250, 0, 0, 0, 0, 0)
         output:
@@ -69,7 +69,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(219, 0, 0, 0, 0, 0)
         output:
@@ -90,7 +90,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(249, "user", "test", 0, -4)
         output:
@@ -111,7 +111,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 syscall(218, "user", "test", 0, -4)
         output:

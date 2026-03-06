@@ -5,7 +5,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 ln -s /etc/shadow /tmp/escape_link && cat /tmp/escape_link
         output:
@@ -25,7 +25,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 mknod /code/urandom c 1 9
         output:
@@ -45,7 +45,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 cp /usr/bin/id /code/suid-id
                 chmod 4755 /code/suid-id 2>/dev/null
@@ -67,7 +67,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo test > /tmp/srcfile && ln /tmp/srcfile /code/crosslink
         output:
@@ -87,7 +87,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 mkfifo /tmp/testpipe
                 echo "hello" > /tmp/testpipe &

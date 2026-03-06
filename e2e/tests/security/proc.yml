@@ -5,7 +5,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo b > /proc/sysrq-trigger
         output:
@@ -25,7 +25,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo x > /proc/self/mem
         output:
@@ -45,7 +45,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo 0 > /proc/sys/kernel/randomize_va_space
         output:
@@ -65,7 +65,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 ls /proc | grep -cE '^[0-9]+$'
         output:

@@ -5,7 +5,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 grep ' /usr/lib ' /proc/mounts | tr ' ' '\n' | sed -n '4p' | tr ',' '\n' | grep -E '^(nosuid|nodev)$' | sort
         output:
@@ -26,7 +26,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 grep ' /usr/lib64 ' /proc/mounts | tr ' ' '\n' | sed -n '4p' | tr ',' '\n' | grep -E '^(nosuid|nodev)$' | sort
         output:
@@ -46,7 +46,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 grep ' /usr/bin ' /proc/mounts | tr ' ' '\n' | sed -n '4p' | tr ',' '\n' | grep -E '^(nosuid|nodev)$' | sort
         output:

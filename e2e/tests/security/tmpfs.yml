@@ -5,7 +5,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 for i in $(seq 0 9); do
                   dd if=/dev/urandom of=/tmp/file$i bs=1M count=10 status=none || exit 1

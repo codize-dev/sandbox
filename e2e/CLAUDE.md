@@ -31,7 +31,7 @@ tests:
           runtime: node
           files:
             - name: index.js
-              type: raw
+              type: plain
               content: |
                 console.log("hello");
             - name: large.txt
@@ -54,7 +54,12 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
-            error: ""
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "not allowed"
 ```
 
 ### Architecture Filter
@@ -70,10 +75,36 @@ tests:
           # ...
 ```
 
+### Null Fields for Missing-Field Tests
+
+To test server-side "missing field" validation, omit the field from the YAML input. The framework uses `*string` for `runtime`, `name`, and `content`, so an omitted field produces `null` in the JSON request.
+
+```yaml
+tests:
+  - name: "missing runtime"
+    requests:
+      - input:
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                console.log("hello");
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["runtime"]
+                  message: "required"
+```
+
 ### File Types
 
-- `raw` (default): File content is provided inline via the `content` field.
-- `fill`: Generates a file of the specified `size` bytes, filled with the character `A`.
+- `plain` (default): File content is provided inline via the `content` field. The framework base64-encodes it before sending.
+- `fill`: Generates a file of the specified `size` bytes, filled with the character `A`. The framework base64-encodes it before sending.
+- `base64`: Content is sent as-is in the request's `content` field without additional encoding. Use for testing pre-encoded content or intentionally invalid base64.
 
 ### Regex Matching
 

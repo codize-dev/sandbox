@@ -5,7 +5,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 if id > /dev/null 2>&1; then
                   echo "ok"
@@ -29,7 +29,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 if [ -f /bin/sh ]; then
                   echo "ok"
@@ -53,7 +53,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo x > /lib/test
         output:
@@ -73,7 +73,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo x > /usr/bin/test
         output:
@@ -94,7 +94,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo x > /lib64/test
         output:
@@ -115,7 +115,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo x > /lib64/test
         output:
@@ -135,7 +135,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 if echo test > /dev/null; then
                   echo "ok"
@@ -159,7 +159,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 if head -c 16 /dev/urandom > /dev/null 2>&1; then
                   echo "ok"
@@ -183,7 +183,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo 0 > /proc/self/oom_score_adj
         output:
@@ -203,7 +203,7 @@ tests:
           runtime: node
           files:
             - name: index.js
-              type: raw
+              type: plain
               content: |
                 const fs = require("fs");
                 fs.writeFileSync("/mise/installs/node/24.14.0/test", "x");
@@ -224,7 +224,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 File.write("/mise/installs/ruby/3.4.8/test", "x")
         output:

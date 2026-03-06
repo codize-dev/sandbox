@@ -5,7 +5,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 size=$(wc -c < payload.bin)
                 head -c 1 payload.bin
@@ -32,7 +32,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 cat payload.bin
             - name: payload.bin

@@ -5,7 +5,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 puts "Hello, World!"
         output:
@@ -25,7 +25,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 $stderr.puts "error message"
         output:
@@ -45,7 +45,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 $stdout.sync = true
                 puts "out"
@@ -67,7 +67,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 exit(1)
         output:
@@ -87,7 +87,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 $stderr.puts "error occurred"
                 exit(2)
@@ -108,12 +108,12 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 require_relative './helper'
                 puts greet("World")
             - name: helper.rb
-              type: raw
+              type: plain
               content: |
                 def greet(name)
                   "Hello, #{name}!"
@@ -135,7 +135,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 require 'json'
                 data = JSON.parse('{"name":"Alice","age":30}')
@@ -158,7 +158,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 nums = [3, 1, 4, 1, 5, 9, 2, 6]
                 result = nums.select { |n| n > 3 }.map { |n| n * 2 }.sort
@@ -180,7 +180,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 class Shape
                   attr_reader :name
@@ -222,7 +222,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 begin
                   1 / 0
@@ -246,7 +246,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 raise "something went wrong"
         output:
@@ -266,7 +266,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 h = { a: 1, b: 2, c: 3 }
                 puts h.keys.join(",")
@@ -289,7 +289,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 result = (1..5).each_with_object([]) do |n, acc|
                   acc << n * n
@@ -315,7 +315,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 s = "Hello, World!"
                 puts s.upcase
@@ -339,7 +339,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 text = "Date: 2025-12-25"
                 if text =~ /(\d{4})-(\d{2})-(\d{2})/

@@ -5,7 +5,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo "Hello, World!"
         output:
@@ -25,7 +25,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo "error message" >&2
         output:
@@ -45,7 +45,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 exit 1
         output:
@@ -65,7 +65,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo "error occurred" >&2
                 exit 2
@@ -86,7 +86,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo "hello world" | tr 'a-z' 'A-Z'
         output:
@@ -106,12 +106,12 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 . ./helper.sh
                 greet "World"
             - name: helper.sh
-              type: raw
+              type: plain
               content: |
                 greet() {
                   echo "Hello, $1!"
@@ -133,7 +133,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 curl --version | head -1
         output:
@@ -153,7 +153,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 wget --version | head -1
         output:
@@ -173,7 +173,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo "hello world" | awk '{print $2}'
         output:
@@ -193,7 +193,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 a=10
                 b=3
@@ -218,7 +218,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 arr=(apple banana cherry)
                 echo "${arr[0]}"
@@ -243,7 +243,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 sum=0
                 for i in $(seq 1 10); do
@@ -267,7 +267,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 n=1
                 while [ $n -le 5 ]; do
@@ -292,7 +292,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 x=15
                 if [ $x -gt 20 ]; then
@@ -319,7 +319,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 lines=$(echo -e "a\nb\nc" | wc -l | tr -d ' ')
                 echo "count: $lines"
@@ -340,7 +340,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 s="Hello, World!"
                 echo "${s^^}"
@@ -365,7 +365,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 factorial() {
                   local n=$1
@@ -395,13 +395,13 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 while IFS=, read -r name age; do
                   echo "$name is $age years old"
                 done < data.csv
             - name: data.csv
-              type: raw
+              type: plain
               content: |
                 Alice,30
                 Bob,25
@@ -423,7 +423,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 echo -e "apple\nbanana\ncherry\napricot" | grep "^a"
                 echo "---"
@@ -445,7 +445,7 @@ tests:
           runtime: bash
           files:
             - name: main.sh
-              type: raw
+              type: plain
               content: |
                 classify() {
                   case "$1" in

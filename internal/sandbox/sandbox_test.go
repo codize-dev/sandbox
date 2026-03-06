@@ -33,7 +33,11 @@ func Test_LookupRuntime(t *testing.T) {
 			if tc.wantErr {
 				assert.Nil(t, rt)
 				assert.Error(t, err)
-				assert.Contains(t, err.Error(), "invalid or missing runtime")
+				if tc.runtime == "" {
+					assert.Contains(t, err.Error(), "required")
+				} else {
+					assert.Contains(t, err.Error(), "must be one of")
+				}
 			} else {
 				assert.NotNil(t, rt)
 				assert.NoError(t, err)

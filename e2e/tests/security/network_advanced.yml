@@ -5,7 +5,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 require 'socket'
                 Socket.new(17, 3, 0)
@@ -26,7 +26,7 @@ tests:
           runtime: ruby
           files:
             - name: main.rb
-              type: raw
+              type: plain
               content: |
                 require 'socket'
                 UNIXSocket.new("/run/docker.sock")
@@ -47,7 +47,7 @@ tests:
           runtime: node
           files:
             - name: index.js
-              type: raw
+              type: plain
               content: |
                 const dgram = require("dgram");
                 const client = dgram.createSocket("udp4");
@@ -76,7 +76,7 @@ tests:
           runtime: node
           files:
             - name: index.js
-              type: raw
+              type: plain
               content: |
                 const dns = require("dns");
                 dns.lookup("example.com", (err) => {

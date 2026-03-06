@@ -5,7 +5,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 

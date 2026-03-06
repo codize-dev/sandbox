@@ -143,8 +143,12 @@ var runtimes = map[RuntimeName]Runtime{
 	RuntimeBash: bashRuntime{},
 }
 
-// LookupRuntime returns the Runtime for the given name, or an error if unknown.
+// LookupRuntime returns the Runtime for the given name.
+// It returns an error if the name is empty (missing) or not a known runtime (invalid).
 func LookupRuntime(name RuntimeName) (Runtime, error) {
+	if name == "" {
+		return nil, errors.New("required")
+	}
 	rt, ok := runtimes[name]
 	if !ok {
 		names := make([]string, 0, len(runtimes))
@@ -152,7 +156,7 @@ func LookupRuntime(name RuntimeName) (Runtime, error) {
 			names = append(names, fmt.Sprintf("%q", k))
 		}
 		sort.Strings(names)
-		return nil, fmt.Errorf("invalid or missing runtime: must be one of %s", strings.Join(names, ", "))
+		return nil, fmt.Errorf("must be one of %s", strings.Join(names, ", "))
 	}
 	return rt, nil
 }

@@ -1,0 +1,216 @@
+tests:
+  - name: "missing runtime"
+    requests:
+      - input:
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                console.log("hello");
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["runtime"]
+                  message: "required"
+
+  - name: "empty runtime"
+    requests:
+      - input:
+          runtime: ""
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                console.log("hello");
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["runtime"]
+                  message: "must not be empty"
+
+  - name: "unknown runtime"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                print("hello")
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["runtime"]
+                  message: 'must be one of "bash", "go", "node", "ruby"'
+
+  - name: "missing files"
+    requests:
+      - input:
+          runtime: node
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files"]
+                  message: "required"
+
+  - name: "empty files array"
+    requests:
+      - input:
+          runtime: node
+          files: []
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files"]
+                  message: "must not be empty"
+
+  - name: "missing file name"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - type: plain
+              content: |
+                console.log("hello");
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "required"
+
+  - name: "missing file content"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "content"]
+                  message: "required"
+
+  - name: "empty file name"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: ""
+              type: plain
+              content: |
+                console.log("hello");
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "must not be empty"
+
+  - name: "dot filename rejected"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: "."
+              type: plain
+              content: |
+                console.log("hello");
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "not allowed"
+
+  - name: "dotdot filename rejected"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: ".."
+              type: plain
+              content: |
+                console.log("hello");
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "not allowed"
+
+  - name: "invalid base64 content"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: base64
+              content: "not-valid-base64!@#$"
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "content"]
+                  message: "invalid base64"
+
+  - name: "invalid base64 in second file"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                require("./helper.js");
+            - name: helper.js
+              type: base64
+              content: "not-valid-base64!@#$"
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 1, "content"]
+                  message: "invalid base64"

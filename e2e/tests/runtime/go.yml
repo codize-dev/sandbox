@@ -5,7 +5,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -38,7 +38,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -62,7 +62,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -98,7 +98,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -131,7 +131,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -168,7 +168,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -207,7 +207,7 @@ tests:
           runtime: go
           files:
             - name: go.mod
-              type: raw
+              type: plain
               content: |
                 module sandbox
 
@@ -215,7 +215,12 @@ tests:
         output:
           status: 400
           body:
-            error: 'file "go.mod" is not allowed for the go runtime'
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "not allowed for this runtime"
 
   - name: "restricted file go.sum rejected"
     requests:
@@ -223,12 +228,17 @@ tests:
           runtime: go
           files:
             - name: go.sum
-              type: raw
+              type: plain
               content: ""
         output:
           status: 400
           body:
-            error: 'file "go.sum" is not allowed for the go runtime'
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "not allowed for this runtime"
 
   - name: "restricted file go.mod rejected even with valid main.go"
     requests:
@@ -236,13 +246,13 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
                 func main() {}
             - name: go.mod
-              type: raw
+              type: plain
               content: |
                 module sandbox
 
@@ -250,7 +260,12 @@ tests:
         output:
           status: 400
           body:
-            error: 'file "go.mod" is not allowed for the go runtime'
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 1, "name"]
+                  message: "not allowed for this runtime"
 
   - name: "restricted file main rejected"
     requests:
@@ -258,18 +273,23 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
                 func main() {}
             - name: main
-              type: raw
+              type: plain
               content: "data"
         output:
           status: 400
           body:
-            error: 'file "main" is not allowed for the go runtime'
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 1, "name"]
+                  message: "not allowed for this runtime"
 
   - name: "multiple files"
     requests:
@@ -277,7 +297,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -285,7 +305,7 @@ tests:
                     PrintHello()
                 }
             - name: helper.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -318,7 +338,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -355,7 +375,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -397,7 +417,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -444,7 +464,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -491,7 +511,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -537,7 +557,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -583,7 +603,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -627,7 +647,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
@@ -667,7 +687,7 @@ tests:
           runtime: go
           files:
             - name: main.go
-              type: raw
+              type: plain
               content: |
                 package main
 
