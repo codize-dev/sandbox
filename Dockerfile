@@ -1,4 +1,4 @@
-FROM alpine:3.21 AS mise
+FROM alpine:3.21.6@sha256:c3f8e73fdb79deaebaa2037150150191b9dcbfba68b4a46d70103204c53f4709 AS mise
 # Automatically set by BuildKit (e.g. amd64, arm64)
 ARG TARGETARCH
 
