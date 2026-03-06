@@ -11,12 +11,13 @@ import (
 type ErrorCode string
 
 const (
-	CodeInvalidRequestBody ErrorCode = "INVALID_REQUEST_BODY"
-	CodeValidationError    ErrorCode = "VALIDATION_ERROR"
-	CodeInternalError      ErrorCode = "INTERNAL_ERROR"
-	CodeExecutionTimeout   ErrorCode = "EXECUTION_TIMEOUT"
-	CodeNotFound           ErrorCode = "NOT_FOUND"
-	CodeMethodNotAllowed   ErrorCode = "METHOD_NOT_ALLOWED"
+	CodeInvalidRequestBody  ErrorCode = "INVALID_REQUEST_BODY"
+	CodeValidationError     ErrorCode = "VALIDATION_ERROR"
+	CodeInternalError       ErrorCode = "INTERNAL_ERROR"
+	CodeExecutionTimeout    ErrorCode = "EXECUTION_TIMEOUT"
+	CodeNotFound            ErrorCode = "NOT_FOUND"
+	CodeMethodNotAllowed    ErrorCode = "METHOD_NOT_ALLOWED"
+	CodeRequestBodyTooLarge ErrorCode = "REQUEST_BODY_TOO_LARGE"
 )
 
 // Message returns the canonical human-readable message for the error code.
@@ -34,6 +35,8 @@ func (c ErrorCode) Message() string {
 		return "the requested resource was not found"
 	case CodeMethodNotAllowed:
 		return "the request method is not allowed for this resource"
+	case CodeRequestBodyTooLarge:
+		return "request body too large"
 	default:
 		return "internal server error"
 	}
@@ -79,6 +82,11 @@ func NewHTTPErrorHandler() echo.HTTPErrorHandler {
 			resp = ErrorResponse{
 				Code:    CodeMethodNotAllowed,
 				Message: CodeMethodNotAllowed.Message(),
+			}
+		case http.StatusRequestEntityTooLarge:
+			resp = ErrorResponse{
+				Code:    CodeRequestBodyTooLarge,
+				Message: CodeRequestBodyTooLarge.Message(),
 			}
 		default:
 			resp = ErrorResponse{

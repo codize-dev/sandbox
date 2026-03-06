@@ -352,3 +352,21 @@ tests:
               errors:
                 - path: ["files", 1, "content"]
                   message: "file too large (max: 262144 bytes)"
+
+  - name: "request body too large"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: ""
+            - name: payload.bin
+              type: fill
+              size: 4194304
+        output:
+          status: 413
+          body:
+            error:
+              code: REQUEST_BODY_TOO_LARGE
+              message: "request body too large"

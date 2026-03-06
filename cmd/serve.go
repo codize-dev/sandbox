@@ -35,6 +35,7 @@ func init() {
 	serveCmd.Flags().Int("output-limit", 1<<20, "maximum combined output bytes")
 	serveCmd.Flags().Int("max-files", 10, "maximum number of files per request")
 	serveCmd.Flags().Int("max-file-size", 256<<10, "maximum file size in bytes per file")
+	serveCmd.Flags().Int("max-body-size", 5<<20, "maximum request body size in bytes")
 }
 
 func runServe(cmd *cobra.Command, _ []string) error {
@@ -68,6 +69,11 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	maxBodySize, err := cmd.Flags().GetInt("max-body-size")
+	if err != nil {
+		return err
+	}
+
 	if runTimeout <= 0 {
 		return fmt.Errorf("--run-timeout must be a positive integer, got %d", runTimeout)
 	}
@@ -83,6 +89,9 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	if maxFileSize <= 0 {
 		return fmt.Errorf("--max-file-size must be a positive integer, got %d", maxFileSize)
 	}
+	if maxBodySize <= 0 {
+		return fmt.Errorf("--max-body-size must be a positive integer, got %d", maxBodySize)
+	}
 
 	cfg := sandbox.Config{
 		RunTimeout:     runTimeout,
@@ -95,6 +104,7 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	e := echo.New()
 	e.HTTPErrorHandler = handler.NewHTTPErrorHandler()
 	e.Use(middleware.RequestLogger())
+	e.Use(middleware.BodyLimit(int64(maxBodySize)))
 	e.POST("/v1/run", h.RunHandler)
 
 	if err := e.Start(fmt.Sprintf(":%d", port)); err != nil {

@@ -46,6 +46,7 @@ The container must run in **privileged mode** (required for nsjail to create Lin
 - `--output-limit` (default `1048576` / 1 MiB) — maximum combined output bytes
 - `--max-files` (default `10`) — maximum number of files per request
 - `--max-file-size` (default `262144` / 256 KiB) — maximum file size in bytes per file
+- `--max-body-size` (default `5242880` / 5 MiB) — maximum request body size in bytes
 
 ## Architecture
 
