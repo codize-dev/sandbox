@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.1](https://github.com/codize-dev/sandbox/compare/v0.0.0...v0.0.1) (2026-03-06)
+
+
+### Features
+
+* Release v0.0.1 ([6d8f7bd](https://github.com/codize-dev/sandbox/commit/6d8f7bdda02f764fd2b0d84af21fc36fbbc09572))
+
 ## 0.0.0 (2026-03-06)
 
 
