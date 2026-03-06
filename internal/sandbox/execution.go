@@ -56,7 +56,6 @@ func (e *execution) buildArgs() []string {
 	}
 
 	args = append(args,
-		"-B", e.tmpDir+":/code", // user code directory (read-write, per-invocation)
 		// Per-invocation resource limits: vary by runtime and execution step.
 		"--rlimit_as", e.limits.Rlimits.AS,
 		"--rlimit_fsize", e.limits.Rlimits.Fsize,
@@ -142,6 +141,7 @@ func (e *execution) closeReadEnds() {
 
 func (e *execution) start(ctx context.Context, args []string) (*exec.Cmd, error) {
 	cmd := exec.CommandContext(ctx, nsjailPath, args...)
+	cmd.Env = append(os.Environ(), "NSJAIL_WORKING_DIR="+e.tmpDir)
 
 	cmd.Stdout = e.stdoutW
 	cmd.Stderr = e.stderrW

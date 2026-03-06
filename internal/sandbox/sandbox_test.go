@@ -133,7 +133,6 @@ func TestExecution_buildArgs(t *testing.T) {
 	want := []string{
 		"-C", "/etc/nsjail/nsjail.cfg",
 		"-R", "/mise/installs/node/24:/mise/installs/node/24",
-		"-B", "/tmp/sandbox-code:/code",
 		"--rlimit_as", "4096",
 		"--rlimit_fsize", "64",
 		"--rlimit_nofile", "64",

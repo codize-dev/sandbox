@@ -81,3 +81,66 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+
+  - name: "landlock_create_ruleset is blocked with SIGSYS"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                syscall(444, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "landlock_add_rule is blocked with SIGSYS"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                syscall(445, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"
+
+  - name: "landlock_restrict_self is blocked with SIGSYS"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                syscall(446, 0, 0, 0)
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 159
+              status: "SIGNAL"
+              signal: "SIGSYS"

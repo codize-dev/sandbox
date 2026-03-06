@@ -79,3 +79,24 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+
+  - name: "/code bind mount has nosuid and nodev flags"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                grep ' /code ' /proc/mounts | tr ' ' '\n' | sed -n '4p' | tr ',' '\n' | grep -E '^(nosuid|nodev)$' | sort
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: "nodev\nnosuid\n"
+              stderr: ""
+              output: "nodev\nnosuid\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
