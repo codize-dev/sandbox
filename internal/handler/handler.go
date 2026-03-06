@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/codize-dev/sandbox/internal/sandbox"
@@ -46,6 +47,63 @@ type decodedFile struct {
 	content []byte
 }
 
+func validationErr(path []any, msg string) *ErrorResponse {
+	return &ErrorResponse{
+		Code:    CodeValidationError,
+		Message: CodeValidationError.Message(),
+		Errors:  []ValidationError{{Path: path, Message: msg}},
+	}
+}
+
+func (h *Handler) decodeRunRequest(req RunRequest) (sandbox.Runtime, []decodedFile, *ErrorResponse) {
+	if req.Runtime == nil {
+		return nil, nil, validationErr([]any{"runtime"}, "required")
+	}
+	if *req.Runtime == "" {
+		return nil, nil, validationErr([]any{"runtime"}, "must not be empty")
+	}
+	rt, err := sandbox.LookupRuntime(sandbox.RuntimeName(*req.Runtime))
+	if err != nil {
+		return nil, nil, validationErr([]any{"runtime"}, err.Error())
+	}
+
+	if req.Files == nil {
+		return nil, nil, validationErr([]any{"files"}, "required")
+	}
+	if len(req.Files) == 0 {
+		return nil, nil, validationErr([]any{"files"}, "must not be empty")
+	}
+	if len(req.Files) > h.MaxFiles {
+		return nil, nil, validationErr([]any{"files"}, fmt.Sprintf("too many files (max: %d)", h.MaxFiles))
+	}
+
+	files := make([]decodedFile, len(req.Files))
+	for i, f := range req.Files {
+		if f.Name == nil {
+			return nil, nil, validationErr([]any{"files", i, "name"}, "required")
+		}
+		if f.Content == nil {
+			return nil, nil, validationErr([]any{"files", i, "content"}, "required")
+		}
+		if err := f.Validate(); err != nil {
+			return nil, nil, validationErr([]any{"files", i, "name"}, err.Error())
+		}
+		if slices.Contains(rt.RestrictedFiles(), *f.Name) {
+			return nil, nil, validationErr([]any{"files", i, "name"}, "not allowed for this runtime")
+		}
+		content, err := base64.StdEncoding.DecodeString(*f.Content)
+		if err != nil {
+			return nil, nil, validationErr([]any{"files", i, "content"}, "invalid base64")
+		}
+		if len(content) > h.MaxFileSize {
+			return nil, nil, validationErr([]any{"files", i, "content"}, fmt.Sprintf("file too large (max: %d bytes)", h.MaxFileSize))
+		}
+		files[i] = decodedFile{name: *f.Name, content: content}
+	}
+
+	return rt, files, nil
+}
+
 func (h *Handler) RunHandler(c *echo.Context) error {
 	var req RunRequest
 	if err := c.Bind(&req); err != nil {
@@ -55,123 +113,9 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 		})
 	}
 
-	if req.Runtime == nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    CodeValidationError,
-			Message: CodeValidationError.Message(),
-			Errors: []ValidationError{
-				{Path: []any{"runtime"}, Message: "required"},
-			},
-		})
-	}
-	if *req.Runtime == "" {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    CodeValidationError,
-			Message: CodeValidationError.Message(),
-			Errors: []ValidationError{
-				{Path: []any{"runtime"}, Message: "must not be empty"},
-			},
-		})
-	}
-	rt, err := sandbox.LookupRuntime(sandbox.RuntimeName(*req.Runtime))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    CodeValidationError,
-			Message: CodeValidationError.Message(),
-			Errors: []ValidationError{
-				{Path: []any{"runtime"}, Message: err.Error()},
-			},
-		})
-	}
-
-	if req.Files == nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    CodeValidationError,
-			Message: CodeValidationError.Message(),
-			Errors: []ValidationError{
-				{Path: []any{"files"}, Message: "required"},
-			},
-		})
-	}
-	if len(req.Files) == 0 {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    CodeValidationError,
-			Message: CodeValidationError.Message(),
-			Errors: []ValidationError{
-				{Path: []any{"files"}, Message: "must not be empty"},
-			},
-		})
-	}
-	if len(req.Files) > h.MaxFiles {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    CodeValidationError,
-			Message: CodeValidationError.Message(),
-			Errors: []ValidationError{
-				{Path: []any{"files"}, Message: fmt.Sprintf("too many files (max: %d)", h.MaxFiles)},
-			},
-		})
-	}
-
-	files := make([]decodedFile, len(req.Files))
-	for i, f := range req.Files {
-		if f.Name == nil {
-			return c.JSON(http.StatusBadRequest, ErrorResponse{
-				Code:    CodeValidationError,
-				Message: CodeValidationError.Message(),
-				Errors: []ValidationError{
-					{Path: []any{"files", i, "name"}, Message: "required"},
-				},
-			})
-		}
-		if f.Content == nil {
-			return c.JSON(http.StatusBadRequest, ErrorResponse{
-				Code:    CodeValidationError,
-				Message: CodeValidationError.Message(),
-				Errors: []ValidationError{
-					{Path: []any{"files", i, "content"}, Message: "required"},
-				},
-			})
-		}
-		if err := f.Validate(); err != nil {
-			return c.JSON(http.StatusBadRequest, ErrorResponse{
-				Code:    CodeValidationError,
-				Message: CodeValidationError.Message(),
-				Errors: []ValidationError{
-					{Path: []any{"files", i, "name"}, Message: err.Error()},
-				},
-			})
-		}
-		for _, restricted := range rt.RestrictedFiles() {
-			if *f.Name == restricted {
-				return c.JSON(http.StatusBadRequest, ErrorResponse{
-					Code:    CodeValidationError,
-					Message: CodeValidationError.Message(),
-					Errors: []ValidationError{
-						{Path: []any{"files", i, "name"}, Message: "not allowed for this runtime"},
-					},
-				})
-			}
-		}
-		content, err := base64.StdEncoding.DecodeString(*f.Content)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, ErrorResponse{
-				Code:    CodeValidationError,
-				Message: CodeValidationError.Message(),
-				Errors: []ValidationError{
-					{Path: []any{"files", i, "content"}, Message: "invalid base64"},
-				},
-			})
-		}
-		if len(content) > h.MaxFileSize {
-			return c.JSON(http.StatusBadRequest, ErrorResponse{
-				Code:    CodeValidationError,
-				Message: CodeValidationError.Message(),
-				Errors: []ValidationError{
-					{Path: []any{"files", i, "content"}, Message: fmt.Sprintf("file too large (max: %d bytes)", h.MaxFileSize)},
-				},
-			})
-		}
-		files[i] = decodedFile{name: *f.Name, content: content}
+	rt, files, errResp := h.decodeRunRequest(req)
+	if errResp != nil {
+		return c.JSON(http.StatusBadRequest, *errResp)
 	}
 
 	tmpDir, err := os.MkdirTemp("", "sandbox-*")
