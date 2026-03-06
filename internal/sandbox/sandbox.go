@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -129,14 +130,22 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 
 	drainErr := e.drainPipes(ctx)
 	if drainErr != nil && !errors.Is(drainErr, errOutputLimitExceeded) {
-		_ = cmd.Wait()
+		if waitErr := cmd.Wait(); waitErr != nil {
+			slog.WarnContext(ctx, "cmd.Wait failed after pipe drain error",
+				"wait_error", waitErr,
+				"drain_error", drainErr,
+			)
+		}
 		return Result{}, fmt.Errorf("sandbox execution failed: %w", drainErr)
 	}
 	outputLimitHit := errors.Is(drainErr, errOutputLimitExceeded)
 
 	waitErr := cmd.Wait()
 
-	logData, _ := io.ReadAll(e.logR)
+	logData, err := io.ReadAll(e.logR)
+	if err != nil {
+		return Result{}, fmt.Errorf("failed to read nsjail log output: %w", err)
+	}
 	logStr := string(logData)
 
 	if outputLimitHit {

@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"log/slog"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -67,6 +70,8 @@ func runServe(_ *cobra.Command, _ []string) error {
 		}
 	}
 
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+
 	cfg := sandbox.Config{
 		RunTimeout:     flagRunTimeout,
 		CompileTimeout: flagCompileTimeout,
@@ -81,8 +86,9 @@ func runServe(_ *cobra.Command, _ []string) error {
 	e.Use(middleware.BodyLimit(int64(flagMaxBodySize)))
 	e.POST("/v1/run", h.RunHandler)
 
-	if err := e.Start(fmt.Sprintf(":%d", flagPort)); err != nil {
-		e.Logger.Error("failed to start server", "error", err)
+	if err := e.Start(fmt.Sprintf(":%d", flagPort)); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		slog.Error("failed to start server", "error", err)
+		return err
 	}
 	return nil
 }

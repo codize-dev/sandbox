@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -120,6 +121,7 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 
 	tmpDir, err := os.MkdirTemp("", "sandbox-*")
 	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "failed to create temp directory", "error", err)
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Code:    CodeInternalError,
 			Message: CodeInternalError.Message(),
@@ -128,6 +130,10 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	if err := writeFiles(tmpDir, files); err != nil {
+		slog.ErrorContext(c.Request().Context(), "failed to write files to temp directory",
+			"error", err,
+			"runtime", *req.Runtime,
+		)
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Code:    CodeInternalError,
 			Message: CodeInternalError.Message(),
@@ -142,6 +148,10 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 				Message: CodeExecutionTimeout.Message(),
 			})
 		}
+		slog.ErrorContext(c.Request().Context(), "sandbox execution failed",
+			"error", err,
+			"runtime", *req.Runtime,
+		)
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Code:    CodeInternalError,
 			Message: CodeInternalError.Message(),
