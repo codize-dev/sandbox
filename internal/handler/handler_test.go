@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/codize-dev/sandbox/internal/sandbox"
@@ -105,6 +106,26 @@ func TestFile_Validate(t *testing.T) {
 			fileName:  strPtr("foo\x00bar"),
 			wantErr:   true,
 			errSubstr: "invalid characters",
+		},
+		{
+			name:     "file name exactly 255 bytes",
+			fileName: strPtr(strings.Repeat("a", 255)),
+		},
+		{
+			name:      "file name exceeding 255 bytes",
+			fileName:  strPtr(strings.Repeat("a", 256)),
+			wantErr:   true,
+			errSubstr: "file name too long",
+		},
+		{
+			name:     "multi-byte UTF-8 filename exactly 255 bytes",
+			fileName: strPtr(strings.Repeat("あ", 85)), // 85 * 3 = 255 bytes
+		},
+		{
+			name:      "multi-byte UTF-8 filename exceeding 255 bytes",
+			fileName:  strPtr(strings.Repeat("あ", 86)), // 86 * 3 = 258 bytes
+			wantErr:   true,
+			errSubstr: "file name too long",
 		},
 	}
 

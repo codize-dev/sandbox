@@ -370,3 +370,40 @@ tests:
             error:
               code: REQUEST_BODY_TOO_LARGE
               message: "request body too large"
+
+  - name: "file name exactly 255 bytes is accepted"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.js"
+              type: plain
+              content: ""
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "file name exceeding 255 bytes"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.js"
+              type: plain
+              content: ""
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "file name too long (max: 255 bytes)"

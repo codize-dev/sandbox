@@ -232,5 +232,8 @@ func (f File) Validate() error {
 	if *f.Name == "." || *f.Name == ".." {
 		return errors.New("not allowed")
 	}
+	if len(*f.Name) > 255 {
+		return errors.New("file name too long (max: 255 bytes)")
+	}
 	return nil
 }
