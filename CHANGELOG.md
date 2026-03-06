@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/codize-dev/sandbox/compare/v0.1.0...v0.1.1) (2026-03-06)
+
+
+### Bug Fixes
+
+* override Echo v5 default WriteTimeout to prevent long-running sandbox responses from being dropped ([1668d13](https://github.com/codize-dev/sandbox/commit/1668d1384c3b80a8cc18d96a6318a2f4acb3ac5f))
+
 ## [0.1.0](https://github.com/codize-dev/sandbox/compare/v0.0.1...v0.1.0) (2026-03-06)
 
 
