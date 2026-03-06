@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/codize-dev/sandbox/internal/handler"
 	"github.com/codize-dev/sandbox/internal/sandbox"
@@ -86,7 +88,21 @@ func runServe(_ *cobra.Command, _ []string) error {
 	e.Use(middleware.BodyLimit(int64(flagMaxBodySize)))
 	e.POST("/v1/run", h.RunHandler)
 
-	if err := e.Start(fmt.Sprintf(":%d", flagPort)); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	sc := echo.StartConfig{
+		Address: fmt.Sprintf(":%d", flagPort),
+		BeforeServeFunc: func(s *http.Server) error {
+			// Override Echo v5's default HTTP server timeouts.
+			s.ReadHeaderTimeout = 10 * time.Second // Slowloris mitigation (GoSec G112)
+			s.ReadTimeout = 30 * time.Second       // Echo v5 default; explicit for resilience against upstream changes
+			// WriteTimeout is reset on each request header read and bounds
+			// the total time from header read to response completion,
+			// including handler execution. It must therefore exceed the
+			// maximum sandbox execution duration (compile + run + margin).
+			s.WriteTimeout = time.Duration(flagRunTimeout+flagCompileTimeout)*time.Second + 30*time.Second
+			return nil
+		},
+	}
+	if err := sc.Start(context.Background(), e); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("failed to start server", "error", err)
 		return err
 	}
