@@ -309,3 +309,46 @@ tests:
               errors:
                 - path: ["files"]
                   message: "too many files (max: 10)"
+
+  - name: "exactly max file size is accepted"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: ""
+            - name: payload.bin
+              type: fill
+              size: 262144
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "file too large"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: ""
+            - name: payload.bin
+              type: fill
+              size: 262145
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 1, "content"]
+                  message: "file too large (max: 262144 bytes)"

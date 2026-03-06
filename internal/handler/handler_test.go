@@ -180,8 +180,9 @@ func TestRunHandler_TooManyFiles(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	h := &Handler{
-		Runner:   sandbox.NewRunner(sandbox.Config{RunTimeout: 30, CompileTimeout: 30, OutputLimit: 1 << 20}),
-		MaxFiles: 2,
+		Runner:      sandbox.NewRunner(sandbox.Config{RunTimeout: 30, CompileTimeout: 30, OutputLimit: 1 << 20}),
+		MaxFiles:    2,
+		MaxFileSize: 1 << 20,
 	}
 
 	err = h.RunHandler(c)
@@ -195,4 +196,43 @@ func TestRunHandler_TooManyFiles(t *testing.T) {
 	require.Len(t, resp.Errors, 1)
 	assert.Equal(t, []any{"files"}, resp.Errors[0].Path)
 	assert.Equal(t, "too many files (max: 2)", resp.Errors[0].Message)
+}
+
+func TestRunHandler_FileTooLarge(t *testing.T) {
+	t.Parallel()
+
+	e := echo.New()
+
+	// 17 bytes "hello world 12345" -> base64 "aGVsbG8gd29ybGQgMTIzNDU="
+	body := RunRequest{
+		Runtime: strPtr("node"),
+		Files: []File{
+			{Name: strPtr("index.js"), Content: strPtr("aGVsbG8gd29ybGQgMTIzNDU=")},
+		},
+	}
+	jsonBody, err := json.Marshal(body)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/run", bytes.NewReader(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	h := &Handler{
+		Runner:      sandbox.NewRunner(sandbox.Config{RunTimeout: 30, CompileTimeout: 30, OutputLimit: 1 << 20}),
+		MaxFiles:    10,
+		MaxFileSize: 16,
+	}
+
+	err = h.RunHandler(c)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+
+	var resp ErrorResponse
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
+	assert.Equal(t, CodeValidationError, resp.Code)
+	require.Len(t, resp.Errors, 1)
+	assert.Equal(t, []any{"files", float64(0), "content"}, resp.Errors[0].Path)
+	assert.Equal(t, "file too large (max: 16 bytes)", resp.Errors[0].Message)
 }

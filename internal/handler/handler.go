@@ -36,8 +36,9 @@ type RunResponse struct {
 
 // Handler holds dependencies for the HTTP handler.
 type Handler struct {
-	Runner   *sandbox.Runner
-	MaxFiles int
+	Runner      *sandbox.Runner
+	MaxFiles    int
+	MaxFileSize int
 }
 
 type decodedFile struct {
@@ -158,6 +159,15 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 				Message: CodeValidationError.Message(),
 				Errors: []ValidationError{
 					{Path: []any{"files", i, "content"}, Message: "invalid base64"},
+				},
+			})
+		}
+		if len(content) > h.MaxFileSize {
+			return c.JSON(http.StatusBadRequest, ErrorResponse{
+				Code:    CodeValidationError,
+				Message: CodeValidationError.Message(),
+				Errors: []ValidationError{
+					{Path: []any{"files", i, "content"}, Message: fmt.Sprintf("file too large (max: %d bytes)", h.MaxFileSize)},
 				},
 			})
 		}

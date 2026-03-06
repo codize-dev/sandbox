@@ -34,6 +34,7 @@ func init() {
 	serveCmd.Flags().Int("compile-timeout", 30, "sandbox compile timeout in seconds")
 	serveCmd.Flags().Int("output-limit", 1<<20, "maximum combined output bytes")
 	serveCmd.Flags().Int("max-files", 10, "maximum number of files per request")
+	serveCmd.Flags().Int("max-file-size", 256<<10, "maximum file size in bytes per file")
 }
 
 func runServe(cmd *cobra.Command, _ []string) error {
@@ -62,6 +63,11 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	maxFileSize, err := cmd.Flags().GetInt("max-file-size")
+	if err != nil {
+		return err
+	}
+
 	if runTimeout <= 0 {
 		return fmt.Errorf("--run-timeout must be a positive integer, got %d", runTimeout)
 	}
@@ -74,6 +80,9 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	if maxFiles <= 0 {
 		return fmt.Errorf("--max-files must be a positive integer, got %d", maxFiles)
 	}
+	if maxFileSize <= 0 {
+		return fmt.Errorf("--max-file-size must be a positive integer, got %d", maxFileSize)
+	}
 
 	cfg := sandbox.Config{
 		RunTimeout:     runTimeout,
@@ -81,7 +90,7 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		OutputLimit:    outputLimit,
 	}
 
-	h := &handler.Handler{Runner: sandbox.NewRunner(cfg), MaxFiles: maxFiles}
+	h := &handler.Handler{Runner: sandbox.NewRunner(cfg), MaxFiles: maxFiles, MaxFileSize: maxFileSize}
 
 	e := echo.New()
 	e.HTTPErrorHandler = handler.NewHTTPErrorHandler()

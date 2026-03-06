@@ -45,6 +45,7 @@ The container must run in **privileged mode** (required for nsjail to create Lin
 - `--compile-timeout` (default `30`) — sandbox compile timeout in seconds
 - `--output-limit` (default `1048576` / 1 MiB) — maximum combined output bytes
 - `--max-files` (default `10`) — maximum number of files per request
+- `--max-file-size` (default `262144` / 256 KiB) — maximum file size in bytes per file
 
 ## Architecture
 
