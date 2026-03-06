@@ -9,4 +9,4 @@ Core sandbox execution engine, split across three files:
 - **configs/seccomp.kafel** — Seccomp-BPF syscall filtering policy written in Kafel. Uses a blacklist approach (DEFAULT ALLOW) blocking dangerous syscalls (io_uring, bpf, userfaultfd, mount, ptrace, etc.) as a defense-in-depth layer. Referenced from nsjail.cfg via `seccomp_policy_file` and copied to `/etc/nsjail/seccomp.kafel` in Docker.
 - **defaults/go/** — Embedded `go.mod.tmpl` and `go.sum.tmpl` templates applied as default files for Go runtime execution.
 
-Go runtime rejects user-submitted `go.mod` and `go.sum` files (HTTP 400) to enforce use of these defaults.
+Go runtime rejects user-submitted `go.mod`, `go.sum`, and `main` files (HTTP 400) to enforce use of defaults and prevent overwriting the compiled binary.
