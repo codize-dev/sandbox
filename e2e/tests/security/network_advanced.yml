@@ -14,8 +14,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/code/main.rb:2:in 'Socket#initialize': Operation not permitted - socket(2) (Errno::EPERM)\n\tfrom /code/main.rb:2:in 'IO.new'\n\tfrom /code/main.rb:2:in '<main>'\n"
-              output: "/code/main.rb:2:in 'Socket#initialize': Operation not permitted - socket(2) (Errno::EPERM)\n\tfrom /code/main.rb:2:in 'IO.new'\n\tfrom /code/main.rb:2:in '<main>'\n"
+              stderr: "/sandbox/main.rb:2:in 'Socket#initialize': Operation not permitted - socket(2) (Errno::EPERM)\n\tfrom /sandbox/main.rb:2:in 'IO.new'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
+              output: "/sandbox/main.rb:2:in 'Socket#initialize': Operation not permitted - socket(2) (Errno::EPERM)\n\tfrom /sandbox/main.rb:2:in 'IO.new'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
               exit_code: 1
               status: "OK"
               signal: null
@@ -35,8 +35,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/code/main.rb:2:in 'UNIXSocket#initialize': No such file or directory - connect(2) for /run/docker.sock (Errno::ENOENT)\n\tfrom /code/main.rb:2:in 'IO.new'\n\tfrom /code/main.rb:2:in '<main>'\n"
-              output: "/code/main.rb:2:in 'UNIXSocket#initialize': No such file or directory - connect(2) for /run/docker.sock (Errno::ENOENT)\n\tfrom /code/main.rb:2:in 'IO.new'\n\tfrom /code/main.rb:2:in '<main>'\n"
+              stderr: "/sandbox/main.rb:2:in 'UNIXSocket#initialize': No such file or directory - connect(2) for /run/docker.sock (Errno::ENOENT)\n\tfrom /sandbox/main.rb:2:in 'IO.new'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
+              output: "/sandbox/main.rb:2:in 'UNIXSocket#initialize': No such file or directory - connect(2) for /run/docker.sock (Errno::ENOENT)\n\tfrom /sandbox/main.rb:2:in 'IO.new'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
               exit_code: 1
               status: "OK"
               signal: null

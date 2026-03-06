@@ -29,7 +29,7 @@ type Runtime interface {
 	Name() RuntimeName
 
 	// Command returns the full command and arguments to execute inside the sandbox.
-	// entryFile is the absolute path inside the sandbox (e.g. "/code/index.js").
+	// entryFile is the absolute path inside the sandbox (e.g. "/sandbox/index.js").
 	// Compiled runtimes may ignore this parameter when the executable path is
 	// determined by the compilation step.
 	Command(entryFile string) []string
@@ -268,7 +268,7 @@ func (goRuntime) Name() RuntimeName { return RuntimeGo }
 // Command returns the path to the compiled binary. The entryFile parameter is
 // unused because the output path is determined by CompileCommand.
 func (goRuntime) Command(_ string) []string {
-	return []string{"/code/main"}
+	return []string{"/sandbox/main"}
 }
 
 // BindMounts returns nil because the compiled binary is statically linked
@@ -282,7 +282,7 @@ func (goRuntime) Env() []string {
 }
 
 func (goRuntime) CompileCommand() []string {
-	return []string{"/mise/installs/go/1.26.0/bin/go", "build", "-o", "/code/main", "."}
+	return []string{"/mise/installs/go/1.26.0/bin/go", "build", "-o", "/sandbox/main", "."}
 }
 
 func (goRuntime) CompileBindMounts() []BindMount {
@@ -368,7 +368,7 @@ func (goRuntime) Limits() Limits {
 // RestrictedFiles prevents users from overriding go.mod and go.sum, which
 // must match the pre-downloaded module cache (GOPROXY=off forbids fetching).
 // "main" is also restricted because go build writes the compiled binary to
-// /code/main, which would silently overwrite a user file with that name.
+// /sandbox/main, which would silently overwrite a user file with that name.
 func (goRuntime) RestrictedFiles() []string {
 	return []string{"go.mod", "go.sum", "main"}
 }

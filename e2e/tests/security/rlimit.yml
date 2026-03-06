@@ -183,8 +183,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/^(/code/main\\.sh: fork: retry: Resource temporarily unavailable\n)+$/"
-              output: "/^(/code/main\\.sh: fork: retry: Resource temporarily unavailable\n)+$/"
+              stderr: "/^(/sandbox/main\\.sh: fork: retry: Resource temporarily unavailable\n)+$/"
+              output: "/^(/sandbox/main\\.sh: fork: retry: Resource temporarily unavailable\n)+$/"
               exit_code: 0
               status: "OK"
               signal: null

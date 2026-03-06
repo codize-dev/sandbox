@@ -57,7 +57,7 @@ type execParams struct {
 	command    []string    // command and arguments to run inside the sandbox
 	bindMounts []BindMount // runtime-specific bind mounts (mounted read-only by buildArgs)
 	env        []string    // environment variables in "KEY=VALUE" format
-	tmpDir     string      // host directory bind-mounted as /code (sandbox working directory)
+	tmpDir     string      // host directory bind-mounted as /sandbox (sandbox working directory)
 	limits     Limits      // nsjail resource limits (rlimits + cgroups)
 	timeout    int         // nsjail --time_limit and --rlimit_cpu value for this invocation, in seconds
 }
@@ -205,7 +205,7 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 	}
 
 	result, err := r.exec(ctx, execParams{
-		command:    rt.Command(filepath.Join("/code", entryFile)),
+		command:    rt.Command(filepath.Join("/sandbox", entryFile)),
 		bindMounts: rt.BindMounts(),
 		env:        rt.Env(),
 		tmpDir:     tmpDir,

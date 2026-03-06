@@ -118,7 +118,7 @@ func TestExecution_buildArgs(t *testing.T) {
 
 	e := &execution{
 		timeout: 10,
-		command: []string{"/usr/bin/node", "/code/index.js"},
+		command: []string{"/usr/bin/node", "/sandbox/index.js"},
 		bindMounts: []BindMount{
 			{Src: "/mise/installs/node/24", Dst: "/mise/installs/node/24"},
 		},
@@ -145,7 +145,7 @@ func TestExecution_buildArgs(t *testing.T) {
 		"--cgroup_cpu_ms_per_sec", "750",
 		"-E", "PATH=/usr/bin:/bin",
 		"--",
-		"/usr/bin/node", "/code/index.js",
+		"/usr/bin/node", "/sandbox/index.js",
 	}
 
 	assert.Equal(t, want, e.buildArgs())

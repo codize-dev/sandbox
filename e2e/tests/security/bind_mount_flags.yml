@@ -80,7 +80,7 @@ tests:
               status: "OK"
               signal: null
 
-  - name: "/code bind mount has nosuid and nodev flags"
+  - name: "/sandbox bind mount has nosuid and nodev flags"
     requests:
       - input:
           runtime: bash
@@ -88,7 +88,7 @@ tests:
             - name: main.sh
               type: plain
               content: |
-                grep ' /code ' /proc/mounts | tr ' ' '\n' | sed -n '4p' | tr ',' '\n' | grep -E '^(nosuid|nodev)$' | sort
+                grep ' /sandbox ' /proc/mounts | tr ' ' '\n' | sed -n '4p' | tr ',' '\n' | grep -E '^(nosuid|nodev)$' | sort
         output:
           status: 200
           body:

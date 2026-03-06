@@ -61,8 +61,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/code/main.sh: line 1: /lib/test: Read-only file system\n"
-              output: "/code/main.sh: line 1: /lib/test: Read-only file system\n"
+              stderr: "/sandbox/main.sh: line 1: /lib/test: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /lib/test: Read-only file system\n"
               exit_code: 1
               status: "OK"
               signal: null
@@ -81,8 +81,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/code/main.sh: line 1: /usr/bin/test: Read-only file system\n"
-              output: "/code/main.sh: line 1: /usr/bin/test: Read-only file system\n"
+              stderr: "/sandbox/main.sh: line 1: /usr/bin/test: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /usr/bin/test: Read-only file system\n"
               exit_code: 1
               status: "OK"
               signal: null
@@ -102,8 +102,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/code/main.sh: line 1: /lib64/test: Read-only file system\n"
-              output: "/code/main.sh: line 1: /lib64/test: Read-only file system\n"
+              stderr: "/sandbox/main.sh: line 1: /lib64/test: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /lib64/test: Read-only file system\n"
               exit_code: 1
               status: "OK"
               signal: null
@@ -123,8 +123,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/code/main.sh: line 1: /lib64/test: Not a directory\n"
-              output: "/code/main.sh: line 1: /lib64/test: Not a directory\n"
+              stderr: "/sandbox/main.sh: line 1: /lib64/test: Not a directory\n"
+              output: "/sandbox/main.sh: line 1: /lib64/test: Not a directory\n"
               exit_code: 1
               status: "OK"
               signal: null
@@ -191,8 +191,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/code/main.sh: line 1: /proc/self/oom_score_adj: Read-only file system\n"
-              output: "/code/main.sh: line 1: /proc/self/oom_score_adj: Read-only file system\n"
+              stderr: "/sandbox/main.sh: line 1: /proc/self/oom_score_adj: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /proc/self/oom_score_adj: Read-only file system\n"
               exit_code: 1
               status: "OK"
               signal: null
@@ -232,8 +232,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/^/code/main\\.rb:\\d+:.*Read-only file system @ rb_sysopen - /mise/installs/ruby/[\\d.]+/test \\(Errno::EROFS\\)\\n\\tfrom /code/main\\.rb:\\d+:.*\\n$/"
-              output: "/^/code/main\\.rb:\\d+:.*Read-only file system @ rb_sysopen - /mise/installs/ruby/[\\d.]+/test \\(Errno::EROFS\\)\\n\\tfrom /code/main\\.rb:\\d+:.*\\n$/"
+              stderr: "/^/sandbox/main\\.rb:\\d+:.*Read-only file system @ rb_sysopen - /mise/installs/ruby/[\\d.]+/test \\(Errno::EROFS\\)\\n\\tfrom /sandbox/main\\.rb:\\d+:.*\\n$/"
+              output: "/^/sandbox/main\\.rb:\\d+:.*Read-only file system @ rb_sysopen - /mise/installs/ruby/[\\d.]+/test \\(Errno::EROFS\\)\\n\\tfrom /sandbox/main\\.rb:\\d+:.*\\n$/"
               exit_code: 1
               status: "OK"
               signal: null

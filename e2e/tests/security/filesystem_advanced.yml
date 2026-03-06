@@ -19,7 +19,7 @@ tests:
               status: "OK"
               signal: null
 
-  - name: "device node creation in /code is blocked (no CAP_MKNOD)"
+  - name: "device node creation in /sandbox is blocked (no CAP_MKNOD)"
     requests:
       - input:
           runtime: bash
@@ -27,19 +27,19 @@ tests:
             - name: main.sh
               type: plain
               content: |
-                mknod /code/urandom c 1 9
+                mknod /sandbox/urandom c 1 9
         output:
           status: 200
           body:
             run:
               stdout: ""
-              stderr: "mknod: /code/urandom: Operation not permitted\n"
-              output: "mknod: /code/urandom: Operation not permitted\n"
+              stderr: "mknod: /sandbox/urandom: Operation not permitted\n"
+              output: "mknod: /sandbox/urandom: Operation not permitted\n"
               exit_code: 1
               status: "OK"
               signal: null
 
-  - name: "SUID bit set in /code does not grant elevated privileges"
+  - name: "SUID bit set in /sandbox does not grant elevated privileges"
     requests:
       - input:
           runtime: bash
@@ -47,9 +47,9 @@ tests:
             - name: main.sh
               type: plain
               content: |
-                cp /usr/bin/id /code/suid-id
-                chmod 4755 /code/suid-id 2>/dev/null
-                /code/suid-id
+                cp /usr/bin/id /sandbox/suid-id
+                chmod 4755 /sandbox/suid-id 2>/dev/null
+                /sandbox/suid-id
         output:
           status: 200
           body:
@@ -69,14 +69,14 @@ tests:
             - name: main.sh
               type: plain
               content: |
-                echo test > /tmp/srcfile && ln /tmp/srcfile /code/crosslink
+                echo test > /tmp/srcfile && ln /tmp/srcfile /sandbox/crosslink
         output:
           status: 200
           body:
             run:
               stdout: ""
-              stderr: "ln: failed to create hard link '/code/crosslink' => '/tmp/srcfile': Invalid cross-device link\n"
-              output: "ln: failed to create hard link '/code/crosslink' => '/tmp/srcfile': Invalid cross-device link\n"
+              stderr: "ln: failed to create hard link '/sandbox/crosslink' => '/tmp/srcfile': Invalid cross-device link\n"
+              output: "ln: failed to create hard link '/sandbox/crosslink' => '/tmp/srcfile': Invalid cross-device link\n"
               exit_code: 1
               status: "OK"
               signal: null

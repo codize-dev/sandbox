@@ -47,9 +47,9 @@ tests:
             - name: main.sh
               type: plain
               content: |
-                cp /usr/bin/id /code/suid-id
-                chmod 4755 /code/suid-id
-                /code/suid-id
+                cp /usr/bin/id /sandbox/suid-id
+                chmod 4755 /sandbox/suid-id
+                /sandbox/suid-id
         output:
           status: 200
           body:
@@ -77,8 +77,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/code/main.sh: line 3: /tmp/test-exec: Permission denied\n"
-              output: "/code/main.sh: line 3: /tmp/test-exec: Permission denied\n"
+              stderr: "/sandbox/main.sh: line 3: /tmp/test-exec: Permission denied\n"
+              output: "/sandbox/main.sh: line 3: /tmp/test-exec: Permission denied\n"
               exit_code: 126
               status: "OK"
               signal: null
