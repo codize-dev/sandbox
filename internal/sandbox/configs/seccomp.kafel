@@ -111,6 +111,14 @@ POLICY blocked {
         // process_vm_readv/process_vm_writev.
         process_madvise,
 
+        // -- Cross-process FD duplication --
+        // pidfd_getfd (Linux 5.6+): can duplicate file descriptors from other
+        // processes within the PID namespace, bypassing normal permission checks.
+        // pidfd_open and pidfd_send_signal are intentionally allowed as they are
+        // constrained by PID namespace and provide no additional capability
+        // beyond kill()/waitpid().
+        pidfd_getfd,
+
         // -- Kernel keyring --
         // The kernel keyring is not namespaced and can leak information between
         // containers. Also used in kernel exploit chains.

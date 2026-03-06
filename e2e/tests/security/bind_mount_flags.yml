@@ -59,3 +59,23 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+
+  - name: "/etc/alternatives is mounted with nosuid and nodev"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                grep ' /etc/alternatives ' /proc/mounts | tr ' ' '\n' | sed -n '4p' | tr ',' '\n' | grep -E '^(nosuid|nodev)$' | sort
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "nodev\nnosuid\n"
+              stderr: ""
+              output: "nodev\nnosuid\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
