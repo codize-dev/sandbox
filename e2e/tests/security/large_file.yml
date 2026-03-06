@@ -34,10 +34,10 @@ tests:
             - name: main.sh
               type: plain
               content: |
-                cat payload.bin
+                for i in $(seq 5); do cat payload.bin; done
             - name: payload.bin
               type: fill
-              size: 2097152
+              size: 262144
         output:
           status: 200
           body:
