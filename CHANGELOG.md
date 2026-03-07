@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/codize-dev/sandbox/compare/v0.1.1...v0.2.0) (2026-03-07)
+
+
+### Features
+
+* add concurrency limiter middleware with queue management ([73e225d](https://github.com/codize-dev/sandbox/commit/73e225dea9446dbff35f3e05c0488b87dfcc30c3))
+* add panic recover middleware to prevent server crashes ([fccee12](https://github.com/codize-dev/sandbox/commit/fccee1257a93309b8533798e017f96f52f713508))
+
+
+### Bug Fixes
+
+* add IdleTimeout to prevent idle keep-alive connections from lingering indefinitely ([2e099d2](https://github.com/codize-dev/sandbox/commit/2e099d2a9b6567da0e8c8bc9ca88ff4a52b0eaa0))
+
 ## [0.1.1](https://github.com/codize-dev/sandbox/compare/v0.1.0...v0.1.1) (2026-03-06)
 
 
