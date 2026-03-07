@@ -1,0 +1,129 @@
+tests:
+  - name: "files created in sandbox are not visible to subsequent requests (node)"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                const fs = require("fs");
+                fs.writeFileSync("/sandbox/persist_test.txt", "secret data");
+                console.log("written");
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "written\n"
+              stderr: ""
+              output: "written\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                const fs = require("fs");
+                try {
+                  fs.readFileSync("/sandbox/persist_test.txt");
+                  console.log("LEAKED");
+                } catch {
+                  console.log("not found");
+                }
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "not found\n"
+              stderr: ""
+              output: "not found\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "files created in sandbox are not visible to subsequent requests (bash)"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo "secret data" > /sandbox/persist_test.txt
+                echo "written"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "written\n"
+              stderr: ""
+              output: "written\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                if [ -f /sandbox/persist_test.txt ]; then
+                  echo "LEAKED"
+                else
+                  echo "not found"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "not found\n"
+              stderr: ""
+              output: "not found\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "files written to /tmp are not visible to subsequent requests"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo "secret" > /tmp/leak_test.txt
+                echo "written"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "written\n"
+              stderr: ""
+              output: "written\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                if [ -f /tmp/leak_test.txt ]; then
+                  echo "LEAKED"
+                else
+                  echo "not found"
+                fi
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "not found\n"
+              stderr: ""
+              output: "not found\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
