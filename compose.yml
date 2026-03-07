@@ -1,5 +1,6 @@
 services:
   sandbox:
+    image: sandbox:latest
     build:
       context: .
       dockerfile: Dockerfile

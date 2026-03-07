@@ -66,8 +66,17 @@ jobs:
         with:
           persist-credentials: false
       - uses: jdx/mise-action@6d1e696aa24c1aa1bcc1adea0212707c71ab78a8 # v3.6.1
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - name: Build with cache
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          load: true
+          tags: sandbox:latest
+          cache-from: type=gha,scope=ci-${{ matrix.os }}
+          cache-to: type=gha,scope=ci-${{ matrix.os }},mode=max
       - name: Start sandbox service
-        run: docker compose up --build -d
+        run: docker compose up -d
       - name: Wait for service to be ready
         run: |
           for i in $(seq 1 30); do
