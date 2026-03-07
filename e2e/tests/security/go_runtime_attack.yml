@@ -1,0 +1,301 @@
+tests:
+  - name: "Go os/exec to run shell command stealing secrets"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"os"
+                	"os/exec"
+                )
+
+                func main() {
+                	out, err := exec.Command("cat", "/etc/shadow").CombinedOutput()
+                	if err != nil {
+                		fmt.Fprintln(os.Stderr, string(out))
+                		os.Exit(1)
+                	}
+                	fmt.Print(string(out))
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "cat: /etc/shadow: No such file or directory\n\n"
+              output: "cat: /etc/shadow: No such file or directory\n\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Go syscall.Exec replaces process but sandbox holds"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"os"
+                	"syscall"
+                )
+
+                func main() {
+                	err := syscall.Exec("/usr/bin/id", []string{"id"}, os.Environ())
+                	if err != nil {
+                		fmt.Fprintln(os.Stderr, err)
+                		os.Exit(1)
+                	}
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "uid=65534 gid=65534 groups=65534\n"
+              stderr: ""
+              output: "uid=65534 gid=65534 groups=65534\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "Go raw socket creation is blocked"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"os"
+                	"syscall"
+                )
+
+                func main() {
+                	fd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, syscall.IPPROTO_ICMP)
+                	if err != nil {
+                		fmt.Fprintln(os.Stderr, err)
+                		os.Exit(1)
+                	}
+                	syscall.Close(fd)
+                	fmt.Println("allowed")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "operation not permitted\n"
+              output: "operation not permitted\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Go write to read-only /usr/bin"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"os"
+                )
+
+                func main() {
+                	err := os.WriteFile("/usr/bin/trojan", []byte("#!/bin/bash\necho pwned"), 0755)
+                	if err != nil {
+                		fmt.Fprintln(os.Stderr, err)
+                		os.Exit(1)
+                	}
+                	fmt.Println("written")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "open /usr/bin/trojan: read-only file system\n"
+              output: "open /usr/bin/trojan: read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Go read host /proc/1/environ in PID namespace"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"os"
+                	"slices"
+                	"strings"
+                )
+
+                func main() {
+                	data, err := os.ReadFile("/proc/1/environ")
+                	if err != nil {
+                		fmt.Fprintln(os.Stderr, err)
+                		os.Exit(1)
+                	}
+                	envs := strings.Split(strings.TrimRight(string(data), "\x00"), "\x00")
+                	slices.Sort(envs)
+                	for _, env := range envs {
+                		fmt.Println(env)
+                	}
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "HOME=/tmp\nPATH=/usr/bin:/bin\n"
+              stderr: ""
+              output: "HOME=/tmp\nPATH=/usr/bin:/bin\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "Go attempt to listen on privileged port"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"net"
+                	"os"
+                )
+
+                func main() {
+                	ln, err := net.Listen("tcp", ":80")
+                	if err != nil {
+                		fmt.Fprintln(os.Stderr, err)
+                		os.Exit(1)
+                	}
+                	ln.Close()
+                	fmt.Println("listening")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "listen tcp :80: bind: permission denied\n"
+              output: "listen tcp :80: bind: permission denied\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Go fork bomb via goroutines with os/exec"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"os/exec"
+                	"sync"
+                )
+
+                func main() {
+                	var wg sync.WaitGroup
+                	for i := 0; i < 200; i++ {
+                		wg.Add(1)
+                		go func() {
+                			defer wg.Done()
+                			exec.Command("sleep", "10").Run()
+                		}()
+                	}
+                	wg.Wait()
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 137
+              status: "TIMEOUT"
+              signal: "SIGKILL"

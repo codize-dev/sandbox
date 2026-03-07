@@ -1,0 +1,241 @@
+tests:
+  - name: "write core dump pattern to exfiltrate memory"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo "|/tmp/exfil %p" > /proc/sys/kernel/core_pattern
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /proc/sys/kernel/core_pattern: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /proc/sys/kernel/core_pattern: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "enable core dumps via ulimit"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                ulimit -c unlimited 2>&1
+                ulimit -c
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "/sandbox/main.sh: line 1: ulimit: core file size: cannot modify limit: Operation not permitted\n0\n"
+              stderr: ""
+              output: "/sandbox/main.sh: line 1: ulimit: core file size: cannot modify limit: Operation not permitted\n0\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "disable ASLR via /proc/sys"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo 0 > /proc/sys/kernel/randomize_va_space
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /proc/sys/kernel/randomize_va_space: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /proc/sys/kernel/randomize_va_space: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "enable dmesg_restrict bypass via /proc"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo 0 > /proc/sys/kernel/dmesg_restrict
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /proc/sys/kernel/dmesg_restrict: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /proc/sys/kernel/dmesg_restrict: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "disable kptr_restrict to leak kernel addresses"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo 0 > /proc/sys/kernel/kptr_restrict
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /proc/sys/kernel/kptr_restrict: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /proc/sys/kernel/kptr_restrict: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "enable perf_event for side-channel attack via /proc"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo -1 > /proc/sys/kernel/perf_event_paranoid
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /proc/sys/kernel/perf_event_paranoid: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /proc/sys/kernel/perf_event_paranoid: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "enable BPF JIT for kernel exploit via /proc"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo 1 > /proc/sys/net/core/bpf_jit_enable
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /proc/sys/net/core/bpf_jit_enable: No such file or directory\n"
+              output: "/sandbox/main.sh: line 1: /proc/sys/net/core/bpf_jit_enable: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "write to /proc/sys/vm/overcommit_memory to manipulate OOM behavior"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo 1 > /proc/sys/vm/overcommit_memory
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /proc/sys/vm/overcommit_memory: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /proc/sys/vm/overcommit_memory: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "enable IP forwarding to pivot network traffic"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo 1 > /proc/sys/net/ipv4/ip_forward
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /proc/sys/net/ipv4/ip_forward: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /proc/sys/net/ipv4/ip_forward: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "read /proc/kcore for kernel memory dump"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                head -c 16 /proc/kcore
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "head: cannot open '/proc/kcore' for reading: Operation not permitted\n"
+              output: "head: cannot open '/proc/kcore' for reading: Operation not permitted\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "strace self for syscall debugging"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                strace -e trace=write echo pwned
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: strace: command not found\n"
+              output: "/sandbox/main.sh: line 1: strace: command not found\n"
+              exit_code: 127
+              status: "OK"
+              signal: null
+
+  - name: "gdb attach to PID 1"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                gdb -batch -p 1
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: gdb: command not found\n"
+              output: "/sandbox/main.sh: line 1: gdb: command not found\n"
+              exit_code: 127
+              status: "OK"
+              signal: null

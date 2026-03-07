@@ -1,0 +1,141 @@
+tests:
+  - name: "read /etc/ld.so.cache for library enumeration"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                cat /etc/ld.so.cache
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /etc/ld.so.cache: No such file or directory\n"
+              output: "cat: /etc/ld.so.cache: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "write to /etc/ld.so.preload for global library injection"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo "/sandbox/evil.so" > /etc/ld.so.preload
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /etc/ld.so.preload: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /etc/ld.so.preload: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "modify /etc/ld.so.conf for library search path manipulation"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo "/sandbox" > /etc/ld.so.conf
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /etc/ld.so.conf: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /etc/ld.so.conf: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "overwrite system shared library"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo pwned > /usr/lib/libc.so.6
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /usr/lib/libc.so.6: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /usr/lib/libc.so.6: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Ruby dlopen of arbitrary shared object path"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                require 'fiddle'
+                Fiddle.dlopen("/etc/ld.so.preload")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle::Handle#initialize': /etc/ld.so.preload: cannot open shared object file: No such file or directory (Fiddle::DLError)\n\tfrom /mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Class#new'\n\tfrom /mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle.dlopen'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
+              output: "/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle::Handle#initialize': /etc/ld.so.preload: cannot open shared object file: No such file or directory (Fiddle::DLError)\n\tfrom /mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Class#new'\n\tfrom /mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle.dlopen'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "Node.js dlopen of arbitrary shared object"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                process.dlopen({exports: {}}, "/etc/ld.so.preload");
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/index.js:1\nprocess.dlopen({exports: {}}, \"/etc/ld.so.preload\");\n        ^\n\nError: /etc/ld.so.preload: cannot open shared object file: No such file or directory\n    at Object.<anonymous> (/sandbox/index.js:1:9)\n    at Module._compile (node:internal/modules/cjs/loader:1812:14)\n    at Object..js (node:internal/modules/cjs/loader:1943:10)\n    at Module.load (node:internal/modules/cjs/loader:1533:32)\n    at Module._load (node:internal/modules/cjs/loader:1335:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  code: 'ERR_DLOPEN_FAILED'\n}\n\nNode.js v24.14.0\n"
+              output: "/sandbox/index.js:1\nprocess.dlopen({exports: {}}, \"/etc/ld.so.preload\");\n        ^\n\nError: /etc/ld.so.preload: cannot open shared object file: No such file or directory\n    at Object.<anonymous> (/sandbox/index.js:1:9)\n    at Module._compile (node:internal/modules/cjs/loader:1812:14)\n    at Object..js (node:internal/modules/cjs/loader:1943:10)\n    at Module.load (node:internal/modules/cjs/loader:1533:32)\n    at Module._load (node:internal/modules/cjs/loader:1335:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  code: 'ERR_DLOPEN_FAILED'\n}\n\nNode.js v24.14.0\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "replace /usr/bin/id binary with trojan"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                cp /usr/bin/bash /usr/bin/id
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cp: cannot create regular file '/usr/bin/id': Read-only file system\n"
+              output: "cp: cannot create regular file '/usr/bin/id': Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null

@@ -1,0 +1,240 @@
+tests:
+  - name: "escape via /proc/self/root traversal to host shadow file"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                cat /proc/self/root/etc/shadow
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /proc/self/root/etc/shadow: No such file or directory\n"
+              output: "cat: /proc/self/root/etc/shadow: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "double /proc/self/root traversal to escape chroot"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                cat /proc/self/root/../../../etc/shadow
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /proc/self/root/../../../etc/shadow: No such file or directory\n"
+              output: "cat: /proc/self/root/../../../etc/shadow: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "chroot escape attempt"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                chroot / cat /etc/shadow
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: chroot: command not found\n"
+              output: "/sandbox/main.sh: line 1: chroot: command not found\n"
+              exit_code: 127
+              status: "OK"
+              signal: null
+
+  - name: "/sys filesystem is not accessible"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                ls /sys
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "ls: cannot access '/sys': No such file or directory\n"
+              output: "ls: cannot access '/sys': No such file or directory\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
+
+  - name: "cgroup filesystem is not accessible"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                ls /sys/fs/cgroup
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "ls: cannot access '/sys/fs/cgroup': No such file or directory\n"
+              output: "ls: cannot access '/sys/fs/cgroup': No such file or directory\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
+
+  - name: "Docker socket is not accessible via filesystem"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                ls -la /var/run/docker.sock
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "ls: cannot access '/var/run/docker.sock': No such file or directory\n"
+              output: "ls: cannot access '/var/run/docker.sock': No such file or directory\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
+
+  - name: "overwrite nsjail config to weaken sandbox"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo "mode: LISTEN" > /etc/nsjail/nsjail.cfg
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /etc/nsjail/nsjail.cfg: No such file or directory\n"
+              output: "/sandbox/main.sh: line 1: /etc/nsjail/nsjail.cfg: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "debugfs is not accessible"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                ls /sys/kernel/debug
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "ls: cannot access '/sys/kernel/debug': No such file or directory\n"
+              output: "ls: cannot access '/sys/kernel/debug': No such file or directory\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
+
+  - name: "tracefs is not accessible"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                ls /sys/kernel/tracing
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "ls: cannot access '/sys/kernel/tracing': No such file or directory\n"
+              output: "ls: cannot access '/sys/kernel/tracing': No such file or directory\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
+
+  - name: "symlink to /proc/1/root for escape"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                ln -s /proc/1/root/etc/shadow /tmp/shadow_link && cat /tmp/shadow_link
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /tmp/shadow_link: No such file or directory\n"
+              output: "cat: /tmp/shadow_link: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "containerd socket is not accessible"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                ls -la /run/containerd/containerd.sock
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "ls: cannot access '/run/containerd/containerd.sock': No such file or directory\n"
+              output: "ls: cannot access '/run/containerd/containerd.sock': No such file or directory\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
+
+  - name: "write to /proc/self/attr/current to change security context"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo "unconfined" > /proc/self/attr/current
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /proc/self/attr/current: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /proc/self/attr/current: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null

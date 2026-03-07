@@ -1,0 +1,220 @@
+tests:
+  - name: "read /dev/mem for physical memory access"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                cat /dev/mem
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /dev/mem: No such file or directory\n"
+              output: "cat: /dev/mem: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "read /dev/kmem for kernel memory access"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                cat /dev/kmem
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /dev/kmem: No such file or directory\n"
+              output: "cat: /dev/kmem: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "read /dev/port for I/O port access"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                cat /dev/port
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /dev/port: No such file or directory\n"
+              output: "cat: /dev/port: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "read /dev/sda for raw disk access"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                dd if=/dev/sda bs=512 count=1 status=none
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "dd: failed to open '/dev/sda': No such file or directory\n"
+              output: "dd: failed to open '/dev/sda': No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "/dev/tty is not accessible"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo pwned > /dev/tty
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /dev/tty: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /dev/tty: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "/dev/console is not accessible"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                echo pwned > /dev/console
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/sandbox/main.sh: line 1: /dev/console: Read-only file system\n"
+              output: "/sandbox/main.sh: line 1: /dev/console: Read-only file system\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "/dev/ptmx is not accessible"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                cat /dev/ptmx
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "cat: /dev/ptmx: No such file or directory\n"
+              output: "cat: /dev/ptmx: No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "/dev/zero is not mounted"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                dd if=/dev/zero bs=1 count=1 status=none
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "dd: failed to open '/dev/zero': No such file or directory\n"
+              output: "dd: failed to open '/dev/zero': No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "/dev/random is not mounted (only /dev/urandom)"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                dd if=/dev/random bs=1 count=1 status=none
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "dd: failed to open '/dev/random': No such file or directory\n"
+              output: "dd: failed to open '/dev/random': No such file or directory\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "create device node for /dev/mem is blocked"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                mknod /tmp/mem c 1 1
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "mknod: /tmp/mem: Operation not permitted\n"
+              output: "mknod: /tmp/mem: Operation not permitted\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "create device node for /dev/sda is blocked"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                mknod /sandbox/sda b 8 0
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "mknod: /sandbox/sda: Operation not permitted\n"
+              output: "mknod: /sandbox/sda: Operation not permitted\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
