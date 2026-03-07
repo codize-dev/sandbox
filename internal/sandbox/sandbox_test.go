@@ -21,8 +21,9 @@ func Test_LookupRuntime(t *testing.T) {
 		{name: "ruby is valid", runtime: RuntimeRuby, wantErr: false},
 		{name: "go is valid", runtime: RuntimeGo, wantErr: false},
 		{name: "bash is valid", runtime: RuntimeBash, wantErr: false},
+		{name: "python is valid", runtime: RuntimePython, wantErr: false},
 		{name: "empty string is invalid", runtime: "", wantErr: true},
-		{name: "unknown runtime is invalid", runtime: "python", wantErr: true},
+		{name: "unknown runtime is invalid", runtime: "java", wantErr: true},
 		{name: "capitalized Node is invalid", runtime: "Node", wantErr: true},
 	}
 
@@ -113,6 +114,20 @@ func TestBashRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "900", got.Cgroups.CpuMsPerSec)
 }
 
+func TestPythonRuntime_Limits(t *testing.T) {
+	t.Parallel()
+	rt := pythonRuntime{}
+	got := rt.Limits()
+	assert.Equal(t, "1024", got.Rlimits.AS)
+	assert.Equal(t, "64", got.Rlimits.Fsize)
+	assert.Equal(t, "64", got.Rlimits.Nofile)
+	assert.Equal(t, "soft", got.Rlimits.Nproc)
+	assert.Equal(t, "32", got.Cgroups.PidsMax)
+	assert.Equal(t, "268435456", got.Cgroups.MemMax)
+	assert.Equal(t, "0", got.Cgroups.MemSwapMax)
+	assert.Equal(t, "900", got.Cgroups.CpuMsPerSec)
+}
+
 func TestExecution_buildArgs(t *testing.T) {
 	t.Parallel()
 
@@ -183,6 +198,13 @@ func Test_readDefaultFiles(t *testing.T) {
 	t.Run("bash has no defaults", func(t *testing.T) {
 		t.Parallel()
 		files, err := readDefaultFiles(RuntimeBash)
+		assert.NoError(t, err)
+		assert.Empty(t, files)
+	})
+
+	t.Run("python has no defaults", func(t *testing.T) {
+		t.Parallel()
+		files, err := readDefaultFiles(RuntimePython)
 		assert.NoError(t, err)
 		assert.Empty(t, files)
 	})
@@ -260,6 +282,13 @@ func TestRuntime_RestrictedFiles(t *testing.T) {
 	t.Run("bash has no restricted files", func(t *testing.T) {
 		t.Parallel()
 		rt, err := LookupRuntime(RuntimeBash)
+		require.NoError(t, err)
+		assert.Empty(t, rt.RestrictedFiles())
+	})
+
+	t.Run("python has no restricted files", func(t *testing.T) {
+		t.Parallel()
+		rt, err := LookupRuntime(RuntimePython)
 		require.NoError(t, err)
 		assert.Empty(t, rt.RestrictedFiles())
 	})

@@ -39,12 +39,12 @@ tests:
   - name: "unknown runtime"
     requests:
       - input:
-          runtime: python
+          runtime: java
           files:
-            - name: main.py
+            - name: Main.java
               type: plain
               content: |
-                print("hello")
+                class Main { public static void main(String[] args) {} }
         output:
           status: 400
           body:
@@ -53,7 +53,7 @@ tests:
               message: "request validation failed"
               errors:
                 - path: ["runtime"]
-                  message: 'must be one of "bash", "go", "node", "ruby"'
+                  message: 'must be one of "bash", "go", "node", "python", "ruby"'
 
   - name: "missing files"
     requests:

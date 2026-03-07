@@ -37,6 +37,7 @@ Codize Sandbox is a code execution engine that runs arbitrary code safely inside
 | Node.js | `node` |
 | Ruby | `ruby` |
 | Go | `go` |
+| Python | `python` |
 | Bash | `bash` |
 
 ## Usage
@@ -115,7 +116,7 @@ Request:
 }
 ```
 
-- `runtime` (required): one of `"node"`, `"ruby"`, `"go"`, `"bash"`
+- `runtime` (required): one of `"node"`, `"ruby"`, `"go"`, `"python"`, `"bash"`
 - `files` (required): array of source files. `content` is Base64-encoded. The first file in the array is used as the entrypoint
 
 Response:
@@ -134,7 +135,7 @@ Response:
 }
 ```
 
-- `compile`: compilation result (same schema as `run`). `null` for interpreted runtimes (node, ruby, bash). When compilation fails, `run` is `null`
+- `compile`: compilation result (same schema as `run`). `null` for interpreted runtimes (node, ruby, python, bash). When compilation fails, `run` is `null`
 - `run`: execution result. `null` when compilation fails
   - `stdout` / `stderr` / `output`: Base64-encoded output. `output` is the interleaved combination of stdout and stderr
   - `exit_code`: process exit code

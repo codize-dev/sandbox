@@ -17,10 +17,11 @@ var defaultFiles embed.FS
 type RuntimeName string
 
 const (
-	RuntimeNode RuntimeName = "node"
-	RuntimeRuby RuntimeName = "ruby"
-	RuntimeGo   RuntimeName = "go"
-	RuntimeBash RuntimeName = "bash"
+	RuntimeNode   RuntimeName = "node"
+	RuntimeRuby   RuntimeName = "ruby"
+	RuntimeGo     RuntimeName = "go"
+	RuntimePython RuntimeName = "python"
+	RuntimeBash   RuntimeName = "bash"
 )
 
 // Runtime defines the interface that all sandbox runtimes must implement.
@@ -137,10 +138,11 @@ func readDefaultFiles(name RuntimeName) ([]DefaultFile, error) {
 }
 
 var runtimes = map[RuntimeName]Runtime{
-	RuntimeNode: nodeRuntime{},
-	RuntimeRuby: rubyRuntime{},
-	RuntimeGo:   goRuntime{},
-	RuntimeBash: bashRuntime{},
+	RuntimeNode:   nodeRuntime{},
+	RuntimeRuby:   rubyRuntime{},
+	RuntimeGo:     goRuntime{},
+	RuntimePython: pythonRuntime{},
+	RuntimeBash:   bashRuntime{},
 }
 
 // LookupRuntime returns the Runtime for the given name.
@@ -258,6 +260,55 @@ func (rubyRuntime) Limits() Limits {
 }
 
 func (rubyRuntime) RestrictedFiles() []string { return nil }
+
+// --- Python ---
+
+type pythonRuntime struct{}
+
+func (pythonRuntime) Name() RuntimeName { return RuntimePython }
+
+func (pythonRuntime) Command(entryFile string) []string {
+	return []string{"/mise/installs/python/3.13.12/bin/python3", entryFile}
+}
+
+func (pythonRuntime) BindMounts() []BindMount {
+	return []BindMount{{Src: "/mise/installs/python/3.13.12", Dst: "/mise/installs/python/3.13.12"}}
+}
+
+func (pythonRuntime) Env() []string {
+	return []string{"PATH=/mise/installs/python/3.13.12/bin:/usr/bin:/bin"}
+}
+
+// Limits returns resource limits for Python execution.
+// Rlimits:
+//   - AS 1024 MiB: sufficient for the CPython interpreter and typical user scripts.
+//   - Fsize 64 MiB: sufficient for typical output files.
+//   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and Python runtime file descriptors.
+//   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
+//
+// Cgroups:
+//   - PidsMax 32: per-cgroup task limit (processes + threads); limits fork bombs and runaway thread creation.
+//   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
+//   - MemSwapMax 0: swap disabled to enforce strict memory limits.
+//   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
+func (pythonRuntime) Limits() Limits {
+	return Limits{
+		Rlimits: Rlimits{
+			AS:     "1024",
+			Fsize:  "64",
+			Nofile: "64",
+			Nproc:  "soft",
+		},
+		Cgroups: Cgroups{
+			PidsMax:     "32",
+			MemMax:      "268435456",
+			MemSwapMax:  "0",
+			CpuMsPerSec: "900",
+		},
+	}
+}
+
+func (pythonRuntime) RestrictedFiles() []string { return nil }
 
 // --- Go ---
 

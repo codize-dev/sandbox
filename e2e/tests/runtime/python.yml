@@ -1,0 +1,348 @@
+tests:
+  - name: "hello world"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                print("Hello, World!")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "Hello, World!\n"
+              stderr: ""
+              output: "Hello, World!\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "stderr output"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                import sys
+                print("error message", file=sys.stderr)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "error message\n"
+              output: "error message\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "stdout and stderr"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                import sys
+                print("out", flush=True)
+                print("err", file=sys.stderr)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "out\n"
+              stderr: "err\n"
+              output: "out\nerr\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "non-zero exit code"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                import sys
+                sys.exit(1)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "stderr with non-zero exit code"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                import sys
+                print("error occurred", file=sys.stderr)
+                sys.exit(2)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "error occurred\n"
+              output: "error occurred\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
+
+  - name: "multiple files with import"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                from helper import greet
+                print(greet("World"))
+            - name: helper.py
+              type: plain
+              content: |
+                def greet(name):
+                    return f"Hello, {name}!"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "Hello, World!\n"
+              stderr: ""
+              output: "Hello, World!\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "JSON parse and generate"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                import json
+                data = json.loads('{"name":"Alice","age":30}')
+                data["active"] = True
+                print(json.dumps(data))
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "{\"name\": \"Alice\", \"age\": 30, \"active\": true}\n"
+              stderr: ""
+              output: "{\"name\": \"Alice\", \"age\": 30, \"active\": true}\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "list operations"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                nums = [3, 1, 4, 1, 5, 9, 2, 6]
+                result = sorted([n * 2 for n in nums if n > 3])
+                print(",".join(str(x) for x in result))
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "8,10,12,18\n"
+              stderr: ""
+              output: "8,10,12,18\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "class and inheritance"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                import math
+
+                class Shape:
+                    def __init__(self, name):
+                        self.name = name
+                    def area(self):
+                        return 0
+
+                class Circle(Shape):
+                    def __init__(self, radius):
+                        super().__init__("circle")
+                        self.radius = radius
+                    def area(self):
+                        return math.pi * self.radius ** 2
+
+                c = Circle(5)
+                print(c.name)
+                print(f"{c.area():.2f}")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "circle\n78.54\n"
+              stderr: ""
+              output: "circle\n78.54\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "try/except error handling"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                try:
+                    1 / 0
+                except ZeroDivisionError as e:
+                    print(f"Caught: {e}")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "Caught: division by zero\n"
+              stderr: ""
+              output: "Caught: division by zero\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "unhandled exception"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                raise RuntimeError("something went wrong")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/RuntimeError: something went wrong/"
+              output: "/RuntimeError: something went wrong/"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "syntax error"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                def broken(
+        output:
+          status: 200
+          body:
+            run:
+              stdout: ""
+              stderr: "/SyntaxError/"
+              output: "/SyntaxError/"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "dictionary operations"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                d = {"a": 1, "b": 2, "c": 3}
+                print(",".join(d.keys()))
+                print(",".join(str(v) for v in d.values()))
+                print(" ".join(f"{k}={v}" for k, v in d.items()))
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "a,b,c\n1,2,3\na=1 b=2 c=3\n"
+              stderr: ""
+              output: "a,b,c\n1,2,3\na=1 b=2 c=3\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "string operations"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                s = "Hello, World!"
+                print(s.upper())
+                print(s.replace("World", "Python"))
+                print(s.split(", ")[0] + " - " + s.split(", ")[1])
+                print("World" in s)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "HELLO, WORLD!\nHello, Python!\nHello - World!\nTrue\n"
+              stderr: ""
+              output: "HELLO, WORLD!\nHello, Python!\nHello - World!\nTrue\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "regular expression"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                import re
+                text = "Date: 2025-12-25"
+                m = re.search(r"(\d{4})-(\d{2})-(\d{2})", text)
+                if m:
+                    print(f"{m.group(1)} {m.group(2)} {m.group(3)}")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "2025 12 25\n"
+              stderr: ""
+              output: "2025 12 25\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

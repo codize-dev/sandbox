@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A code execution sandbox service that runs arbitrary code inside Linux namespace jails (nsjail). Supports Node.js, Ruby, Go, and Bash runtimes. Exposes an HTTP API to receive code, execute it in an isolated environment, and return the output.
+A code execution sandbox service that runs arbitrary code inside Linux namespace jails (nsjail). Supports Node.js, Ruby, Go, Python, and Bash runtimes. Exposes an HTTP API to receive code, execute it in an isolated environment, and return the output.
 
 ## Development Setup
 
@@ -87,7 +87,7 @@ Comprehensive nsjail reference documentation lives in `.context/docs/nsjail/`. C
 
 ### POST /v1/run
 
-Request (`runtime` is required, must be `"node"`, `"ruby"`, `"go"`, or `"bash"`):
+Request (`runtime` is required, must be `"node"`, `"ruby"`, `"go"`, `"python"`, or `"bash"`):
 ```json
 {"runtime": "node", "files": [{"name": "index.js", "content": "<base64-encoded source>"}]}
 ```
@@ -99,4 +99,4 @@ Response:
 
 Possible `status` values: `"OK"`, `"SIGNAL"`, `"TIMEOUT"`, `"OUTPUT_LIMIT_EXCEEDED"`.
 
-`compile`: Compilation step result (same schema as `run`). `null` for non-compiled runtimes (node, ruby, bash). When compilation fails, `run` is `null`.
+`compile`: Compilation step result (same schema as `run`). `null` for non-compiled runtimes (node, ruby, python, bash). When compilation fails, `run` is `null`.

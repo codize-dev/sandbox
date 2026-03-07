@@ -4,7 +4,7 @@ ARG TARGETARCH
 
 RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "x64") && \
     wget -qO /usr/local/bin/mise \
-      "https://github.com/jdx/mise/releases/download/v2026.2.23/mise-v2026.2.23-linux-${ARCH}-musl" && \
+      "https://github.com/jdx/mise/releases/download/v2026.2.23/mise-v2026.2.23-linux-${ARCH}" && \
     chmod +x /usr/local/bin/mise
 
 # ---
@@ -21,12 +21,15 @@ COPY --from=mise /usr/local/bin/mise /usr/local/bin/mise
 
 ENV MISE_DATA_DIR="/mise"
 
+# Node.js
 ENV PATH="/mise/installs/node/24.14.0/bin:$PATH"
 RUN mise use -g node@24.14.0
 
+# Ruby
 ENV PATH="/mise/installs/ruby/3.4.8/bin:$PATH"
 RUN mise settings ruby.compile=false && mise use -g ruby@3.4.8
 
+# Go
 ENV PATH="/mise/installs/go/1.26.0/bin:$PATH"
 RUN mise use -g go@1.26.0
 RUN CGO_ENABLED=0 GOCACHE=/mise/go-cache go build std
@@ -36,6 +39,11 @@ RUN cd /tmp/preinstall && \
     GOMODCACHE=/mise/go-modcache go mod download && \
     rm -rf /tmp/preinstall
 
+# Python
+ENV PATH="/mise/installs/python/3.13.12/bin:$PATH"
+RUN mise use -g python@3.13.12
+
+# Install tools for sandbox
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       curl wget mawk && \
