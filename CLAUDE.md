@@ -47,6 +47,9 @@ The container must run in **privileged mode** (required for nsjail to create Lin
 - `--max-files` (default `10`) — maximum number of files per request
 - `--max-file-size` (default `262144` / 256 KiB) — maximum file size in bytes per file
 - `--max-body-size` (default `5242880` / 5 MiB) — maximum request body size in bytes
+- `--max-concurrency` (default `10`) — maximum number of concurrent sandbox executions
+- `--max-queue-size` (default `50`) — maximum number of requests waiting in the execution queue
+- `--queue-timeout` (default `30`) — maximum time in seconds a request waits in the execution queue
 
 ## Architecture
 
@@ -65,6 +68,7 @@ POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
 - **cmd/gocacheprog/** — Read-only Go module cache helper used during compilation.
 - **internal/handler/** — Request parsing and response formatting.
 - **internal/sandbox/** — Core sandbox execution logic; `configs/nsjail.cfg` holds the static nsjail protobuf config; `configs/seccomp.kafel` holds the Seccomp-BPF syscall filtering policy.
+- **internal/middleware/** — Custom Echo middleware. Concurrency limiter with queue management.
 - **e2e/** — YAML-driven E2E test suite. Test cases live under `e2e/tests/runtime/`, `e2e/tests/security/`, and `e2e/tests/api/`. See `e2e/CLAUDE.md` for testing guidelines.
 
 ### Docker Build

@@ -18,6 +18,8 @@ const (
 	CodeNotFound            ErrorCode = "NOT_FOUND"
 	CodeMethodNotAllowed    ErrorCode = "METHOD_NOT_ALLOWED"
 	CodeRequestBodyTooLarge ErrorCode = "REQUEST_BODY_TOO_LARGE"
+	CodeQueueFull           ErrorCode = "QUEUE_FULL"
+	CodeQueueTimeout        ErrorCode = "QUEUE_TIMEOUT"
 )
 
 // Message returns the canonical human-readable message for the error code.
@@ -37,6 +39,10 @@ func (c ErrorCode) Message() string {
 		return "the request method is not allowed for this resource"
 	case CodeRequestBodyTooLarge:
 		return "request body too large"
+	case CodeQueueFull:
+		return "service is at capacity, please retry later"
+	case CodeQueueTimeout:
+		return "request timed out waiting in queue"
 	default:
 		return "internal server error"
 	}

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/codize-dev/sandbox/internal/handler"
+	intmw "github.com/codize-dev/sandbox/internal/middleware"
 	"github.com/codize-dev/sandbox/internal/sandbox"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -30,6 +31,9 @@ var (
 	flagMaxFiles       int
 	flagMaxFileSize    int
 	flagMaxBodySize    int
+	flagMaxConcurrency int
+	flagMaxQueueSize   int
+	flagQueueTimeout   int
 )
 
 func defaultPort() int {
@@ -52,6 +56,9 @@ func init() {
 	f.IntVar(&flagMaxFiles, "max-files", 10, "maximum number of files per request")
 	f.IntVar(&flagMaxFileSize, "max-file-size", 256<<10, "maximum file size in bytes per file")
 	f.IntVar(&flagMaxBodySize, "max-body-size", 5<<20, "maximum request body size in bytes")
+	f.IntVar(&flagMaxConcurrency, "max-concurrency", 10, "maximum number of concurrent sandbox executions")
+	f.IntVar(&flagMaxQueueSize, "max-queue-size", 50, "maximum number of requests waiting in the execution queue")
+	f.IntVar(&flagQueueTimeout, "queue-timeout", 30, "maximum time in seconds a request waits in the execution queue")
 }
 
 func runServe(_ *cobra.Command, _ []string) error {
@@ -66,10 +73,16 @@ func runServe(_ *cobra.Command, _ []string) error {
 		{"--max-files", flagMaxFiles},
 		{"--max-file-size", flagMaxFileSize},
 		{"--max-body-size", flagMaxBodySize},
+		{"--max-concurrency", flagMaxConcurrency},
+		{"--queue-timeout", flagQueueTimeout},
 	} {
 		if c.value <= 0 {
 			return fmt.Errorf("%s must be a positive integer, got %d", c.name, c.value)
 		}
+	}
+
+	if flagMaxQueueSize < 0 {
+		return fmt.Errorf("--max-queue-size must be a non-negative integer, got %d", flagMaxQueueSize)
 	}
 
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
@@ -86,7 +99,11 @@ func runServe(_ *cobra.Command, _ []string) error {
 	e.HTTPErrorHandler = handler.NewHTTPErrorHandler()
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.BodyLimit(int64(flagMaxBodySize)))
-	e.POST("/v1/run", h.RunHandler)
+	e.POST("/v1/run", h.RunHandler, intmw.ConcurrencyLimiter(intmw.ConcurrencyConfig{
+		MaxConcurrency: flagMaxConcurrency,
+		MaxQueueSize:   flagMaxQueueSize,
+		QueueTimeout:   time.Duration(flagQueueTimeout) * time.Second,
+	}))
 
 	sc := echo.StartConfig{
 		Address: fmt.Sprintf(":%d", flagPort),
@@ -99,7 +116,7 @@ func runServe(_ *cobra.Command, _ []string) error {
 			// the total time from header read to response completion,
 			// including handler execution. It must therefore exceed the
 			// maximum sandbox execution duration (compile + run + margin).
-			s.WriteTimeout = time.Duration(flagRunTimeout+flagCompileTimeout)*time.Second + 30*time.Second
+			s.WriteTimeout = time.Duration(flagQueueTimeout+flagRunTimeout+flagCompileTimeout)*time.Second + 30*time.Second
 			return nil
 		},
 	}

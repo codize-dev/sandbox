@@ -93,6 +93,9 @@ $ docker compose up
 | `--max-files` | `10` | Maximum number of files per request |
 | `--max-file-size` | `262144` (256 KiB) | Maximum file size in bytes |
 | `--max-body-size` | `5242880` (5 MiB) | Maximum request body size in bytes |
+| `--max-concurrency` | `10` | Maximum number of concurrent sandbox executions |
+| `--max-queue-size` | `50` | Maximum number of requests waiting in the execution queue |
+| `--queue-timeout` | `30` | Maximum time in seconds a request waits in the execution queue |
 
 ### API
 
