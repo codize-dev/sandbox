@@ -97,6 +97,7 @@ func runServe(_ *cobra.Command, _ []string) error {
 
 	e := echo.New()
 	e.HTTPErrorHandler = handler.NewHTTPErrorHandler()
+	e.Use(middleware.Recover())
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.BodyLimit(int64(flagMaxBodySize)))
 	e.POST("/v1/run", h.RunHandler, intmw.ConcurrencyLimiter(intmw.ConcurrencyConfig{
