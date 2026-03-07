@@ -94,6 +94,7 @@ func runServe(_ *cobra.Command, _ []string) error {
 			// Override Echo v5's default HTTP server timeouts.
 			s.ReadHeaderTimeout = 10 * time.Second // Slowloris mitigation (GoSec G112)
 			s.ReadTimeout = 30 * time.Second       // Echo v5 default; explicit for resilience against upstream changes
+			s.IdleTimeout = 30 * time.Second       // Keep-alive connections: time to wait for the next request
 			// WriteTimeout is reset on each request header read and bounds
 			// the total time from header read to response completion,
 			// including handler execution. It must therefore exceed the
