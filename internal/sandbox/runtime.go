@@ -630,10 +630,11 @@ func (nodeTypeScriptRuntime) Limits() Limits {
 	}
 }
 
-// RestrictedFiles prevents users from overriding package.json, which must
-// match the pre-installed node_modules bind mount (contains typescript and @types/node).
+// RestrictedFiles prevents users from overriding package.json and
+// package-lock.json, which must match the pre-installed node_modules
+// bind mount (contains typescript and @types/node).
 func (nodeTypeScriptRuntime) RestrictedFiles() []string {
-	return []string{"package.json"}
+	return []string{"package.json", "package-lock.json"}
 }
 
 // --- Bash ---

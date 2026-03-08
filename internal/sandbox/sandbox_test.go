@@ -291,16 +291,17 @@ func Test_readDefaultFiles(t *testing.T) {
 		assert.Empty(t, files)
 	})
 
-	t.Run("node-typescript has tsconfig.json and package.json", func(t *testing.T) {
+	t.Run("node-typescript has package.json, package-lock.json, and tsconfig.json", func(t *testing.T) {
 		t.Parallel()
 		files, err := readDefaultFiles(RuntimeNodeTypeScript)
 		require.NoError(t, err)
-		require.Len(t, files, 2)
+		require.Len(t, files, 3)
 		// Files are returned in directory order (lexicographic by embedded FS)
-		assert.Equal(t, "package.json", files[0].Name)
-		assert.Contains(t, string(files[0].Content), `"@types/node"`)
-		assert.Equal(t, "tsconfig.json", files[1].Name)
-		assert.Contains(t, string(files[1].Content), `"skipLibCheck": true`)
+		assert.Equal(t, "package-lock.json", files[0].Name)
+		assert.Equal(t, "package.json", files[1].Name)
+		assert.Contains(t, string(files[1].Content), `"@types/node"`)
+		assert.Equal(t, "tsconfig.json", files[2].Name)
+		assert.Contains(t, string(files[2].Content), `"skipLibCheck": true`)
 	})
 
 	t.Run("unknown runtime has no defaults", func(t *testing.T) {
@@ -394,10 +395,10 @@ func TestRuntime_RestrictedFiles(t *testing.T) {
 		assert.ElementsMatch(t, []string{"main"}, rt.RestrictedFiles())
 	})
 
-	t.Run("node-typescript restricts package.json", func(t *testing.T) {
+	t.Run("node-typescript restricts package.json and package-lock.json", func(t *testing.T) {
 		t.Parallel()
 		rt, err := LookupRuntime(RuntimeNodeTypeScript)
 		require.NoError(t, err)
-		assert.ElementsMatch(t, []string{"package.json"}, rt.RestrictedFiles())
+		assert.ElementsMatch(t, []string{"package.json", "package-lock.json"}, rt.RestrictedFiles())
 	})
 }

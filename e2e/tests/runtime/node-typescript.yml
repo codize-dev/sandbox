@@ -263,6 +263,29 @@ tests:
                 - path: ["files", 1, "name"]
                   message: "not allowed for this runtime"
 
+  - name: "restricted file - package-lock.json"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                console.log("hello");
+            - name: package-lock.json
+              type: plain
+              content: |
+                {}
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 1, "name"]
+                  message: "not allowed for this runtime"
+
   - name: "interfaces and generics"
     requests:
       - input:

@@ -8,5 +8,8 @@ Core sandbox execution engine, split across three files:
 - **configs/nsjail.cfg** — Static protobuf-format nsjail configuration loaded via `-C /etc/nsjail/nsjail.cfg`. Defines execution mode (`ONCE`), Seccomp-BPF policy file reference, logging (`log_fd: 3`), working directory, static rlimits, and filesystem mounts (system libraries, device nodes, tmpfs, procfs, symlinks). Per-invocation settings (runtime bind mounts, resource limits, timeout, env vars) are passed as CLI flags.
 - **configs/seccomp.kafel** — Seccomp-BPF syscall filtering policy written in Kafel. Uses a blacklist approach (DEFAULT ALLOW) blocking dangerous syscalls (io_uring, bpf, userfaultfd, mount, ptrace, etc.) as a defense-in-depth layer. Referenced from nsjail.cfg via `seccomp_policy_file` and copied to `/etc/nsjail/seccomp.kafel` in Docker.
 - **defaults/go/** — Embedded `go.mod.tmpl` and `go.sum.tmpl` templates applied as default files for Go runtime execution.
+- **defaults/node-typescript/** — Embedded `package.json`, `package-lock.json`, and `tsconfig.json` applied as default files for Node-TypeScript runtime execution.
 
 Go runtime rejects user-submitted `go.mod`, `go.sum`, and `main` files (HTTP 400) to enforce use of defaults and prevent overwriting the compiled binary.
+
+Node-TypeScript runtime rejects user-submitted `package.json` and `package-lock.json` files (HTTP 400) to ensure consistency with the pre-installed `node_modules` bind mount.
