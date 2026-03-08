@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/codize-dev/sandbox/compare/v0.4.1...v0.4.2) (2026-03-08)
+
+
+### Bug Fixes
+
+* correct nsjail image digest to manifest list hash ([101a839](https://github.com/codize-dev/sandbox/commit/101a839b60647337c87d16c070da1b26b0d552aa))
+
 ## [0.4.1](https://github.com/codize-dev/sandbox/compare/v0.4.0...v0.4.1) (2026-03-08)
 
 
