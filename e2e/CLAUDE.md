@@ -110,19 +110,31 @@ tests:
 
 String fields (`stdout`, `stderr`, `output`) support regex matching via `/pattern/` syntax. When a value starts and ends with `/`, the inner content is treated as a Go regular expression and matched against the actual value using partial match (`regexp.MatchString`).
 
-Use regex only when exact match is technically impossible (e.g., non-deterministic timing output, variable iteration numbers):
+**Exact match is always preferred.** Even if the output is long or verbose, the full expected string must be written out. Regex is permitted **only** for values that are genuinely non-deterministic across runs — timestamps, random IDs, or kernel-version-dependent messages. Values that are deterministic within a pinned environment (runtime versions, compiler error messages, stack traces with fixed line numbers, etc.) must use exact match, not regex.
+
+```yaml
+# GOOD: exact match for deterministic compiler output
+compile:
+  stdout: "index.ts(1,7): error TS2322: Type 'string' is not assignable to type 'number'.\n"
+
+# GOOD: exact match for deterministic stack trace (Node.js version is pinned)
+run:
+  stderr: "/sandbox/index.js:1\nthrow new Error(\"oops\");\n^\n\nError: oops\n    at Object.<anonymous> (/sandbox/index.js:1:7)\n...\n\nNode.js v24.14.0\n"
+
+# BAD: regex for output that is deterministic within our pinned environment
+run:
+  stderr: "/error TS2322/"
+  stderr: "/Node\\.js v[\\d.]+/"
+```
+
+Regex example (justified — kernel error message varies across kernel versions and architectures):
 
 ```yaml
 run:
-  stdout: ""
   stderr: "/No space left on device/"
-  output: "/No space left on device/"
-  exit_code: 1
-  status: "OK"
-  signal: null
 ```
 
-Exact match is the default and preferred mode. All fields are required — never omit a field to skip its assertion. Use regex only when exact match is technically impossible (e.g., non-deterministic output that varies across kernel versions or runs).
+All fields are required — never omit a field to skip its assertion.
 
 ### Multiple Requests
 
