@@ -30,6 +30,8 @@ RUN apt-get update && \
 # Node.js
 ENV PATH="/mise/installs/node/24.14.0/bin:$PATH"
 RUN mise use -g node@24.14.0
+COPY internal/sandbox/defaults/node-typescript/package.json /mise/ts-node-modules/package.json
+RUN cd /mise/ts-node-modules && npm install
 
 # Ruby
 ENV PATH="/mise/installs/ruby/3.4.8/bin:$PATH"

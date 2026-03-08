@@ -1,0 +1,452 @@
+tests:
+  - name: "hello world"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                console.log("Hello, World!");
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "Hello, World!\n"
+              stderr: ""
+              output: "Hello, World!\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "compile error - type error"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                const x: number = "hello";
+                console.log(x);
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: "index.ts(1,7): error TS2322: Type 'string' is not assignable to type 'number'.\n"
+              stderr: ""
+              output: "index.ts(1,7): error TS2322: Type 'string' is not assignable to type 'number'.\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
+            run: null
+
+  - name: "compile error - syntax error"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                console.log("hello"
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: "index.ts(2,1): error TS1005: ')' expected.\n"
+              stderr: ""
+              output: "index.ts(2,1): error TS1005: ')' expected.\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
+            run: null
+
+  - name: "stderr output"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                console.error("error message");
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "error message\n"
+              output: "error message\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "stdout and stderr"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                console.log("out");
+                console.error("err");
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "out\n"
+              stderr: "err\n"
+              output: "out\nerr\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "non-zero exit code"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                process.exit(1);
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "stderr with non-zero exit code"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                console.error("fatal error");
+                process.exit(42);
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "fatal error\n"
+              output: "fatal error\n"
+              exit_code: 42
+              status: "OK"
+              signal: null
+
+  - name: "multiple files"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                import { greet } from "./helper";
+                console.log(greet("World"));
+            - name: helper.ts
+              type: plain
+              content: |
+                export function greet(name: string): string {
+                  return `Hello, ${name}!`;
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "Hello, World!\n"
+              stderr: ""
+              output: "Hello, World!\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "unhandled exception"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                throw new Error("something went wrong");
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "/sandbox/index.js:1\nthrow new Error(\"something went wrong\");\n^\n\nError: something went wrong\n    at Object.<anonymous> (/sandbox/index.js:1:7)\n    at Module._compile (node:internal/modules/cjs/loader:1812:14)\n    at Object..js (node:internal/modules/cjs/loader:1943:10)\n    at Module.load (node:internal/modules/cjs/loader:1533:32)\n    at Module._load (node:internal/modules/cjs/loader:1335:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47\n\nNode.js v24.14.0\n"
+              output: "/sandbox/index.js:1\nthrow new Error(\"something went wrong\");\n^\n\nError: something went wrong\n    at Object.<anonymous> (/sandbox/index.js:1:7)\n    at Module._compile (node:internal/modules/cjs/loader:1812:14)\n    at Object..js (node:internal/modules/cjs/loader:1943:10)\n    at Module.load (node:internal/modules/cjs/loader:1533:32)\n    at Module._load (node:internal/modules/cjs/loader:1335:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47\n\nNode.js v24.14.0\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "restricted file - package.json"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                console.log("hello");
+            - name: package.json
+              type: plain
+              content: |
+                {}
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 1, "name"]
+                  message: "not allowed for this runtime"
+
+  - name: "interfaces and generics"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                interface Identifiable {
+                  id: number;
+                  name: string;
+                }
+
+                function findById<T extends Identifiable>(items: T[], id: number): T | undefined {
+                  return items.find(item => item.id === id);
+                }
+
+                const users: Identifiable[] = [
+                  { id: 1, name: "Alice" },
+                  { id: 2, name: "Bob" },
+                ];
+
+                const found = findById(users, 2);
+                console.log(found ? found.name : "not found");
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "Bob\n"
+              stderr: ""
+              output: "Bob\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "enums and type guards"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                enum Color {
+                  Red = "RED",
+                  Green = "GREEN",
+                  Blue = "BLUE",
+                }
+
+                function isWarm(color: Color): boolean {
+                  return color === Color.Red;
+                }
+
+                console.log(Color.Green);
+                console.log(isWarm(Color.Red));
+                console.log(isWarm(Color.Blue));
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "GREEN\ntrue\nfalse\n"
+              stderr: ""
+              output: "GREEN\ntrue\nfalse\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "async/await"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                async function fetchData(): Promise<string> {
+                  return "data";
+                }
+
+                async function main(): Promise<void> {
+                  const result = await fetchData();
+                  console.log(result);
+                }
+
+                main();
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "data\n"
+              stderr: ""
+              output: "data\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "custom tsconfig.json override - strict mode rejects implicit any"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                function greet(name) {
+                  console.log(name);
+                }
+                greet("hello");
+            - name: tsconfig.json
+              type: plain
+              content: |
+                {
+                  "compilerOptions": {
+                    "target": "ES2024",
+                    "module": "commonjs",
+                    "strict": true,
+                    "skipLibCheck": true
+                  }
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: "index.ts(1,16): error TS7006: Parameter 'name' implicitly has an 'any' type.\n"
+              stderr: ""
+              output: "index.ts(1,16): error TS7006: Parameter 'name' implicitly has an 'any' type.\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
+            run: null
+
+  - name: "standard library usage - JSON"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                interface User {
+                  name: string;
+                  age: number;
+                }
+
+                const user: User = { name: "Alice", age: 30 };
+                const json: string = JSON.stringify(user);
+                const parsed: User = JSON.parse(json);
+                console.log(parsed.name);
+                console.log(parsed.age);
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "Alice\n30\n"
+              stderr: ""
+              output: "Alice\n30\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

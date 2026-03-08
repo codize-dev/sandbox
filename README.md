@@ -35,6 +35,7 @@ Codize Sandbox is a code execution engine that runs arbitrary code safely inside
 | Runtime | Identifier |
 | --- | --- |
 | Node.js | `node` |
+| TypeScript | `node-typescript` |
 | Ruby | `ruby` |
 | Go | `go` |
 | Python | `python` |
@@ -117,7 +118,7 @@ Request:
 }
 ```
 
-- `runtime` (required): one of `"node"`, `"ruby"`, `"go"`, `"python"`, `"rust"`, `"bash"`
+- `runtime` (required): one of `"node"`, `"node-typescript"`, `"ruby"`, `"go"`, `"python"`, `"rust"`, `"bash"`
 - `files` (required): array of source files. `content` is Base64-encoded. The first file in the array is used as the entrypoint
 
 Response:

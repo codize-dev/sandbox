@@ -23,6 +23,7 @@ func Test_LookupRuntime(t *testing.T) {
 		{name: "bash is valid", runtime: RuntimeBash, wantErr: false},
 		{name: "python is valid", runtime: RuntimePython, wantErr: false},
 		{name: "rust is valid", runtime: RuntimeRust, wantErr: false},
+		{name: "node-typescript is valid", runtime: RuntimeNodeTypeScript, wantErr: false},
 		{name: "empty string is invalid", runtime: "", wantErr: true},
 		{name: "unknown runtime is invalid", runtime: "java", wantErr: true},
 		{name: "capitalized Node is invalid", runtime: "Node", wantErr: true},
@@ -154,6 +155,54 @@ func TestRustRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "900", compile.Cgroups.CpuMsPerSec)
 }
 
+func TestNodeTypeScriptRuntime_Limits(t *testing.T) {
+	t.Parallel()
+	rt := nodeTypeScriptRuntime{}
+
+	run := rt.Limits()
+	assert.Equal(t, "4096", run.Rlimits.AS)
+	assert.Equal(t, "64", run.Rlimits.Fsize)
+	assert.Equal(t, "64", run.Rlimits.Nofile)
+	assert.Equal(t, "soft", run.Rlimits.Nproc)
+	assert.Equal(t, "64", run.Cgroups.PidsMax)
+	assert.Equal(t, "268435456", run.Cgroups.MemMax)
+	assert.Equal(t, "0", run.Cgroups.MemSwapMax)
+	assert.Equal(t, "900", run.Cgroups.CpuMsPerSec)
+
+	compile := rt.CompileLimits()
+	assert.Equal(t, "4096", compile.Rlimits.AS)
+	assert.Equal(t, "64", compile.Rlimits.Fsize)
+	assert.Equal(t, "256", compile.Rlimits.Nofile)
+	assert.Equal(t, "soft", compile.Rlimits.Nproc)
+	assert.Equal(t, "64", compile.Cgroups.PidsMax)
+	assert.Equal(t, "268435456", compile.Cgroups.MemMax)
+	assert.Equal(t, "0", compile.Cgroups.MemSwapMax)
+	assert.Equal(t, "900", compile.Cgroups.CpuMsPerSec)
+}
+
+func TestNodeTypeScriptRuntime_Command(t *testing.T) {
+	t.Parallel()
+	rt := nodeTypeScriptRuntime{}
+
+	t.Run("converts .ts to .js", func(t *testing.T) {
+		t.Parallel()
+		got := rt.Command("/sandbox/index.ts")
+		assert.Equal(t, []string{"/mise/installs/node/24.14.0/bin/node", "/sandbox/index.js"}, got)
+	})
+
+	t.Run("converts .tsx to .js", func(t *testing.T) {
+		t.Parallel()
+		got := rt.Command("/sandbox/app.tsx")
+		assert.Equal(t, []string{"/mise/installs/node/24.14.0/bin/node", "/sandbox/app.js"}, got)
+	})
+
+	t.Run("appends .js when no extension", func(t *testing.T) {
+		t.Parallel()
+		got := rt.Command("/sandbox/noext")
+		assert.Equal(t, []string{"/mise/installs/node/24.14.0/bin/node", "/sandbox/noext.js"}, got)
+	})
+}
+
 func TestExecution_buildArgs(t *testing.T) {
 	t.Parallel()
 
@@ -240,6 +289,18 @@ func Test_readDefaultFiles(t *testing.T) {
 		files, err := readDefaultFiles(RuntimeRust)
 		assert.NoError(t, err)
 		assert.Empty(t, files)
+	})
+
+	t.Run("node-typescript has tsconfig.json and package.json", func(t *testing.T) {
+		t.Parallel()
+		files, err := readDefaultFiles(RuntimeNodeTypeScript)
+		require.NoError(t, err)
+		require.Len(t, files, 2)
+		// Files are returned in directory order (lexicographic by embedded FS)
+		assert.Equal(t, "package.json", files[0].Name)
+		assert.Contains(t, string(files[0].Content), `"@types/node"`)
+		assert.Equal(t, "tsconfig.json", files[1].Name)
+		assert.Contains(t, string(files[1].Content), `"skipLibCheck": true`)
 	})
 
 	t.Run("unknown runtime has no defaults", func(t *testing.T) {
@@ -331,5 +392,12 @@ func TestRuntime_RestrictedFiles(t *testing.T) {
 		rt, err := LookupRuntime(RuntimeRust)
 		require.NoError(t, err)
 		assert.ElementsMatch(t, []string{"main"}, rt.RestrictedFiles())
+	})
+
+	t.Run("node-typescript restricts package.json", func(t *testing.T) {
+		t.Parallel()
+		rt, err := LookupRuntime(RuntimeNodeTypeScript)
+		require.NoError(t, err)
+		assert.ElementsMatch(t, []string{"package.json"}, rt.RestrictedFiles())
 	})
 }

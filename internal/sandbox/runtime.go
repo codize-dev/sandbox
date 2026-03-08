@@ -17,12 +17,13 @@ var defaultFiles embed.FS
 type RuntimeName string
 
 const (
-	RuntimeNode   RuntimeName = "node"
-	RuntimeRuby   RuntimeName = "ruby"
-	RuntimeGo     RuntimeName = "go"
-	RuntimePython RuntimeName = "python"
-	RuntimeRust   RuntimeName = "rust"
-	RuntimeBash   RuntimeName = "bash"
+	RuntimeNode           RuntimeName = "node"
+	RuntimeRuby           RuntimeName = "ruby"
+	RuntimeGo             RuntimeName = "go"
+	RuntimePython         RuntimeName = "python"
+	RuntimeRust           RuntimeName = "rust"
+	RuntimeNodeTypeScript RuntimeName = "node-typescript"
+	RuntimeBash           RuntimeName = "bash"
 )
 
 // Runtime defines the interface that all sandbox runtimes must implement.
@@ -70,6 +71,7 @@ type CompiledRuntime interface {
 
 var _ CompiledRuntime = goRuntime{}
 var _ CompiledRuntime = rustRuntime{}
+var _ CompiledRuntime = nodeTypeScriptRuntime{}
 
 // BindMount represents a read-only bind mount for nsjail (-R src:dst).
 type BindMount struct {
@@ -140,12 +142,13 @@ func readDefaultFiles(name RuntimeName) ([]DefaultFile, error) {
 }
 
 var runtimes = map[RuntimeName]Runtime{
-	RuntimeNode:   nodeRuntime{},
-	RuntimeRuby:   rubyRuntime{},
-	RuntimeGo:     goRuntime{},
-	RuntimePython: pythonRuntime{},
-	RuntimeRust:   rustRuntime{},
-	RuntimeBash:   bashRuntime{},
+	RuntimeNode:           nodeRuntime{},
+	RuntimeRuby:           rubyRuntime{},
+	RuntimeGo:             goRuntime{},
+	RuntimePython:         pythonRuntime{},
+	RuntimeRust:           rustRuntime{},
+	RuntimeNodeTypeScript: nodeTypeScriptRuntime{},
+	RuntimeBash:           bashRuntime{},
 }
 
 // LookupRuntime returns the Runtime for the given name.
@@ -533,6 +536,104 @@ func (rustRuntime) Limits() Limits {
 // overwrite a user file with that name.
 func (rustRuntime) RestrictedFiles() []string {
 	return []string{"main"}
+}
+
+// --- Node.js (TypeScript) ---
+
+type nodeTypeScriptRuntime struct{}
+
+func (nodeTypeScriptRuntime) Name() RuntimeName { return RuntimeNodeTypeScript }
+
+func (nodeTypeScriptRuntime) Command(entryFile string) []string {
+	jsFile := strings.TrimSuffix(entryFile, path.Ext(entryFile)) + ".js"
+	return []string{"/mise/installs/node/24.14.0/bin/node", jsFile}
+}
+
+func (nodeTypeScriptRuntime) BindMounts() []BindMount {
+	return []BindMount{{Src: "/mise/installs/node/24.14.0", Dst: "/mise/installs/node/24.14.0"}}
+}
+
+func (nodeTypeScriptRuntime) Env() []string {
+	return []string{"PATH=/mise/installs/node/24.14.0/bin:/usr/bin:/bin"}
+}
+
+func (nodeTypeScriptRuntime) CompileCommand() []string {
+	return []string{"/mise/installs/node/24.14.0/bin/node", "/sandbox/node_modules/typescript/bin/tsc"}
+}
+
+func (nodeTypeScriptRuntime) CompileBindMounts() []BindMount {
+	return []BindMount{
+		{Src: "/mise/installs/node/24.14.0", Dst: "/mise/installs/node/24.14.0"},
+		{Src: "/mise/ts-node-modules/node_modules", Dst: "/sandbox/node_modules"}, // pre-installed typescript and @types/node (read-only)
+	}
+}
+
+func (nodeTypeScriptRuntime) CompileEnv() []string {
+	return []string{"PATH=/mise/installs/node/24.14.0/bin:/usr/bin:/bin"}
+}
+
+// CompileLimits returns resource limits for the TypeScript compilation step.
+// Rlimits:
+//   - AS 4096 MiB: tsc runs on V8 (Node.js), which uses mmap-heavy memory management.
+//   - Fsize 64 MiB: sufficient for compiled JavaScript output files.
+//   - Nofile 256: tsc reads many source files and type definition files concurrently.
+//   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
+//
+// Cgroups:
+//   - PidsMax 64: per-cgroup task limit (processes + threads); tsc is mostly single-threaded.
+//   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
+//   - MemSwapMax 0: swap disabled to enforce strict memory limits.
+//   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
+func (nodeTypeScriptRuntime) CompileLimits() Limits {
+	return Limits{
+		Rlimits: Rlimits{
+			AS:     "4096",
+			Fsize:  "64",
+			Nofile: "256",
+			Nproc:  "soft",
+		},
+		Cgroups: Cgroups{
+			PidsMax:     "64",
+			MemMax:      "268435456",
+			MemSwapMax:  "0",
+			CpuMsPerSec: "900",
+		},
+	}
+}
+
+// Limits returns resource limits for Node.js (TypeScript) execution.
+// Rlimits:
+//   - AS 4096 MiB: V8 uses mmap for heap management and requires a large virtual address space.
+//   - Fsize 64 MiB: sufficient for typical output files.
+//   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and V8 engine file descriptors.
+//   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
+//
+// Cgroups:
+//   - PidsMax 64: per-cgroup task limit (processes + threads); limits fork bombs and runaway thread creation.
+//   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
+//   - MemSwapMax 0: swap disabled to enforce strict memory limits.
+//   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
+func (nodeTypeScriptRuntime) Limits() Limits {
+	return Limits{
+		Rlimits: Rlimits{
+			AS:     "4096",
+			Fsize:  "64",
+			Nofile: "64",
+			Nproc:  "soft",
+		},
+		Cgroups: Cgroups{
+			PidsMax:     "64",
+			MemMax:      "268435456",
+			MemSwapMax:  "0",
+			CpuMsPerSec: "900",
+		},
+	}
+}
+
+// RestrictedFiles prevents users from overriding package.json, which must
+// match the pre-installed node_modules bind mount (contains typescript and @types/node).
+func (nodeTypeScriptRuntime) RestrictedFiles() []string {
+	return []string{"package.json"}
 }
 
 // --- Bash ---
