@@ -18,8 +18,8 @@ type ConcurrencyConfig struct {
 
 // ConcurrencyLimiter returns an Echo middleware that limits concurrent handler
 // executions. Excess requests are queued up to MaxQueueSize. Requests that
-// cannot enter the queue receive 503 (QUEUE_FULL). Requests that wait longer
-// than QueueTimeout receive 503 (QUEUE_TIMEOUT).
+// cannot enter the queue receive 503 (SERVER_BUSY). Requests that wait longer
+// than QueueTimeout receive 503 (SERVER_BUSY).
 func ConcurrencyLimiter(cfg ConcurrencyConfig) echo.MiddlewareFunc {
 	sem := make(chan struct{}, cfg.MaxConcurrency)
 	var queued atomic.Int64
@@ -40,8 +40,8 @@ func ConcurrencyLimiter(cfg ConcurrencyConfig) echo.MiddlewareFunc {
 
 			if q > int64(cfg.MaxQueueSize) {
 				return c.JSON(http.StatusServiceUnavailable, handler.ErrorResponse{
-					Code:    handler.CodeQueueFull,
-					Message: handler.CodeQueueFull.Message(),
+					Code:    handler.CodeServerBusy,
+					Message: handler.CodeServerBusy.Message(),
 				})
 			}
 
@@ -54,13 +54,13 @@ func ConcurrencyLimiter(cfg ConcurrencyConfig) echo.MiddlewareFunc {
 				return next(c)
 			case <-timer.C:
 				return c.JSON(http.StatusServiceUnavailable, handler.ErrorResponse{
-					Code:    handler.CodeQueueTimeout,
-					Message: handler.CodeQueueTimeout.Message(),
+					Code:    handler.CodeServerBusy,
+					Message: handler.CodeServerBusy.Message(),
 				})
 			case <-c.Request().Context().Done():
 				return c.JSON(http.StatusServiceUnavailable, handler.ErrorResponse{
-					Code:    handler.CodeQueueTimeout,
-					Message: handler.CodeQueueTimeout.Message(),
+					Code:    handler.CodeServerBusy,
+					Message: handler.CodeServerBusy.Message(),
 				})
 			}
 		}

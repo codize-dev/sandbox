@@ -135,8 +135,8 @@ func TestConcurrencyLimiter_QueueFull(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &errResp); err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)
 	}
-	if errResp.Code != handler.CodeQueueFull {
-		t.Fatalf("expected QUEUE_FULL, got %s", errResp.Code)
+	if errResp.Code != handler.CodeServerBusy {
+		t.Fatalf("expected SERVER_BUSY, got %s", errResp.Code)
 	}
 
 	// Cleanup: release gate and wait.
@@ -171,8 +171,8 @@ func TestConcurrencyLimiter_QueueTimeout(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &errResp); err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)
 	}
-	if errResp.Code != handler.CodeQueueTimeout {
-		t.Fatalf("expected QUEUE_TIMEOUT, got %s", errResp.Code)
+	if errResp.Code != handler.CodeServerBusy {
+		t.Fatalf("expected SERVER_BUSY, got %s", errResp.Code)
 	}
 
 	// Cleanup.
@@ -220,8 +220,8 @@ func TestConcurrencyLimiter_ClientCancel(t *testing.T) {
 	if err := json.Unmarshal(cancelledRec.Body.Bytes(), &errResp); err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)
 	}
-	if errResp.Code != handler.CodeQueueTimeout {
-		t.Fatalf("expected QUEUE_TIMEOUT, got %s", errResp.Code)
+	if errResp.Code != handler.CodeServerBusy {
+		t.Fatalf("expected SERVER_BUSY, got %s", errResp.Code)
 	}
 
 	// Cleanup.
