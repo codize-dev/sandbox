@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/codize-dev/sandbox/compare/v0.3.0...v0.4.0) (2026-03-08)
+
+
+### Features
+
+* add /healthz endpoint for liveness checks ([2f89b3e](https://github.com/codize-dev/sandbox/commit/2f89b3e47d74efb553e5d80bbad2405678d32dc8))
+* add package-lock.json to node-typescript restricted files and use npm ci ([363b92f](https://github.com/codize-dev/sandbox/commit/363b92f91ed06a85039123d3d0ff2b6b3dffa9dd))
+
 ## [0.3.0](https://github.com/codize-dev/sandbox/compare/v0.2.0...v0.3.0) (2026-03-08)
 
 
