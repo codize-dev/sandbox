@@ -100,6 +100,9 @@ func runServe(_ *cobra.Command, _ []string) error {
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.BodyLimit(int64(flagMaxBodySize)))
+	e.GET("/healthz", func(c *echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
+	})
 	e.POST("/v1/run", h.RunHandler, intmw.ConcurrencyLimiter(intmw.ConcurrencyConfig{
 		MaxConcurrency: flagMaxConcurrency,
 		MaxQueueSize:   flagMaxQueueSize,
