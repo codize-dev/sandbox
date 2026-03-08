@@ -102,6 +102,16 @@ $ docker compose up
 
 ### API
 
+#### `GET /healthz`
+
+Returns the service health status. Intended for load balancer health checks, Docker health checks, and Kubernetes liveness probes.
+
+Response:
+
+```json
+{"status":"ok"}
+```
+
 #### `POST /v1/run`
 
 Request:

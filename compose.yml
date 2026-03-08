@@ -9,3 +9,9 @@ services:
     command: ["serve", "--run-timeout", "10", "--compile-timeout", "10"]
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
