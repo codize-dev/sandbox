@@ -22,6 +22,7 @@ func Test_LookupRuntime(t *testing.T) {
 		{name: "go is valid", runtime: RuntimeGo, wantErr: false},
 		{name: "bash is valid", runtime: RuntimeBash, wantErr: false},
 		{name: "python is valid", runtime: RuntimePython, wantErr: false},
+		{name: "rust is valid", runtime: RuntimeRust, wantErr: false},
 		{name: "empty string is invalid", runtime: "", wantErr: true},
 		{name: "unknown runtime is invalid", runtime: "java", wantErr: true},
 		{name: "capitalized Node is invalid", runtime: "Node", wantErr: true},
@@ -128,6 +129,31 @@ func TestPythonRuntime_Limits(t *testing.T) {
 	assert.Equal(t, "900", got.Cgroups.CpuMsPerSec)
 }
 
+func TestRustRuntime_Limits(t *testing.T) {
+	t.Parallel()
+	rt := rustRuntime{}
+
+	run := rt.Limits()
+	assert.Equal(t, "1024", run.Rlimits.AS)
+	assert.Equal(t, "64", run.Rlimits.Fsize)
+	assert.Equal(t, "64", run.Rlimits.Nofile)
+	assert.Equal(t, "soft", run.Rlimits.Nproc)
+	assert.Equal(t, "64", run.Cgroups.PidsMax)
+	assert.Equal(t, "268435456", run.Cgroups.MemMax)
+	assert.Equal(t, "0", run.Cgroups.MemSwapMax)
+	assert.Equal(t, "900", run.Cgroups.CpuMsPerSec)
+
+	compile := rt.CompileLimits()
+	assert.Equal(t, "4096", compile.Rlimits.AS)
+	assert.Equal(t, "64", compile.Rlimits.Fsize)
+	assert.Equal(t, "256", compile.Rlimits.Nofile)
+	assert.Equal(t, "soft", compile.Rlimits.Nproc)
+	assert.Equal(t, "128", compile.Cgroups.PidsMax)
+	assert.Equal(t, "268435456", compile.Cgroups.MemMax)
+	assert.Equal(t, "0", compile.Cgroups.MemSwapMax)
+	assert.Equal(t, "900", compile.Cgroups.CpuMsPerSec)
+}
+
 func TestExecution_buildArgs(t *testing.T) {
 	t.Parallel()
 
@@ -205,6 +231,13 @@ func Test_readDefaultFiles(t *testing.T) {
 	t.Run("python has no defaults", func(t *testing.T) {
 		t.Parallel()
 		files, err := readDefaultFiles(RuntimePython)
+		assert.NoError(t, err)
+		assert.Empty(t, files)
+	})
+
+	t.Run("rust has no defaults", func(t *testing.T) {
+		t.Parallel()
+		files, err := readDefaultFiles(RuntimeRust)
 		assert.NoError(t, err)
 		assert.Empty(t, files)
 	})
@@ -291,5 +324,12 @@ func TestRuntime_RestrictedFiles(t *testing.T) {
 		rt, err := LookupRuntime(RuntimePython)
 		require.NoError(t, err)
 		assert.Empty(t, rt.RestrictedFiles())
+	})
+
+	t.Run("rust restricts main", func(t *testing.T) {
+		t.Parallel()
+		rt, err := LookupRuntime(RuntimeRust)
+		require.NoError(t, err)
+		assert.ElementsMatch(t, []string{"main"}, rt.RestrictedFiles())
 	})
 }

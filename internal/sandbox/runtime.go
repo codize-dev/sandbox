@@ -21,6 +21,7 @@ const (
 	RuntimeRuby   RuntimeName = "ruby"
 	RuntimeGo     RuntimeName = "go"
 	RuntimePython RuntimeName = "python"
+	RuntimeRust   RuntimeName = "rust"
 	RuntimeBash   RuntimeName = "bash"
 )
 
@@ -68,6 +69,7 @@ type CompiledRuntime interface {
 }
 
 var _ CompiledRuntime = goRuntime{}
+var _ CompiledRuntime = rustRuntime{}
 
 // BindMount represents a read-only bind mount for nsjail (-R src:dst).
 type BindMount struct {
@@ -142,6 +144,7 @@ var runtimes = map[RuntimeName]Runtime{
 	RuntimeRuby:   rubyRuntime{},
 	RuntimeGo:     goRuntime{},
 	RuntimePython: pythonRuntime{},
+	RuntimeRust:   rustRuntime{},
 	RuntimeBash:   bashRuntime{},
 }
 
@@ -422,6 +425,114 @@ func (goRuntime) Limits() Limits {
 // /sandbox/main, which would silently overwrite a user file with that name.
 func (goRuntime) RestrictedFiles() []string {
 	return []string{"go.mod", "go.sum", "main"}
+}
+
+// --- Rust ---
+
+type rustRuntime struct{}
+
+func (rustRuntime) Name() RuntimeName { return RuntimeRust }
+
+// Command returns the path to the compiled binary. The entryFile parameter is
+// unused because the output path is determined by CompileCommand.
+func (rustRuntime) Command(_ string) []string {
+	return []string{"/sandbox/main"}
+}
+
+// BindMounts returns nil because the compiled binary links dynamically against
+// system libraries (libc, libgcc_s) that are already available via the /usr/lib
+// bind mount in nsjail.cfg. No additional runtime-specific directories are needed.
+func (rustRuntime) BindMounts() []BindMount {
+	return nil
+}
+
+func (rustRuntime) Env() []string {
+	return []string{"PATH=/usr/bin:/bin"}
+}
+
+func (rustRuntime) CompileCommand() []string {
+	return []string{"/mise/cargo/bin/rustc", "--edition", "2024", "-o", "/sandbox/main", "main.rs"}
+}
+
+func (rustRuntime) CompileBindMounts() []BindMount {
+	return []BindMount{
+		{Src: "/mise/cargo", Dst: "/mise/cargo"},   // rustc binary (rustup shim) and toolchain binaries
+		{Src: "/mise/rustup", Dst: "/mise/rustup"}, // toolchains managed by rustup
+	}
+}
+
+func (rustRuntime) CompileEnv() []string {
+	return []string{
+		"PATH=/mise/cargo/bin:/usr/bin:/bin",
+		"RUSTUP_HOME=/mise/rustup",
+		"CARGO_HOME=/mise/cargo",
+		"RUSTUP_TOOLCHAIN=1.94.0",
+	}
+}
+
+// CompileLimits returns resource limits for the Rust compilation step.
+// Rlimits:
+//   - AS 4096 MiB: rustc and the LLVM backend together consume significant virtual address space; 4 GiB provides comfortable headroom.
+//   - Fsize 64 MiB: sufficient for compiled binaries (typically 1-20 MiB).
+//   - Nofile 256: rustc opens many source and object files concurrently.
+//   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
+//
+// Cgroups:
+//   - PidsMax 128: per-cgroup task limit (processes + threads); limits fork bombs and runaway thread creation.
+//   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
+//   - MemSwapMax 0: swap disabled to enforce strict memory limits.
+//   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
+func (rustRuntime) CompileLimits() Limits {
+	return Limits{
+		Rlimits: Rlimits{
+			AS:     "4096",
+			Fsize:  "64",
+			Nofile: "256",
+			Nproc:  "soft",
+		},
+		Cgroups: Cgroups{
+			PidsMax:     "128",
+			MemMax:      "268435456",
+			MemSwapMax:  "0",
+			CpuMsPerSec: "900",
+		},
+	}
+}
+
+// Limits returns resource limits for Rust runtime execution.
+// Rlimits:
+//   - AS 1024 MiB: sufficient for typical compiled Rust programs.
+//   - Fsize 64 MiB: sufficient for typical output files.
+//   - Nofile 64: covers stdin/stdout/stderr, nsjail internal fds, and minimal runtime file descriptors.
+//   - Nproc soft: inherits the system soft limit; per-sandbox process limiting is handled by cgroup_pids_max.
+//
+// Cgroups:
+//   - PidsMax 64: per-cgroup task limit (processes + threads); limits fork bombs and runaway thread creation.
+//   - MemMax 268435456 (256 MiB): physical memory limit; prevents sandbox OOM from affecting the host.
+//   - MemSwapMax 0: swap disabled to enforce strict memory limits.
+//   - CpuMsPerSec 900: throttle CPU to 900 ms per second (90% of one core).
+func (rustRuntime) Limits() Limits {
+	return Limits{
+		Rlimits: Rlimits{
+			AS:     "1024",
+			Fsize:  "64",
+			Nofile: "64",
+			Nproc:  "soft",
+		},
+		Cgroups: Cgroups{
+			PidsMax:     "64",
+			MemMax:      "268435456",
+			MemSwapMax:  "0",
+			CpuMsPerSec: "900",
+		},
+	}
+}
+
+// RestrictedFiles prevents users from submitting a file named "main" because
+// rustc writes the compiled binary to /sandbox/main, which would silently
+// overwrite a user file with that name.
+func (rustRuntime) RestrictedFiles() []string {
+	return []string{"main"}
 }
 
 // --- Bash ---

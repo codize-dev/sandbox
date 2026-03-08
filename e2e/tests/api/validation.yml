@@ -53,7 +53,7 @@ tests:
               message: "request validation failed"
               errors:
                 - path: ["runtime"]
-                  message: 'must be one of "bash", "go", "node", "python", "ruby"'
+                  message: 'must be one of "bash", "go", "node", "python", "ruby", "rust"'
 
   - name: "missing files"
     requests:

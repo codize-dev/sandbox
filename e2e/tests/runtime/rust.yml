@@ -1,0 +1,554 @@
+tests:
+  - name: "hello world"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                fn main() {
+                    println!("Hello, World!");
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "Hello, World!\n"
+              stderr: ""
+              output: "Hello, World!\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "compile error"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                fn main() {
+                    undefined_variable;
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: "error[E0425]: cannot find value `undefined_variable` in this scope\n --> main.rs:2:5\n  |\n2 |     undefined_variable;\n  |     ^^^^^^^^^^^^^^^^^^ not found in this scope\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0425`.\n"
+              output: "error[E0425]: cannot find value `undefined_variable` in this scope\n --> main.rs:2:5\n  |\n2 |     undefined_variable;\n  |     ^^^^^^^^^^^^^^^^^^ not found in this scope\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0425`.\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+            run: null
+
+  - name: "stderr output"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                fn main() {
+                    eprintln!("error message");
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "error message\n"
+              output: "error message\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "stdout and stderr"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                fn main() {
+                    println!("out");
+                    eprintln!("err");
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "out\n"
+              stderr: "err\n"
+              output: "out\nerr\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "non-zero exit code"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                use std::process;
+
+                fn main() {
+                    process::exit(1);
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 1
+              status: "OK"
+              signal: null
+
+  - name: "stderr with non-zero exit code"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                use std::process;
+
+                fn main() {
+                    eprintln!("error occurred");
+                    process::exit(2);
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "error occurred\n"
+              output: "error occurred\n"
+              exit_code: 2
+              status: "OK"
+              signal: null
+
+  - name: "multiple files"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                mod helper;
+
+                fn main() {
+                    helper::say_hello();
+                }
+            - name: helper.rs
+              type: plain
+              content: |
+                pub fn say_hello() {
+                    println!("Hello from helper");
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "Hello from helper\n"
+              stderr: ""
+              output: "Hello from helper\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "syntax error"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                fn main() {
+                    let x =
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: "error: expected expression, found `}`\n --> main.rs:3:1\n  |\n3 | }\n  | ^ expected expression\n\nerror: aborting due to 1 previous error\n\n"
+              output: "error: expected expression, found `}`\n --> main.rs:3:1\n  |\n3 | }\n  | ^ expected expression\n\nerror: aborting due to 1 previous error\n\n"
+              exit_code: 1
+              status: "OK"
+              signal: null
+            run: null
+
+  - name: "unhandled panic"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                fn main() {
+                    panic!("something went wrong");
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: ""
+              stderr: "\nthread 'main' (1) panicked at main.rs:2:5:\nsomething went wrong\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+              output: "\nthread 'main' (1) panicked at main.rs:2:5:\nsomething went wrong\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+              exit_code: 101
+              status: "OK"
+              signal: null
+
+  - name: "restricted file main rejected"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                fn main() {}
+            - name: main
+              type: plain
+              content: "data"
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 1, "name"]
+                  message: "not allowed for this runtime"
+
+  - name: "standard library usage"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                use std::collections::HashMap;
+
+                fn main() {
+                    let mut map = HashMap::new();
+                    map.insert("a", 1);
+                    map.insert("b", 2);
+                    map.insert("c", 3);
+                    let mut keys: Vec<&str> = map.keys().copied().collect();
+                    keys.sort();
+                    for k in keys {
+                        println!("{}={}", k, map[k]);
+                    }
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "a=1\nb=2\nc=3\n"
+              stderr: ""
+              output: "a=1\nb=2\nc=3\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "struct and impl"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                struct Rect {
+                    width: f64,
+                    height: f64,
+                }
+
+                impl Rect {
+                    fn area(&self) -> f64 {
+                        self.width * self.height
+                    }
+                }
+
+                fn main() {
+                    let r = Rect { width: 3.0, height: 4.0 };
+                    println!("{:.1}", r.area());
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "12.0\n"
+              stderr: ""
+              output: "12.0\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "traits"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                use std::fmt;
+
+                struct Point {
+                    x: i32,
+                    y: i32,
+                }
+
+                impl fmt::Display for Point {
+                    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                        write!(f, "({}, {})", self.x, self.y)
+                    }
+                }
+
+                fn main() {
+                    let p = Point { x: 3, y: 4 };
+                    println!("{}", p);
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "(3, 4)\n"
+              stderr: ""
+              output: "(3, 4)\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "Result and error handling"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                fn divide(a: f64, b: f64) -> Result<f64, String> {
+                    if b == 0.0 {
+                        Err("division by zero".to_string())
+                    } else {
+                        Ok(a / b)
+                    }
+                }
+
+                fn main() {
+                    match divide(10.0, 3.0) {
+                        Ok(v) => println!("{:.2}", v),
+                        Err(e) => println!("Error: {}", e),
+                    }
+                    match divide(1.0, 0.0) {
+                        Ok(v) => println!("{:.2}", v),
+                        Err(e) => println!("Error: {}", e),
+                    }
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "3.33\nError: division by zero\n"
+              stderr: ""
+              output: "3.33\nError: division by zero\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "closures and iterators"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                fn main() {
+                    let nums = vec![3, 1, 4, 1, 5, 9, 2, 6];
+                    let mut sorted = nums.clone();
+                    sorted.sort();
+                    println!("{:?}", sorted);
+
+                    let filtered: Vec<i32> = sorted.into_iter().filter(|&n| n > 3).collect();
+                    println!("{:?}", filtered);
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "[1, 1, 2, 3, 4, 5, 6, 9]\n[4, 5, 6, 9]\n"
+              stderr: ""
+              output: "[1, 1, 2, 3, 4, 5, 6, 9]\n[4, 5, 6, 9]\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "JSON serialization with serde-like manual impl"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                fn main() {
+                    let name = "Alice";
+                    let age = 30;
+                    println!("{{\"name\":\"{}\",\"age\":{}}}", name, age);
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "{\"name\":\"Alice\",\"age\":30}\n"
+              stderr: ""
+              output: "{\"name\":\"Alice\",\"age\":30}\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "threading"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                use std::thread;
+                use std::sync::mpsc;
+
+                fn main() {
+                    let (tx, rx) = mpsc::channel();
+                    thread::spawn(move || {
+                        tx.send(42).unwrap();
+                    });
+                    println!("{}", rx.recv().unwrap());
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+            run:
+              stdout: "42\n"
+              stderr: ""
+              output: "42\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

@@ -46,8 +46,14 @@ RUN mise use -g python@3.13.12
 # Install tools for sandbox
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      curl wget mawk && \
+      curl wget mawk gcc libc-dev && \
     rm -rf /var/lib/apt/lists/*
+
+# Rust
+ENV RUSTUP_HOME="/mise/rustup" \
+    CARGO_HOME="/mise/cargo"
+ENV PATH="/mise/cargo/bin:$PATH"
+RUN mise use -g rust@1.94.0
 
 # ---
 

@@ -27,16 +27,16 @@ Resource limits are a security boundary. Choose values based on the runtime's ch
 
 ### Existing Limits Reference
 
-| Limit | Node.js | Ruby | Python | Go (run) | Go (compile) | Bash |
-|-------|---------|------|--------|----------|--------------|------|
-| AS (MiB) | 4096 | 1024 | 1024 | 1024 | 4096 | 512 |
-| Fsize (MiB) | 64 | 64 | 64 | 64 | 64 | 64 |
-| Nofile | 64 | 64 | 64 | 64 | 256 | 64 |
-| Nproc | soft | soft | soft | soft | soft | soft |
-| PidsMax | 64 | 32 | 32 | 64 | 128 | 32 |
-| MemMax (bytes) | 268435456 | 268435456 | 268435456 | 268435456 | 268435456 | 268435456 |
-| MemSwapMax | 0 | 0 | 0 | 0 | 0 | 0 |
-| CpuMsPerSec | 900 | 900 | 900 | 900 | 900 | 900 |
+| Limit | Node.js | Ruby | Python | Go (run) | Go (compile) | Rust (run) | Rust (compile) | Bash |
+|-------|---------|------|--------|----------|--------------|------------|----------------|------|
+| AS (MiB) | 4096 | 1024 | 1024 | 1024 | 4096 | 1024 | 4096 | 512 |
+| Fsize (MiB) | 64 | 64 | 64 | 64 | 64 | 64 | 64 | 64 |
+| Nofile | 64 | 64 | 64 | 64 | 256 | 64 | 256 | 64 |
+| Nproc | soft | soft | soft | soft | soft | soft | soft | soft |
+| PidsMax | 64 | 32 | 32 | 64 | 128 | 64 | 128 | 32 |
+| MemMax (bytes) | 268435456 | 268435456 | 268435456 | 268435456 | 268435456 | 268435456 | 268435456 | 268435456 |
+| MemSwapMax | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| CpuMsPerSec | 900 | 900 | 900 | 900 | 900 | 900 | 900 | 900 |
 
 ### Decision Framework
 
