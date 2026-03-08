@@ -21,6 +21,12 @@ COPY --from=mise /usr/local/bin/mise /usr/local/bin/mise
 
 ENV MISE_DATA_DIR="/mise"
 
+# Install tools for sandbox
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      curl wget mawk gcc libc-dev && \
+    rm -rf /var/lib/apt/lists/*
+
 # Node.js
 ENV PATH="/mise/installs/node/24.14.0/bin:$PATH"
 RUN mise use -g node@24.14.0
@@ -42,12 +48,6 @@ RUN cd /tmp/preinstall && \
 # Python
 ENV PATH="/mise/installs/python/3.13.12/bin:$PATH"
 RUN mise use -g python@3.13.12
-
-# Install tools for sandbox
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      curl wget mawk gcc libc-dev && \
-    rm -rf /var/lib/apt/lists/*
 
 # Rust
 ENV RUSTUP_HOME="/mise/rustup" \
