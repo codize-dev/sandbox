@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.0](https://github.com/codize-dev/sandbox/compare/v0.2.0...v0.3.0) (2026-03-08)
+
+
+### Features
+
+* add Python 3.13.12 runtime support ([cbebf3e](https://github.com/codize-dev/sandbox/commit/cbebf3eb3b2c31e951a2e5bd20bb0f48396e5cf3))
+* add Rust 1.94.0 runtime support ([a42f253](https://github.com/codize-dev/sandbox/commit/a42f2538cb177088595f628680ea445b43b9b65e))
+* add TypeScript (node-typescript) runtime support ([9af8e49](https://github.com/codize-dev/sandbox/commit/9af8e493957a80c4f1c3925958a88d0c2e6ce105))
+
 ## [0.2.0](https://github.com/codize-dev/sandbox/compare/v0.1.1...v0.2.0) (2026-03-07)
 
 
