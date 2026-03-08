@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/codize-dev/sandbox/compare/v0.4.2...v0.4.3) (2026-03-08)
+
+
+### Bug Fixes
+
+* update nsjail base image to commit 222f2fa ([6480042](https://github.com/codize-dev/sandbox/commit/648004251dd952545bd7459ee2f57f85243651bb))
+
 ## [0.4.2](https://github.com/codize-dev/sandbox/compare/v0.4.1...v0.4.2) (2026-03-08)
 
 
