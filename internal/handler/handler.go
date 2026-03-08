@@ -144,8 +144,8 @@ func (h *Handler) RunHandler(c *echo.Context) error {
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return c.JSON(http.StatusGatewayTimeout, ErrorResponse{
-				Code:    CodeExecutionTimeout,
-				Message: CodeExecutionTimeout.Message(),
+				Code:    CodeTimeout,
+				Message: CodeTimeout.Message(),
 			})
 		}
 		slog.ErrorContext(c.Request().Context(), "sandbox execution failed",

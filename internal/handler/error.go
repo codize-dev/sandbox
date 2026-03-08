@@ -14,7 +14,7 @@ const (
 	CodeInvalidRequestBody  ErrorCode = "INVALID_REQUEST_BODY"
 	CodeValidationError     ErrorCode = "VALIDATION_ERROR"
 	CodeInternalError       ErrorCode = "INTERNAL_ERROR"
-	CodeExecutionTimeout    ErrorCode = "EXECUTION_TIMEOUT"
+	CodeTimeout             ErrorCode = "TIMEOUT"
 	CodeNotFound            ErrorCode = "NOT_FOUND"
 	CodeMethodNotAllowed    ErrorCode = "METHOD_NOT_ALLOWED"
 	CodeRequestBodyTooLarge ErrorCode = "REQUEST_BODY_TOO_LARGE"
@@ -30,7 +30,7 @@ func (c ErrorCode) Message() string {
 		return "request validation failed"
 	case CodeInternalError:
 		return "internal server error"
-	case CodeExecutionTimeout:
+	case CodeTimeout:
 		return "execution timed out"
 	case CodeNotFound:
 		return "the requested resource was not found"
