@@ -50,6 +50,7 @@ The container must run in **privileged mode** (required for nsjail to create Lin
 - `--max-concurrency` (default `10`) — maximum number of concurrent sandbox executions
 - `--max-queue-size` (default `50`) — maximum number of requests waiting in the execution queue
 - `--queue-timeout` (default `30`) — maximum time in seconds a request waits in the execution queue
+- `--metrics` (default `false`) — enable the `/metrics` endpoint
 
 ## Architecture
 

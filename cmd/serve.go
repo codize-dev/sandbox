@@ -34,6 +34,7 @@ var (
 	flagMaxConcurrency int
 	flagMaxQueueSize   int
 	flagQueueTimeout   int
+	flagMetrics        bool
 )
 
 func defaultPort() int {
@@ -59,6 +60,7 @@ func init() {
 	f.IntVar(&flagMaxConcurrency, "max-concurrency", 10, "maximum number of concurrent sandbox executions")
 	f.IntVar(&flagMaxQueueSize, "max-queue-size", 50, "maximum number of requests waiting in the execution queue")
 	f.IntVar(&flagQueueTimeout, "queue-timeout", 30, "maximum time in seconds a request waits in the execution queue")
+	f.BoolVar(&flagMetrics, "metrics", false, "enable /metrics endpoint")
 }
 
 func runServe(_ *cobra.Command, _ []string) error {
@@ -105,7 +107,9 @@ func runServe(_ *cobra.Command, _ []string) error {
 	e.GET("/healthz", func(c *echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})
-	e.GET("/metrics", intmw.MetricsHandler(metrics, flagMaxConcurrency, flagMaxQueueSize))
+	if flagMetrics {
+		e.GET("/metrics", intmw.MetricsHandler(metrics, flagMaxConcurrency, flagMaxQueueSize))
+	}
 	e.POST("/v1/run", h.RunHandler, intmw.ConcurrencyLimiter(intmw.ConcurrencyConfig{
 		MaxConcurrency: flagMaxConcurrency,
 		MaxQueueSize:   flagMaxQueueSize,

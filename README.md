@@ -99,6 +99,7 @@ $ docker compose up
 | `--max-concurrency` | `10` | Maximum number of concurrent sandbox executions |
 | `--max-queue-size` | `50` | Maximum number of requests waiting in the execution queue |
 | `--queue-timeout` | `30` | Maximum time in seconds a request waits in the execution queue |
+| `--metrics` | `false` | Enable the `/metrics` endpoint |
 
 ### API
 
@@ -156,6 +157,27 @@ Response:
   - `exit_code`: process exit code
   - `status`: one of `"OK"`, `"SIGNAL"`, `"TIMEOUT"`, `"OUTPUT_LIMIT_EXCEEDED"`
   - `signal`: signal name if the process was killed by a signal (e.g. `"SIGKILL"`), `null` otherwise
+
+#### `GET /metrics`
+
+Returns Prometheus text exposition format metrics. Only available when the `--metrics` flag is enabled.
+
+Response (Content-Type: `text/plain; version=0.0.4; charset=utf-8`):
+
+```text
+# HELP sandbox_concurrency_active Number of requests currently executing.
+# TYPE sandbox_concurrency_active gauge
+sandbox_concurrency_active 0
+# HELP sandbox_queue_length Number of requests waiting in queue.
+# TYPE sandbox_queue_length gauge
+sandbox_queue_length 0
+# HELP sandbox_concurrency_max Configured maximum concurrent executions.
+# TYPE sandbox_concurrency_max gauge
+sandbox_concurrency_max 10
+# HELP sandbox_queue_max Configured maximum queue size.
+# TYPE sandbox_queue_max gauge
+sandbox_queue_max 50
+```
 
 ## How It Works
 
