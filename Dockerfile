@@ -59,7 +59,7 @@ RUN mise use -g rust@1.94.0
 
 # ---
 
-FROM golang:1.25-bookworm@sha256:564e366a28ad1d70f460a2b97d1d299a562f08707eb0ecb24b659e5bd6c108e1 AS builder
+FROM golang:1.26.1-bookworm@sha256:c7a82e9e2df2fea5d8cb62a16aa6f796d2b2ed81ccad4ddd2bc9f0d22936c3f2 AS builder
 WORKDIR /src
 
 COPY go.mod go.sum ./
