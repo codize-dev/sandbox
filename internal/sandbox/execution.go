@@ -70,7 +70,7 @@ func (e *execution) buildArgs() []string {
 	)
 
 	// Runtime-specific environment variables (e.g. PATH, GOROOT).
-	// HOME=/tmp is set in the config file.
+	// HOME=/sandbox is set in the config file.
 	for _, env := range e.env {
 		args = append(args, "-E", env)
 	}

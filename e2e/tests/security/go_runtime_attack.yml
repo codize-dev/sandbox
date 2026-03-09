@@ -206,9 +206,9 @@ tests:
               status: "OK"
               signal: null
             run:
-              stdout: "HOME=/tmp\nPATH=/usr/bin:/bin\n"
+              stdout: "HOME=/sandbox\nPATH=/usr/bin:/bin\n"
               stderr: ""
-              output: "HOME=/tmp\nPATH=/usr/bin:/bin\n"
+              output: "HOME=/sandbox\nPATH=/usr/bin:/bin\n"
               exit_code: 0
               status: "OK"
               signal: null
