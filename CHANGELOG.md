@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.4](https://github.com/codize-dev/sandbox/compare/v0.4.3...v0.4.4) (2026-03-09)
+
+
+### Bug Fixes
+
+* improve go fork bomb test to verify process limit enforcement ([e25544e](https://github.com/codize-dev/sandbox/commit/e25544e492b99761a09f1cc0b9ca688b332c9533))
+
 ## [0.4.3](https://github.com/codize-dev/sandbox/compare/v0.4.2...v0.4.3) (2026-03-08)
 
 
