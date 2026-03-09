@@ -9,11 +9,19 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// ConcurrencyMetrics exposes live concurrency and queue counters for external
+// consumption (e.g. Prometheus /metrics endpoint).
+type ConcurrencyMetrics struct {
+	Active atomic.Int64
+	Queued atomic.Int64
+}
+
 // ConcurrencyConfig holds parameters for the concurrency limiter middleware.
 type ConcurrencyConfig struct {
 	MaxConcurrency int
 	MaxQueueSize   int
 	QueueTimeout   time.Duration
+	Metrics        *ConcurrencyMetrics
 }
 
 // ConcurrencyLimiter returns an Echo middleware that limits concurrent handler
@@ -22,21 +30,24 @@ type ConcurrencyConfig struct {
 // than QueueTimeout receive 503 (SERVER_BUSY).
 func ConcurrencyLimiter(cfg ConcurrencyConfig) echo.MiddlewareFunc {
 	sem := make(chan struct{}, cfg.MaxConcurrency)
-	var queued atomic.Int64
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
 			// Fast path: try to acquire a semaphore slot without blocking.
 			select {
 			case sem <- struct{}{}:
-				defer func() { <-sem }()
+				cfg.Metrics.Active.Add(1)
+				defer func() {
+					<-sem
+					cfg.Metrics.Active.Add(-1)
+				}()
 				return next(c)
 			default:
 			}
 
 			// Slow path: semaphore is full — enter the queue.
-			q := queued.Add(1)
-			defer queued.Add(-1)
+			q := cfg.Metrics.Queued.Add(1)
+			defer cfg.Metrics.Queued.Add(-1)
 
 			if q > int64(cfg.MaxQueueSize) {
 				return c.JSON(http.StatusServiceUnavailable, handler.ErrorResponse{
@@ -50,7 +61,11 @@ func ConcurrencyLimiter(cfg ConcurrencyConfig) echo.MiddlewareFunc {
 
 			select {
 			case sem <- struct{}{}:
-				defer func() { <-sem }()
+				cfg.Metrics.Active.Add(1)
+				defer func() {
+					<-sem
+					cfg.Metrics.Active.Add(-1)
+				}()
 				return next(c)
 			case <-timer.C:
 				return c.JSON(http.StatusServiceUnavailable, handler.ErrorResponse{

@@ -13,7 +13,10 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-func setupEcho(cfg ConcurrencyConfig, gate chan struct{}) (*echo.Echo, echo.MiddlewareFunc) {
+func setupEcho(cfg ConcurrencyConfig, gate chan struct{}) (*echo.Echo, *ConcurrencyMetrics) {
+	if cfg.Metrics == nil {
+		cfg.Metrics = &ConcurrencyMetrics{}
+	}
 	e := echo.New()
 	mw := ConcurrencyLimiter(cfg)
 
@@ -25,7 +28,7 @@ func setupEcho(cfg ConcurrencyConfig, gate chan struct{}) (*echo.Echo, echo.Midd
 	}
 
 	e.POST("/v1/run", h, mw)
-	return e, mw
+	return e, cfg.Metrics
 }
 
 func doRequest(e *echo.Echo) *httptest.ResponseRecorder {
@@ -42,8 +45,18 @@ func doRequestWithContext(e *echo.Echo, ctx context.Context) *httptest.ResponseR
 	return rec
 }
 
+func assertMetricsZero(t *testing.T, metrics *ConcurrencyMetrics) {
+	t.Helper()
+	if v := metrics.Active.Load(); v != 0 {
+		t.Errorf("expected Active=0 after completion, got %d", v)
+	}
+	if v := metrics.Queued.Load(); v != 0 {
+		t.Errorf("expected Queued=0 after completion, got %d", v)
+	}
+}
+
 func TestConcurrencyLimiter_UnderLimit(t *testing.T) {
-	e, _ := setupEcho(ConcurrencyConfig{
+	e, metrics := setupEcho(ConcurrencyConfig{
 		MaxConcurrency: 2,
 		MaxQueueSize:   5,
 		QueueTimeout:   5 * time.Second,
@@ -53,11 +66,12 @@ func TestConcurrencyLimiter_UnderLimit(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", rec.Code)
 	}
+	assertMetricsZero(t, metrics)
 }
 
 func TestConcurrencyLimiter_QueueAndSucceed(t *testing.T) {
 	gate := make(chan struct{})
-	e, _ := setupEcho(ConcurrencyConfig{
+	e, metrics := setupEcho(ConcurrencyConfig{
 		MaxConcurrency: 1,
 		MaxQueueSize:   5,
 		QueueTimeout:   5 * time.Second,
@@ -98,11 +112,12 @@ func TestConcurrencyLimiter_QueueAndSucceed(t *testing.T) {
 	if queuedRec.Code != http.StatusOK {
 		t.Fatalf("queued request: expected 200, got %d", queuedRec.Code)
 	}
+	assertMetricsZero(t, metrics)
 }
 
 func TestConcurrencyLimiter_QueueFull(t *testing.T) {
 	gate := make(chan struct{})
-	e, _ := setupEcho(ConcurrencyConfig{
+	e, metrics := setupEcho(ConcurrencyConfig{
 		MaxConcurrency: 1,
 		MaxQueueSize:   1,
 		QueueTimeout:   5 * time.Second,
@@ -142,11 +157,12 @@ func TestConcurrencyLimiter_QueueFull(t *testing.T) {
 	// Cleanup: release gate and wait.
 	close(gate)
 	wg.Wait()
+	assertMetricsZero(t, metrics)
 }
 
 func TestConcurrencyLimiter_QueueTimeout(t *testing.T) {
 	gate := make(chan struct{})
-	e, _ := setupEcho(ConcurrencyConfig{
+	e, metrics := setupEcho(ConcurrencyConfig{
 		MaxConcurrency: 1,
 		MaxQueueSize:   5,
 		QueueTimeout:   100 * time.Millisecond,
@@ -178,11 +194,12 @@ func TestConcurrencyLimiter_QueueTimeout(t *testing.T) {
 	// Cleanup.
 	close(gate)
 	wg.Wait()
+	assertMetricsZero(t, metrics)
 }
 
 func TestConcurrencyLimiter_ClientCancel(t *testing.T) {
 	gate := make(chan struct{})
-	e, _ := setupEcho(ConcurrencyConfig{
+	e, metrics := setupEcho(ConcurrencyConfig{
 		MaxConcurrency: 1,
 		MaxQueueSize:   5,
 		QueueTimeout:   10 * time.Second,
@@ -227,4 +244,5 @@ func TestConcurrencyLimiter_ClientCancel(t *testing.T) {
 	// Cleanup.
 	close(gate)
 	wg.Wait()
+	assertMetricsZero(t, metrics)
 }

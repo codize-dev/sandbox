@@ -95,6 +95,8 @@ func runServe(_ *cobra.Command, _ []string) error {
 
 	h := &handler.Handler{Runner: sandbox.NewRunner(cfg), MaxFiles: flagMaxFiles, MaxFileSize: flagMaxFileSize}
 
+	metrics := &intmw.ConcurrencyMetrics{}
+
 	e := echo.New()
 	e.HTTPErrorHandler = handler.NewHTTPErrorHandler()
 	e.Use(middleware.Recover())
@@ -103,10 +105,12 @@ func runServe(_ *cobra.Command, _ []string) error {
 	e.GET("/healthz", func(c *echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})
+	e.GET("/metrics", intmw.MetricsHandler(metrics, flagMaxConcurrency, flagMaxQueueSize))
 	e.POST("/v1/run", h.RunHandler, intmw.ConcurrencyLimiter(intmw.ConcurrencyConfig{
 		MaxConcurrency: flagMaxConcurrency,
 		MaxQueueSize:   flagMaxQueueSize,
 		QueueTimeout:   time.Duration(flagQueueTimeout) * time.Second,
+		Metrics:        metrics,
 	}))
 
 	sc := echo.StartConfig{
