@@ -187,9 +187,9 @@ func TestRunHandler_TooManyFiles(t *testing.T) {
 	body := RunRequest{
 		Runtime: strPtr("node"),
 		Files: []File{
-			{Name: strPtr("a.js"), Content: strPtr("Y29uc29sZS5sb2coImEiKQ==")},
-			{Name: strPtr("b.js"), Content: strPtr("Y29uc29sZS5sb2coImIiKQ==")},
-			{Name: strPtr("c.js"), Content: strPtr("Y29uc29sZS5sb2coImMiKQ==")},
+			{Name: strPtr("a.js"), Content: strPtr(`console.log("a")`)},
+			{Name: strPtr("b.js"), Content: strPtr(`console.log("b")`)},
+			{Name: strPtr("c.js"), Content: strPtr(`console.log("c")`)},
 		},
 	}
 	jsonBody, err := json.Marshal(body)
@@ -224,11 +224,11 @@ func TestRunHandler_FileTooLarge(t *testing.T) {
 
 	e := echo.New()
 
-	// 17 bytes "hello world 12345" -> base64 "aGVsbG8gd29ybGQgMTIzNDU="
+	// 17 bytes plain text
 	body := RunRequest{
 		Runtime: strPtr("node"),
 		Files: []File{
-			{Name: strPtr("index.js"), Content: strPtr("aGVsbG8gd29ybGQgMTIzNDU=")},
+			{Name: strPtr("index.js"), Content: strPtr("hello world 12345")},
 		},
 	}
 	jsonBody, err := json.Marshal(body)
@@ -256,4 +256,58 @@ func TestRunHandler_FileTooLarge(t *testing.T) {
 	require.Len(t, resp.Errors, 1)
 	assert.Equal(t, []any{"files", float64(0), "content"}, resp.Errors[0].Path)
 	assert.Equal(t, "file too large (max: 16 bytes)", resp.Errors[0].Message)
+}
+
+func TestDecodeRunRequest_Base64Encoded(t *testing.T) {
+	t.Parallel()
+
+	h := &Handler{
+		Runner:      sandbox.NewRunner(sandbox.Config{RunTimeout: 30, CompileTimeout: 30, OutputLimit: 1 << 20}),
+		MaxFiles:    10,
+		MaxFileSize: 1 << 20,
+	}
+
+	t.Run("base64_encoded true decodes content", func(t *testing.T) {
+		t.Parallel()
+		// "hello" → base64 "aGVsbG8="
+		req := RunRequest{
+			Runtime: strPtr("node"),
+			Files: []File{
+				{Name: strPtr("index.js"), Content: strPtr("aGVsbG8="), Base64Encoded: true},
+			},
+		}
+		_, files, errResp := h.decodeRunRequest(req)
+		assert.Nil(t, errResp)
+		require.Len(t, files, 1)
+		assert.Equal(t, []byte("hello"), files[0].content)
+	})
+
+	t.Run("base64_encoded false uses content as-is", func(t *testing.T) {
+		t.Parallel()
+		req := RunRequest{
+			Runtime: strPtr("node"),
+			Files: []File{
+				{Name: strPtr("index.js"), Content: strPtr("console.log('hi')")},
+			},
+		}
+		_, files, errResp := h.decodeRunRequest(req)
+		assert.Nil(t, errResp)
+		require.Len(t, files, 1)
+		assert.Equal(t, []byte("console.log('hi')"), files[0].content)
+	})
+
+	t.Run("base64_encoded true with invalid base64 returns error", func(t *testing.T) {
+		t.Parallel()
+		req := RunRequest{
+			Runtime: strPtr("node"),
+			Files: []File{
+				{Name: strPtr("index.js"), Content: strPtr("not-valid!@#"), Base64Encoded: true},
+			},
+		}
+		_, _, errResp := h.decodeRunRequest(req)
+		require.NotNil(t, errResp)
+		assert.Equal(t, CodeValidationError, errResp.Code)
+		require.Len(t, errResp.Errors, 1)
+		assert.Equal(t, "invalid base64", errResp.Errors[0].Message)
+	})
 }

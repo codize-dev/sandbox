@@ -363,7 +363,7 @@ tests:
               content: ""
             - name: payload.bin
               type: fill
-              size: 4194304
+              size: 5242880
         output:
           status: 413
           body:
@@ -407,3 +407,46 @@ tests:
               errors:
                 - path: ["files", 0, "name"]
                   message: "file name too long (max: 255 bytes)"
+
+  - name: "base64 encoded file executes correctly"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: base64
+              content: "Y29uc29sZS5sb2coImhlbGxvIik7"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "hello\n"
+              stderr: ""
+              output: "hello\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+
+  - name: "mixed plain and base64 encoded files"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                const msg = require("./helper.js");
+                console.log(msg);
+            - name: helper.js
+              type: base64
+              content: "bW9kdWxlLmV4cG9ydHMgPSAiaGVsbG8gZnJvbSBiYXNlNjQi"
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "hello from base64\n"
+              stderr: ""
+              output: "hello from base64\n"
+              exit_code: 0
+              status: "OK"
+              signal: null

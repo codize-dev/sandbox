@@ -102,9 +102,9 @@ tests:
 
 ### File Types
 
-- `plain` (default): File content is provided inline via the `content` field. The framework base64-encodes it before sending.
-- `fill`: Generates a file of the specified `size` bytes, filled with the character `A`. The framework base64-encodes it before sending.
-- `base64`: Content is sent as-is in the request's `content` field without additional encoding. Use for testing pre-encoded content or intentionally invalid base64.
+- `plain` (default): File content is provided inline via the `content` field. The framework sends it as-is (plain text).
+- `fill`: Generates a file of the specified `size` bytes, filled with the character `A`. The framework sends it as-is (plain text).
+- `base64`: Content is sent as-is in the request's `content` field with `base64_encoded: true`. Use for testing pre-encoded content or intentionally invalid base64.
 
 ### Regex Matching
 

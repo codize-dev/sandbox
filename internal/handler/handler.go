@@ -25,8 +25,9 @@ type RunRequest struct {
 // File represents a single source file in the run request.
 // The first file in the request's Files array is used as the entrypoint.
 type File struct {
-	Name    *string `json:"name"`
-	Content *string `json:"content"`
+	Name          *string `json:"name"`
+	Content       *string `json:"content"`
+	Base64Encoded bool    `json:"base64_encoded"`
 }
 
 // RunResponse is the JSON response for POST /v1/run.
@@ -92,9 +93,15 @@ func (h *Handler) decodeRunRequest(req RunRequest) (sandbox.Runtime, []decodedFi
 		if slices.Contains(rt.RestrictedFiles(), *f.Name) {
 			return nil, nil, validationErr([]any{"files", i, "name"}, "not allowed for this runtime")
 		}
-		content, err := base64.StdEncoding.DecodeString(*f.Content)
-		if err != nil {
-			return nil, nil, validationErr([]any{"files", i, "content"}, "invalid base64")
+		var content []byte
+		if f.Base64Encoded {
+			var err error
+			content, err = base64.StdEncoding.DecodeString(*f.Content)
+			if err != nil {
+				return nil, nil, validationErr([]any{"files", i, "content"}, "invalid base64")
+			}
+		} else {
+			content = []byte(*f.Content)
 		}
 		if len(content) > h.MaxFileSize {
 			return nil, nil, validationErr([]any{"files", i, "content"}, fmt.Sprintf("file too large (max: %d bytes)", h.MaxFileSize))

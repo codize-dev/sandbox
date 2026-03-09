@@ -117,8 +117,9 @@ type apiRequest struct {
 }
 
 type apiFile struct {
-	Name    *string `json:"name"`
-	Content *string `json:"content"`
+	Name          *string `json:"name"`
+	Content       *string `json:"content"`
+	Base64Encoded *bool   `json:"base64_encoded,omitempty"`
 }
 
 type apiResponse struct {
@@ -212,11 +213,12 @@ func TestE2E(t *testing.T) {
 								if f.Content != nil || f.Type == fileTypeFill {
 									content, err := f.resolveContent()
 									require.NoError(t, err, "[request %d] failed to resolve file content", ri)
-									encodedContent := base64.StdEncoding.EncodeToString([]byte(content))
 									if f.Type == fileTypeBase64 {
-										encodedContent = content
+										af.Content = &content
+										af.Base64Encoded = new(true)
+									} else {
+										af.Content = &content
 									}
-									af.Content = &encodedContent
 								}
 
 								apiFiles[fi] = af

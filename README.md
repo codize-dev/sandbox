@@ -122,14 +122,17 @@ Request:
   "files": [
     {
       "name": "index.js",
-      "content": "Y29uc29sZS5sb2coIkhlbGxvLCBXb3JsZCEiKQ=="
+      "content": "console.log(\"Hello, World!\")"
     }
   ]
 }
 ```
 
 - `runtime` (required): one of `"node"`, `"node-typescript"`, `"ruby"`, `"go"`, `"python"`, `"rust"`, `"bash"`
-- `files` (required): array of source files. `content` is Base64-encoded. The first file in the array is used as the entrypoint
+- `files` (required): array of source files. The first file in the array is used as the entrypoint
+  - `name` (required): file name
+  - `content` (required): file content as plain text (default) or Base64-encoded string
+  - `base64_encoded` (optional, default: `false`): when `true`, `content` is treated as a Base64-encoded string and decoded by the server
 
 Response:
 
@@ -160,7 +163,7 @@ Response:
 
 ```
 POST /v1/run
-  → Echo HTTP server (request validation, Base64 decoding, write files to tmpdir)
+  → Echo HTTP server (request validation, optional Base64 decoding, write files to tmpdir)
     → nsjail (execute code in a namespace-isolated environment)
       → Return response
 ```
