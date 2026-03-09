@@ -12,4 +12,6 @@ Core sandbox execution engine, split across three files:
 
 Go runtime rejects user-submitted `go.mod`, `go.sum`, and `main` files (HTTP 400) to enforce use of defaults and prevent overwriting the compiled binary.
 
+Rust runtime rejects user-submitted `main` files (HTTP 400) to prevent overwriting the compiled binary.
+
 Node-TypeScript runtime rejects user-submitted `package.json` and `package-lock.json` files (HTTP 400) to ensure consistency with the pre-installed `node_modules` bind mount.

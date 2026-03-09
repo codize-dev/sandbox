@@ -10,7 +10,7 @@ A code execution sandbox service that runs arbitrary code inside Linux namespace
 
 Tool versions are managed by [mise](https://mise.jdx.dev/). Run `mise install` to install Go, golangci-lint, and lefthook.
 
-- **Go**: 1.26.0 (mise.toml), module requires 1.25.0 (go.mod)
+- **Go**: 1.26.0 (mise.toml / go.mod)
 - **golangci-lint**: 2.10.1 (installed via mise aqua backend)
 - **lefthook**: 2.1.2 (installed via mise aqua backend) — pre-commit hook runs `go fmt ./...`, `golangci-lint run`, and `gitleaks git --pre-commit --staged`; pre-push hook runs `gitleaks git`
 
