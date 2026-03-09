@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/codize-dev/sandbox/compare/v0.6.0...v0.7.0) (2026-03-09)
+
+
+### Features
+
+* add --metrics flag to toggle /metrics endpoint ([6e5fadd](https://github.com/codize-dev/sandbox/commit/6e5fadd98124fa328fad6fa10788e860aec29b1d))
+* set sandbox HOME directory to /sandbox instead of /tmp ([1cd4afd](https://github.com/codize-dev/sandbox/commit/1cd4afdbb10db7e3903fe2cc7604bb1fd8b98be9))
+
 ## [0.6.0](https://github.com/codize-dev/sandbox/compare/v0.5.0...v0.6.0) (2026-03-09)
 
 
