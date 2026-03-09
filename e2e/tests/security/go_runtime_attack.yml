@@ -267,6 +267,8 @@ tests:
                 package main
 
                 import (
+                	"fmt"
+                	"os"
                 	"os/exec"
                 	"sync"
                 )
@@ -277,10 +279,15 @@ tests:
                 		wg.Add(1)
                 		go func() {
                 			defer wg.Done()
-                			exec.Command("sleep", "10").Run()
+                			cmd := exec.Command("sleep", "60")
+                			if err := cmd.Start(); err != nil {
+                				fmt.Fprintln(os.Stderr, err)
+                				os.Exit(1)
+                			}
                 		}()
                 	}
                 	wg.Wait()
+                	select {}
                 }
         output:
           status: 200
@@ -294,8 +301,8 @@ tests:
               signal: null
             run:
               stdout: ""
-              stderr: ""
-              output: ""
-              exit_code: 137
-              status: "TIMEOUT"
-              signal: "SIGKILL"
+              stderr: "/.*: too many open files\n$/"
+              output: "/.*: too many open files\n$/"
+              exit_code: 1
+              status: "OK"
+              signal: null
