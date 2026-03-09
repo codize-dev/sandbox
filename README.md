@@ -28,7 +28,7 @@ A sandboxed code execution engine.
 
 </p>
 
-Codize Sandbox is a code execution engine that runs arbitrary code safely inside Linux namespace jails ([google/nsjail](https://github.com/google/nsjail)). It exposes an HTTP API to receive code, execute it in an isolated environment, and return the output.
+Codize Sandbox is the code execution engine that powers [Codize](https://codize.dev) in production, running arbitrary code safely inside Linux namespace jails ([google/nsjail](https://github.com/google/nsjail)). It exposes an HTTP API to receive code, execute it in an isolated environment, and return the output.
 
 ## Supported Runtimes
 
