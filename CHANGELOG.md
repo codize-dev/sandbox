@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/codize-dev/sandbox/compare/v0.5.0...v0.6.0) (2026-03-09)
+
+
+### Features
+
+* add base64_encoded field to make base64 input opt-in ([de14dc5](https://github.com/codize-dev/sandbox/commit/de14dc59ea7e1313e55ad0358f3a88794f5a95a5))
+
+
+### Bug Fixes
+
+* Update go 1.25 to 1.26 ([6d1f988](https://github.com/codize-dev/sandbox/commit/6d1f988d7290b8949028d0e30096457f40ce6676))
+
 ## [0.5.0](https://github.com/codize-dev/sandbox/compare/v0.4.4...v0.5.0) (2026-03-09)
 
 
