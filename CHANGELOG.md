@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/codize-dev/sandbox/compare/v0.4.4...v0.5.0) (2026-03-09)
+
+
+### Features
+
+* add Prometheus /metrics endpoint for concurrency and queue gauges ([a869ca7](https://github.com/codize-dev/sandbox/commit/a869ca7939a7bd3187b58959698ea6d6d15d46d2))
+
 ## [0.4.4](https://github.com/codize-dev/sandbox/compare/v0.4.3...v0.4.4) (2026-03-09)
 
 
