@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.1](https://github.com/codize-dev/sandbox/compare/v0.7.0...v0.7.1) (2026-03-10)
+
+
+### Bug Fixes
+
+* add --disable-wasm-trap-handler to Node.js runtimes to prevent OOM ([7b51661](https://github.com/codize-dev/sandbox/commit/7b516619a6cb1e8741d32fba9cfee2ed75896471))
+* enable Renovate auto-updates for mise-managed runtime versions ([34acc0e](https://github.com/codize-dev/sandbox/commit/34acc0ea299b187797e57701bfdc005f55df9875))
+
 ## [0.7.0](https://github.com/codize-dev/sandbox/compare/v0.6.0...v0.7.0) (2026-03-09)
 
 
