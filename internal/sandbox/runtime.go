@@ -176,7 +176,7 @@ type nodeRuntime struct{}
 func (nodeRuntime) Name() RuntimeName { return RuntimeNode }
 
 func (nodeRuntime) Command(entryFile string) []string {
-	return []string{"/mise/installs/node/24.14.0/bin/node", entryFile}
+	return []string{"/mise/installs/node/24.14.0/bin/node", "--disable-wasm-trap-handler", entryFile}
 }
 
 func (nodeRuntime) BindMounts() []BindMount {
@@ -546,7 +546,7 @@ func (nodeTypeScriptRuntime) Name() RuntimeName { return RuntimeNodeTypeScript }
 
 func (nodeTypeScriptRuntime) Command(entryFile string) []string {
 	jsFile := strings.TrimSuffix(entryFile, path.Ext(entryFile)) + ".js"
-	return []string{"/mise/installs/node/24.14.0/bin/node", jsFile}
+	return []string{"/mise/installs/node/24.14.0/bin/node", "--disable-wasm-trap-handler", jsFile}
 }
 
 func (nodeTypeScriptRuntime) BindMounts() []BindMount {
@@ -558,7 +558,7 @@ func (nodeTypeScriptRuntime) Env() []string {
 }
 
 func (nodeTypeScriptRuntime) CompileCommand() []string {
-	return []string{"/mise/installs/node/24.14.0/bin/node", "/sandbox/node_modules/typescript/bin/tsc"}
+	return []string{"/mise/installs/node/24.14.0/bin/node", "--disable-wasm-trap-handler", "/sandbox/node_modules/typescript/bin/tsc"}
 }
 
 func (nodeTypeScriptRuntime) CompileBindMounts() []BindMount {
