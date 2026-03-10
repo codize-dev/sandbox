@@ -45,7 +45,7 @@ RUN mise settings ruby.compile=false && mise use -g ruby@${RUBY_VERSION}
 
 # Go
 # renovate: datasource=golang-version depName=go
-ARG GO_VERSION=1.26.0
+ARG GO_VERSION=1.26.1
 ENV PATH="/mise/installs/go/${GO_VERSION}/bin:$PATH"
 RUN mise use -g go@${GO_VERSION}
 RUN CGO_ENABLED=0 GOCACHE=/mise/go-cache go build std
