@@ -187,19 +187,19 @@ func TestNodeTypeScriptRuntime_Command(t *testing.T) {
 	t.Run("converts .ts to .js", func(t *testing.T) {
 		t.Parallel()
 		got := rt.Command("/sandbox/index.ts")
-		assert.Equal(t, []string{"/mise/installs/node/24.14.0/bin/node", "/sandbox/index.js"}, got)
+		assert.Equal(t, []string{"/mise/installs/node/24.14.0/bin/node", "--disable-wasm-trap-handler", "/sandbox/index.js"}, got)
 	})
 
 	t.Run("converts .tsx to .js", func(t *testing.T) {
 		t.Parallel()
 		got := rt.Command("/sandbox/app.tsx")
-		assert.Equal(t, []string{"/mise/installs/node/24.14.0/bin/node", "/sandbox/app.js"}, got)
+		assert.Equal(t, []string{"/mise/installs/node/24.14.0/bin/node", "--disable-wasm-trap-handler", "/sandbox/app.js"}, got)
 	})
 
 	t.Run("appends .js when no extension", func(t *testing.T) {
 		t.Parallel()
 		got := rt.Command("/sandbox/noext")
-		assert.Equal(t, []string{"/mise/installs/node/24.14.0/bin/node", "/sandbox/noext.js"}, got)
+		assert.Equal(t, []string{"/mise/installs/node/24.14.0/bin/node", "--disable-wasm-trap-handler", "/sandbox/noext.js"}, got)
 	})
 }
 
