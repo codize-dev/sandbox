@@ -2,9 +2,11 @@ FROM alpine:3.23.3@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f
 # Automatically set by BuildKit (e.g. amd64, arm64)
 ARG TARGETARCH
 
+# renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.+)$
+ARG MISE_VERSION=2026.2.23
 RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "x64") && \
     wget -qO /usr/local/bin/mise \
-      "https://github.com/jdx/mise/releases/download/v2026.2.23/mise-v2026.2.23-linux-${ARCH}" && \
+      "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-${ARCH}" && \
     chmod +x /usr/local/bin/mise
 
 # ---
@@ -28,18 +30,24 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Node.js
-ENV PATH="/mise/installs/node/24.14.0/bin:$PATH"
-RUN mise use -g node@24.14.0
+# renovate: datasource=node-version depName=node
+ARG NODE_VERSION=24.14.0
+ENV PATH="/mise/installs/node/${NODE_VERSION}/bin:$PATH"
+RUN mise use -g node@${NODE_VERSION}
 COPY internal/sandbox/defaults/node-typescript/package.json internal/sandbox/defaults/node-typescript/package-lock.json /mise/ts-node-modules/
 RUN cd /mise/ts-node-modules && npm ci
 
 # Ruby
-ENV PATH="/mise/installs/ruby/3.4.8/bin:$PATH"
-RUN mise settings ruby.compile=false && mise use -g ruby@3.4.8
+# renovate: datasource=ruby-version depName=ruby
+ARG RUBY_VERSION=3.4.8
+ENV PATH="/mise/installs/ruby/${RUBY_VERSION}/bin:$PATH"
+RUN mise settings ruby.compile=false && mise use -g ruby@${RUBY_VERSION}
 
 # Go
-ENV PATH="/mise/installs/go/1.26.0/bin:$PATH"
-RUN mise use -g go@1.26.0
+# renovate: datasource=golang-version depName=go
+ARG GO_VERSION=1.26.0
+ENV PATH="/mise/installs/go/${GO_VERSION}/bin:$PATH"
+RUN mise use -g go@${GO_VERSION}
 RUN CGO_ENABLED=0 GOCACHE=/mise/go-cache go build std
 COPY internal/sandbox/defaults/go/go.mod.tmpl /tmp/preinstall/go.mod
 COPY internal/sandbox/defaults/go/go.sum.tmpl /tmp/preinstall/go.sum
@@ -48,14 +56,18 @@ RUN cd /tmp/preinstall && \
     rm -rf /tmp/preinstall
 
 # Python
-ENV PATH="/mise/installs/python/3.13.12/bin:$PATH"
-RUN mise use -g python@3.13.12
+# renovate: datasource=python-version depName=python
+ARG PYTHON_VERSION=3.13.12
+ENV PATH="/mise/installs/python/${PYTHON_VERSION}/bin:$PATH"
+RUN mise use -g python@${PYTHON_VERSION}
 
 # Rust
+# renovate: datasource=github-tags depName=rust packageName=rust-lang/rust
+ARG RUST_VERSION=1.94.0
 ENV RUSTUP_HOME="/mise/rustup" \
     CARGO_HOME="/mise/cargo"
 ENV PATH="/mise/cargo/bin:$PATH"
-RUN mise use -g rust@1.94.0
+RUN mise use -g rust@${RUST_VERSION}
 
 # ---
 
