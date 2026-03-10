@@ -1,0 +1,7 @@
+ignored:
+  # apt packages don't need version pinning — base images are SHA-pinned
+  - DL3008
+  # cd in subshell is intentional (one-shot commands, not directory state)
+  - DL3003
+  # Consecutive RUN instructions are intentional for Docker layer caching
+  - DL3059
