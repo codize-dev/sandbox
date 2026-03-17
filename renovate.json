@@ -4,9 +4,16 @@
     "github>koki-develop/renovate-config",
     "customManagers:dockerfileVersions"
   ],
-  "gomod": {
-    "managerFilePatterns": ["internal/sandbox/defaults/go/go.mod.tmpl"]
-  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["internal/sandbox/defaults/go/go.mod.tmpl"],
+      "matchStrings": ["go (?<currentValue>\\S+)\\n"],
+      "depNameTemplate": "go",
+      "datasourceTemplate": "golang-version",
+      "versioningTemplate": "semver"
+    }
+  ],
   "packageRules": [
     {
       "matchFileNames": ["Dockerfile"],
