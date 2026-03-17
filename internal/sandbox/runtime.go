@@ -42,7 +42,7 @@ type Runtime interface {
 	BindMounts() []BindMount
 
 	// Env returns environment variables for the sandbox in "KEY=VALUE" format
-	// (e.g. "PATH=/mise/installs/node/24.14.0/bin:/usr/bin").
+	// (e.g. "PATH=/mise/installs/node/current/bin:/usr/bin").
 	Env() []string
 
 	// Limits returns the nsjail resource limits for the run step.
@@ -176,15 +176,15 @@ type nodeRuntime struct{}
 func (nodeRuntime) Name() RuntimeName { return RuntimeNode }
 
 func (nodeRuntime) Command(entryFile string) []string {
-	return []string{"/mise/installs/node/24.14.0/bin/node", "--disable-wasm-trap-handler", entryFile}
+	return []string{"/mise/installs/node/current/bin/node", "--disable-wasm-trap-handler", entryFile}
 }
 
 func (nodeRuntime) BindMounts() []BindMount {
-	return []BindMount{{Src: "/mise/installs/node/24.14.0", Dst: "/mise/installs/node/24.14.0"}}
+	return []BindMount{{Src: "/mise/installs/node/current", Dst: "/mise/installs/node/current"}}
 }
 
 func (nodeRuntime) Env() []string {
-	return []string{"PATH=/mise/installs/node/24.14.0/bin:/usr/bin:/bin"}
+	return []string{"PATH=/mise/installs/node/current/bin:/usr/bin:/bin"}
 }
 
 // Limits returns resource limits for Node.js execution.
@@ -225,15 +225,15 @@ type rubyRuntime struct{}
 func (rubyRuntime) Name() RuntimeName { return RuntimeRuby }
 
 func (rubyRuntime) Command(entryFile string) []string {
-	return []string{"/mise/installs/ruby/3.4.8/bin/ruby", entryFile}
+	return []string{"/mise/installs/ruby/current/bin/ruby", entryFile}
 }
 
 func (rubyRuntime) BindMounts() []BindMount {
-	return []BindMount{{Src: "/mise/installs/ruby/3.4.8", Dst: "/mise/installs/ruby/3.4.8"}}
+	return []BindMount{{Src: "/mise/installs/ruby/current", Dst: "/mise/installs/ruby/current"}}
 }
 
 func (rubyRuntime) Env() []string {
-	return []string{"PATH=/mise/installs/ruby/3.4.8/bin:/usr/bin:/bin"}
+	return []string{"PATH=/mise/installs/ruby/current/bin:/usr/bin:/bin"}
 }
 
 // Limits returns resource limits for Ruby execution.
@@ -274,15 +274,15 @@ type pythonRuntime struct{}
 func (pythonRuntime) Name() RuntimeName { return RuntimePython }
 
 func (pythonRuntime) Command(entryFile string) []string {
-	return []string{"/mise/installs/python/3.13.12/bin/python3", entryFile}
+	return []string{"/mise/installs/python/current/bin/python3", entryFile}
 }
 
 func (pythonRuntime) BindMounts() []BindMount {
-	return []BindMount{{Src: "/mise/installs/python/3.13.12", Dst: "/mise/installs/python/3.13.12"}}
+	return []BindMount{{Src: "/mise/installs/python/current", Dst: "/mise/installs/python/current"}}
 }
 
 func (pythonRuntime) Env() []string {
-	return []string{"PATH=/mise/installs/python/3.13.12/bin:/usr/bin:/bin"}
+	return []string{"PATH=/mise/installs/python/current/bin:/usr/bin:/bin"}
 }
 
 // Limits returns resource limits for Python execution.
@@ -339,12 +339,12 @@ func (goRuntime) Env() []string {
 }
 
 func (goRuntime) CompileCommand() []string {
-	return []string{"/mise/installs/go/1.26.0/bin/go", "build", "-o", "/sandbox/main", "."}
+	return []string{"/mise/installs/go/current/bin/go", "build", "-o", "/sandbox/main", "."}
 }
 
 func (goRuntime) CompileBindMounts() []BindMount {
 	return []BindMount{
-		{Src: "/mise/installs/go/1.26.0", Dst: "/mise/installs/go/1.26.0"},
+		{Src: "/mise/installs/go/current", Dst: "/mise/installs/go/current"},
 		{Src: "/mise/go-cache", Dst: "/mise/go-cache"},                         // pre-built Go stdlib cache (read-only)
 		{Src: "/mise/go-modcache", Dst: "/mise/go-modcache"},                   // pre-downloaded module cache (read-only)
 		{Src: "/usr/local/bin/gocacheprog", Dst: "/usr/local/bin/gocacheprog"}, // cache helper binary; /usr/local/bin is not mounted by the base config
@@ -353,8 +353,8 @@ func (goRuntime) CompileBindMounts() []BindMount {
 
 func (goRuntime) CompileEnv() []string {
 	return []string{
-		"PATH=/mise/installs/go/1.26.0/bin:/usr/bin:/bin",
-		"GOROOT=/mise/installs/go/1.26.0",
+		"PATH=/mise/installs/go/current/bin:/usr/bin:/bin",
+		"GOROOT=/mise/installs/go/current",
 		"GOPATH=/tmp/gopath",                                    // writable location for module metadata and build artifacts
 		"GOMODCACHE=/mise/go-modcache",                          // read-only pre-downloaded module cache from Docker image
 		"GOCACHEPROG=/usr/local/bin/gocacheprog /mise/go-cache", // read-only cache backed by pre-built stdlib cache from Docker image
@@ -546,30 +546,30 @@ func (nodeTypeScriptRuntime) Name() RuntimeName { return RuntimeNodeTypeScript }
 
 func (nodeTypeScriptRuntime) Command(entryFile string) []string {
 	jsFile := strings.TrimSuffix(entryFile, path.Ext(entryFile)) + ".js"
-	return []string{"/mise/installs/node/24.14.0/bin/node", "--disable-wasm-trap-handler", jsFile}
+	return []string{"/mise/installs/node/current/bin/node", "--disable-wasm-trap-handler", jsFile}
 }
 
 func (nodeTypeScriptRuntime) BindMounts() []BindMount {
-	return []BindMount{{Src: "/mise/installs/node/24.14.0", Dst: "/mise/installs/node/24.14.0"}}
+	return []BindMount{{Src: "/mise/installs/node/current", Dst: "/mise/installs/node/current"}}
 }
 
 func (nodeTypeScriptRuntime) Env() []string {
-	return []string{"PATH=/mise/installs/node/24.14.0/bin:/usr/bin:/bin"}
+	return []string{"PATH=/mise/installs/node/current/bin:/usr/bin:/bin"}
 }
 
 func (nodeTypeScriptRuntime) CompileCommand() []string {
-	return []string{"/mise/installs/node/24.14.0/bin/node", "--disable-wasm-trap-handler", "/sandbox/node_modules/typescript/bin/tsc"}
+	return []string{"/mise/installs/node/current/bin/node", "--disable-wasm-trap-handler", "/sandbox/node_modules/typescript/bin/tsc"}
 }
 
 func (nodeTypeScriptRuntime) CompileBindMounts() []BindMount {
 	return []BindMount{
-		{Src: "/mise/installs/node/24.14.0", Dst: "/mise/installs/node/24.14.0"},
+		{Src: "/mise/installs/node/current", Dst: "/mise/installs/node/current"},
 		{Src: "/mise/ts-node-modules/node_modules", Dst: "/sandbox/node_modules"}, // pre-installed typescript and @types/node (read-only)
 	}
 }
 
 func (nodeTypeScriptRuntime) CompileEnv() []string {
-	return []string{"PATH=/mise/installs/node/24.14.0/bin:/usr/bin:/bin"}
+	return []string{"PATH=/mise/installs/node/current/bin:/usr/bin:/bin"}
 }
 
 // CompileLimits returns resource limits for the TypeScript compilation step.

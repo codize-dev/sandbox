@@ -33,7 +33,8 @@ RUN apt-get update && \
 # renovate: datasource=node-version depName=node
 ARG NODE_VERSION=24.14.0
 ENV PATH="/mise/installs/node/${NODE_VERSION}/bin:$PATH"
-RUN mise use -g node@${NODE_VERSION}
+RUN mise use -g node@${NODE_VERSION} && \
+    ln -s /mise/installs/node/${NODE_VERSION} /mise/installs/node/current
 COPY internal/sandbox/defaults/node-typescript/package.json internal/sandbox/defaults/node-typescript/package-lock.json /mise/ts-node-modules/
 RUN cd /mise/ts-node-modules && npm ci
 
@@ -41,13 +42,15 @@ RUN cd /mise/ts-node-modules && npm ci
 # renovate: datasource=ruby-version depName=ruby
 ARG RUBY_VERSION=3.4.8
 ENV PATH="/mise/installs/ruby/${RUBY_VERSION}/bin:$PATH"
-RUN mise settings ruby.compile=false && mise use -g ruby@${RUBY_VERSION}
+RUN mise settings ruby.compile=false && mise use -g ruby@${RUBY_VERSION} && \
+    ln -s /mise/installs/ruby/${RUBY_VERSION} /mise/installs/ruby/current
 
 # Go
 # renovate: datasource=golang-version depName=go
 ARG GO_VERSION=1.26.0
 ENV PATH="/mise/installs/go/${GO_VERSION}/bin:$PATH"
-RUN mise use -g go@${GO_VERSION}
+RUN mise use -g go@${GO_VERSION} && \
+    ln -s /mise/installs/go/${GO_VERSION} /mise/installs/go/current
 RUN CGO_ENABLED=0 GOCACHE=/mise/go-cache go build std
 COPY internal/sandbox/defaults/go/go.mod.tmpl /tmp/preinstall/go.mod
 COPY internal/sandbox/defaults/go/go.sum.tmpl /tmp/preinstall/go.sum
@@ -59,7 +62,8 @@ RUN cd /tmp/preinstall && \
 # renovate: datasource=python-version depName=python
 ARG PYTHON_VERSION=3.13.12
 ENV PATH="/mise/installs/python/${PYTHON_VERSION}/bin:$PATH"
-RUN mise use -g python@${PYTHON_VERSION}
+RUN mise use -g python@${PYTHON_VERSION} && \
+    ln -s /mise/installs/python/${PYTHON_VERSION} /mise/installs/python/current
 
 # Rust
 # renovate: datasource=github-tags depName=rust packageName=rust-lang/rust
