@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.2](https://github.com/codize-dev/sandbox/compare/v0.7.1...v0.7.2) (2026-04-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency jdx/mise to v2026.3.16 ([#30](https://github.com/codize-dev/sandbox/issues/30)) ([e91347b](https://github.com/codize-dev/sandbox/commit/e91347bf34330f739b00f82fdcb7a8ba64f49409))
+* enable Renovate auto-updates for go directive in go.mod ([dee956d](https://github.com/codize-dev/sandbox/commit/dee956d6b91f4c5c8cb49c698fbb9bd413282ef5))
+* exclude DOM types from node-typescript tsconfig to prevent global name conflicts ([badca20](https://github.com/codize-dev/sandbox/commit/badca2039b1f65d8bdb0893b0b1aeee9d98a2eb4))
+* extend Renovate gomod manager to cover go.mod.tmpl ([aaf706b](https://github.com/codize-dev/sandbox/commit/aaf706bbbc0d83ed90b451be4ef8ede09a90c2f3))
+* update mise to v2026.4.11 to fix Python freethreaded build selection bug ([4ebd58f](https://github.com/codize-dev/sandbox/commit/4ebd58f9166b1378c13b75f0b5f1f87c535b31c8))
+* use current symlink paths in security E2E tests instead of versioned paths ([5b4fd77](https://github.com/codize-dev/sandbox/commit/5b4fd77946365d166b2de8e57832ea420dc434ef))
+* use full semver in go.mod.tmpl for Renovate compatibility ([d171f25](https://github.com/codize-dev/sandbox/commit/d171f25f7ba87673dd1a688e30b1e0ee72468e9f))
+* use version-agnostic symlinks for runtime paths ([3987680](https://github.com/codize-dev/sandbox/commit/398768085455c22f29ca2a9ffd83c0137aa21640))
+
 ## [0.7.1](https://github.com/codize-dev/sandbox/compare/v0.7.0...v0.7.1) (2026-03-10)
 
 
