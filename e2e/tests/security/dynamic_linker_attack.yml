@@ -94,8 +94,8 @@ tests:
           body:
             run:
               stdout: ""
-              stderr: "/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle::Handle#initialize': /etc/ld.so.preload: cannot open shared object file: No such file or directory (Fiddle::DLError)\n\tfrom /mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Class#new'\n\tfrom /mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle.dlopen'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
-              output: "/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle::Handle#initialize': /etc/ld.so.preload: cannot open shared object file: No such file or directory (Fiddle::DLError)\n\tfrom /mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Class#new'\n\tfrom /mise/installs/ruby/3.4.8/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle.dlopen'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
+              stderr: "/mise/installs/ruby/current/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle::Handle#initialize': /etc/ld.so.preload: cannot open shared object file: No such file or directory (Fiddle::DLError)\n\tfrom /mise/installs/ruby/current/lib/ruby/3.4.0/fiddle.rb:93:in 'Class#new'\n\tfrom /mise/installs/ruby/current/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle.dlopen'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
+              output: "/mise/installs/ruby/current/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle::Handle#initialize': /etc/ld.so.preload: cannot open shared object file: No such file or directory (Fiddle::DLError)\n\tfrom /mise/installs/ruby/current/lib/ruby/3.4.0/fiddle.rb:93:in 'Class#new'\n\tfrom /mise/installs/ruby/current/lib/ruby/3.4.0/fiddle.rb:93:in 'Fiddle.dlopen'\n\tfrom /sandbox/main.rb:2:in '<main>'\n"
               exit_code: 1
               status: "OK"
               signal: null

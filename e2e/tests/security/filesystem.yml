@@ -206,14 +206,14 @@ tests:
               type: plain
               content: |
                 const fs = require("fs");
-                fs.writeFileSync("/mise/installs/node/24.14.0/test", "x");
+                fs.writeFileSync("/mise/installs/node/current/test", "x");
         output:
           status: 200
           body:
             run:
               stdout: ""
-              stderr: "/^node:fs:\\d+\\n[\\s\\S]*Error: EROFS: read-only file system, open '/mise/installs/node/[\\d.]+/test'[\\s\\S]*Node\\.js v[\\d.]+\\n$/"
-              output: "/^node:fs:\\d+\\n[\\s\\S]*Error: EROFS: read-only file system, open '/mise/installs/node/[\\d.]+/test'[\\s\\S]*Node\\.js v[\\d.]+\\n$/"
+              stderr: "/^node:fs:\\d+\\n[\\s\\S]*Error: EROFS: read-only file system, open '/mise/installs/node/current/test'[\\s\\S]*Node\\.js v[\\d.]+\\n$/"
+              output: "/^node:fs:\\d+\\n[\\s\\S]*Error: EROFS: read-only file system, open '/mise/installs/node/current/test'[\\s\\S]*Node\\.js v[\\d.]+\\n$/"
               exit_code: 1
               status: "OK"
               signal: null
@@ -226,14 +226,14 @@ tests:
             - name: main.rb
               type: plain
               content: |
-                File.write("/mise/installs/ruby/3.4.8/test", "x")
+                File.write("/mise/installs/ruby/current/test", "x")
         output:
           status: 200
           body:
             run:
               stdout: ""
-              stderr: "/^/sandbox/main\\.rb:\\d+:.*Read-only file system @ rb_sysopen - /mise/installs/ruby/[\\d.]+/test \\(Errno::EROFS\\)\\n\\tfrom /sandbox/main\\.rb:\\d+:.*\\n$/"
-              output: "/^/sandbox/main\\.rb:\\d+:.*Read-only file system @ rb_sysopen - /mise/installs/ruby/[\\d.]+/test \\(Errno::EROFS\\)\\n\\tfrom /sandbox/main\\.rb:\\d+:.*\\n$/"
+              stderr: "/^/sandbox/main\\.rb:\\d+:.*Read-only file system @ rb_sysopen - /mise/installs/ruby/current/test \\(Errno::EROFS\\)\\n\\tfrom /sandbox/main\\.rb:\\d+:.*\\n$/"
+              output: "/^/sandbox/main\\.rb:\\d+:.*Read-only file system @ rb_sysopen - /mise/installs/ruby/current/test \\(Errno::EROFS\\)\\n\\tfrom /sandbox/main\\.rb:\\d+:.*\\n$/"
               exit_code: 1
               status: "OK"
               signal: null
