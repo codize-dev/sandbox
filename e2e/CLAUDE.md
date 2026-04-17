@@ -110,20 +110,25 @@ tests:
 
 String fields (`stdout`, `stderr`, `output`) support regex matching via `/pattern/` syntax. When a value starts and ends with `/`, the inner content is treated as a Go regular expression and matched against the actual value using partial match (`regexp.MatchString`).
 
-**Exact match is always preferred.** Even if the output is long or verbose, the full expected string must be written out. Regex is permitted **only** for values that are genuinely non-deterministic across runs — timestamps, random IDs, or kernel-version-dependent messages. Values that are deterministic within a pinned environment (runtime versions, compiler error messages, stack traces with fixed line numbers, etc.) must use exact match, not regex.
+**Exact match is always preferred.** Even if the output is long or verbose, the full expected string must be written out. Regex is permitted **only** for values that are genuinely non-deterministic across runs — timestamps, random IDs, kernel-version-dependent messages, or runtime version strings in stack traces (which change with automated dependency updates).
+
+When converting an exact-match string to regex, escape all regex special characters with `regexp.QuoteMeta` and replace only the non-deterministic parts (e.g. `Node\.js v24\.14\.0` → `Node\.js v\d+\.\d+\.\d+`). Anchor the pattern with `^` and `$`.
 
 ```yaml
 # GOOD: exact match for deterministic compiler output
 compile:
   stdout: "index.ts(1,7): error TS2322: Type 'string' is not assignable to type 'number'.\n"
 
-# GOOD: exact match for deterministic stack trace (Node.js version is pinned)
+# GOOD: regex for stack trace — everything exact except the runtime version
 run:
-  stderr: "/sandbox/index.js:1\nthrow new Error(\"oops\");\n^\n\nError: oops\n    at Object.<anonymous> (/sandbox/index.js:1:7)\n...\n\nNode.js v24.14.0\n"
+  stderr: "/^/sandbox/index\\.js:1\\nthrow new Error\\(\"oops\"\\);\\n\\^\\n\\nError: oops\\n    at Object\\.<anonymous> \\(/sandbox/index\\.js:1:7\\)\\n\\.\\.\\.\\n\\nNode\\.js v\\d+\\.\\d+\\.\\d+\\n$/"
 
 # BAD: regex for output that is deterministic within our pinned environment
 run:
   stderr: "/error TS2322/"
+
+# BAD: overly loose regex that doesn't verify error content
+run:
   stderr: "/Node\\.js v[\\d.]+/"
 ```
 
