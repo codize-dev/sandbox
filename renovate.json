@@ -17,7 +17,7 @@
   "packageRules": [
     {
       "groupName": "Go",
-      "matchDatasources": ["golang-version", "docker"],
+      "matchDatasources": ["golang-version", "docker", "github-tags"],
       "matchDepNames": ["go", "golang"]
     },
     {
