@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.3](https://github.com/codize-dev/sandbox/compare/v0.7.2...v0.7.3) (2026-04-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ruby to v3.4.9 ([#28](https://github.com/codize-dev/sandbox/issues/28)) ([d49e4ac](https://github.com/codize-dev/sandbox/commit/d49e4ac12e253f5d06538e9928b5a657374aca28))
+* **deps:** update go to v1.26.2 ([#34](https://github.com/codize-dev/sandbox/issues/34)) ([b64eca9](https://github.com/codize-dev/sandbox/commit/b64eca980c64bf2cf1cf18e6f711cbaac50e70a0))
+
 ## [0.7.2](https://github.com/codize-dev/sandbox/compare/v0.7.1...v0.7.2) (2026-04-15)
 
 
