@@ -12,6 +12,14 @@
       "depNameTemplate": "go",
       "datasourceTemplate": "golang-version",
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["internal/sandbox/runtime.go"],
+      "matchStrings": ["RUSTUP_TOOLCHAIN=(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      "depNameTemplate": "rust",
+      "packageNameTemplate": "rust-lang/rust",
+      "datasourceTemplate": "github-tags"
     }
   ],
   "packageRules": [
