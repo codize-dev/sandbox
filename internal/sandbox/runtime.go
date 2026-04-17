@@ -469,7 +469,7 @@ func (rustRuntime) CompileEnv() []string {
 		"PATH=/mise/cargo/bin:/usr/bin:/bin",
 		"RUSTUP_HOME=/mise/rustup",
 		"CARGO_HOME=/mise/cargo",
-		"RUSTUP_TOOLCHAIN=1.94.0",
+		"RUSTUP_TOOLCHAIN=1.94.1",
 	}
 }
 
