@@ -47,7 +47,7 @@ RUN mise settings ruby.compile=false && mise use -g ruby@${RUBY_VERSION} && \
 
 # Go
 # renovate: datasource=golang-version depName=go
-ARG GO_VERSION=1.26.0
+ARG GO_VERSION=1.26.2
 ENV PATH="/mise/installs/go/${GO_VERSION}/bin:$PATH"
 RUN mise use -g go@${GO_VERSION} && \
     ln -s /mise/installs/go/${GO_VERSION} /mise/installs/go/current
@@ -75,7 +75,7 @@ RUN mise use -g rust@${RUST_VERSION}
 
 # ---
 
-FROM golang:1.26.1-bookworm@sha256:c7a82e9e2df2fea5d8cb62a16aa6f796d2b2ed81ccad4ddd2bc9f0d22936c3f2 AS builder
+FROM golang:1.26.2-bookworm@sha256:4f4ab2c90005e7e63cb631f0b4427f05422f241622ee3ec4727cc5febbf83e34 AS builder
 WORKDIR /src
 
 COPY go.mod go.sum ./
