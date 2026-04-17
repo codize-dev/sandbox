@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.4](https://github.com/codize-dev/sandbox/compare/v0.7.3...v0.7.4) (2026-04-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency python to v3.14.4 ([#39](https://github.com/codize-dev/sandbox/issues/39)) ([abfc8ec](https://github.com/codize-dev/sandbox/commit/abfc8eca3694d092d09db8bd56efe6f3cec6ec37))
+* **deps:** update dependency rust to v1.94.1 ([#35](https://github.com/codize-dev/sandbox/issues/35)) ([6b5de20](https://github.com/codize-dev/sandbox/commit/6b5de208479aad2df5b0544c22ab53cc5812e2e6))
+* **deps:** update node.js to v24.14.1 ([#36](https://github.com/codize-dev/sandbox/issues/36)) ([14bda4d](https://github.com/codize-dev/sandbox/commit/14bda4db90fd8fe6985a70df9230fe28d5fff1cf))
+
 ## [0.7.3](https://github.com/codize-dev/sandbox/compare/v0.7.2...v0.7.3) (2026-04-17)
 
 
