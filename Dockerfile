@@ -31,7 +31,7 @@ RUN apt-get update && \
 
 # Node.js
 # renovate: datasource=node-version depName=node
-ARG NODE_VERSION=24.14.0
+ARG NODE_VERSION=24.14.1
 ENV PATH="/mise/installs/node/${NODE_VERSION}/bin:$PATH"
 RUN mise use -g node@${NODE_VERSION} && \
     ln -s /mise/installs/node/${NODE_VERSION} /mise/installs/node/current
