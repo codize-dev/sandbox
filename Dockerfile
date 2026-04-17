@@ -67,7 +67,7 @@ RUN mise use -g python@${PYTHON_VERSION} && \
 
 # Rust
 # renovate: datasource=github-tags depName=rust packageName=rust-lang/rust
-ARG RUST_VERSION=1.94.0
+ARG RUST_VERSION=1.94.1
 ENV RUSTUP_HOME="/mise/rustup" \
     CARGO_HOME="/mise/cargo"
 ENV PATH="/mise/cargo/bin:$PATH"
