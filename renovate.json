@@ -16,6 +16,11 @@
   ],
   "packageRules": [
     {
+      "groupName": "Go",
+      "matchDatasources": ["golang-version", "docker"],
+      "matchDepNames": ["go", "golang"]
+    },
+    {
       "matchFileNames": ["Dockerfile"],
       "semanticCommitType": "fix"
     },
