@@ -24,7 +24,7 @@ The following special strings can be used from the CLI:
 | `hard` / `max` | `HARD` |
 | (numeric) | `VALUE` |
 
-Note: In the current implementation, when an rlimit is specified via CLI, `*_type` is internally set to `VALUE`. For `--rlimit_as`, `--rlimit_core`, `--rlimit_fsize`, `--rlimit_stack`, and `--rlimit_memlock`, a unit conversion (MiB/KiB) is applied in a later step, so specifying `soft`/`hard` from the CLI will reliably produce incorrect values (because `adjustRLimit` applies an additional multiplication of MiB (×1,048,576) or KiB (×1,024) to the byte value returned by `parseRLimit`). To strictly use `SOFT`/`HARD`/`INF`, set `*_type` explicitly in the configuration file.
+When an rlimit is specified via CLI with the special strings `soft`, `hard`, or `inf`, `parseRLimitType()` correctly sets the `_type` field to `SOFT`, `HARD`, or `INF` respectively. The `adjustRLimit` function delegates to `parseRLimit()`, which only applies the unit multiplier for numeric values. When the resolved type is `SOFT` or `HARD`, `parseRLimit()` returns the system soft/hard limit directly without any unit conversion. This means using `soft`/`hard`/`inf` from the CLI works correctly — the system soft limit, hard limit, or infinity is applied without any unit multiplier.
 
 ### rlimit List
 
@@ -100,9 +100,9 @@ When `max_cpus > 0`:
 2. Randomly select `max_cpus` CPUs from the available CPU set
 3. Set the affinity with `sched_setaffinity`
 
-Random selection uses the MMIX LCG pseudo-random number generator, seeded from `getrandom()` or `/dev/urandom`.
+Random selection uses the MMIX LCG pseudo-random number generator, seeded from `getrandom()`, `/dev/urandom`, or `gettimeofday()` (as a last resort).
 
-This processing is performed inside the child process (after capability dropping, but while sufficient privileges remain).
+This processing is performed inside the child process (after capability dropping (running as non-root within the namespace)).
 
 ## Process Priority
 
@@ -111,3 +111,11 @@ This processing is performed inside the child process (after capability dropping
 | `nice_level` | `19` | `--nice_level VALUE` | Process nice value (-20: highest priority, 19: lowest priority) |
 
 Set via `setpriority(PRIO_PROCESS, 0, nice_level)`. The default value of `19` is the lowest priority, preventing sandbox processes from affecting the responsiveness of the host system.
+
+## OOM Score Adjustment
+
+| Field | Default | CLI | Description |
+|-------|---------|-----|-------------|
+| `oom_score_adj` | not set | `--oom_score_adj VALUE` | OOM killer score adjustment (-1000 to 1000) |
+
+When set, writes the specified value to `/proc/self/oom_score_adj` inside the child process before containment. Higher values make the process more likely to be killed by the Linux OOM killer. This is config.proto field 29.

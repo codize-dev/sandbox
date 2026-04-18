@@ -47,7 +47,7 @@ The `nosuid`, `nodev`, and `noexec` flags can be configured individually per mou
 | CLI | Protobuf Field | Description |
 |-----|-------------------|------|
 | `--proc_path PATH` | `mount_proc: true` (set implicitly) | Specify the mount point for procfs and mount it (default: `/proc`). Specifying this flag automatically sets `mount_proc` to `true` |
-| `--proc_rw` | `is_proc_rw` | Mount procfs as read-write (default: read-only) |
+| `--proc_rw` | CLI-only (no protobuf equivalent) | Mount procfs as read-write (default: read-only). In config files, use `rw: true` on the proc mount entry |
 | `--disable_proc` | `mount_proc: false` (set implicitly) | Do not mount procfs |
 
 Note: There is no CLI flag called `--mount_proc`. In Protobuf configuration files, `mount_proc: true` can be specified directly. In CLI usage, it is implicitly enabled when `--proc_path` is used.
@@ -68,13 +68,15 @@ Example: Combining `prefix_src_env: "HOME"` with `src: "/Documents"` results in 
 
 | CLI | Description |
 |-----|------|
-| `--chroot PATH` / `-c PATH` | Root directory for the jail |
-| `--rw` | Mount chroot as read-write (default: read-only) |
-| `--no_pivotroot` | Use `mount(MS_MOVE)` + `chroot()` instead of `pivot_root` |
+| `--chroot PATH` / `-c PATH` | Root directory for the jail (default: none) (CLI-only, no protobuf equivalent) |
+| `--rw` | Mount chroot as read-write (default: read-only) (CLI-only, no protobuf equivalent) |
+| `--no_pivotroot` | Use `mount(MS_MOVE)` + `chroot()` instead of `pivot_root` (protobuf field: `no_pivotroot`) |
 
 ## Mount Process Details
 
-The mount process executed in `mnt::initCloneNs()`:
+The mount process executed in `mnt::initCloneNs()`. Note that the step order differs between the new API path and the legacy API path:
+
+**New API path:**
 
 1. `chdir('/')` — Set current directory to root
 2. `mount("/", "/", NULL, MS_REC | MS_PRIVATE)` — Make root private
@@ -86,11 +88,24 @@ The mount process executed in `mnt::initCloneNs()`:
    - `/dev/shm/nsjail.UID.root`
    - Fallback: traverse directories under `/` to find a writable directory
    - Final fallback: `/tmp/nsjail.UID.root.<random>` (with a random suffix)
-4. Mount tmpfs (16 MiB) on the working directory (on the legacy API path, a second tmpfs may be additionally mounted for `src_content`; this is not needed on the new API path, which uses fd-relative operations)
+4. Mount tmpfs (16 MiB) on the working directory
 5. Process all configured mount entries in order
-6. If `is_root_rw` is false: remount the root directory as read-only
+6. If `is_root_rw` is false: remount the root directory as read-only (uses `mount_setattr` with `AT_RECURSIVE`, so the remount applies recursively to all submounts)
 7. `pivot_root(destdir, destdir)` + `umount2("/", MNT_DETACH)`
-   - Or if `no_pivotroot`: `mount(".", "/", MS_MOVE)` + `chroot(".")`
+   - Or if `no_pivotroot`: `chdir(destdir)` + `mount(".", "/", MS_MOVE)` + `chroot(".")`
+8. Remount each mount point to apply read-only flags
+9. `chdir(cwd)`
+
+**Legacy API path:**
+
+1. `chdir('/')` — Set current directory to root
+2. Create a temporary working directory (same search order as above)
+3. `mount("/", "/", NULL, MS_REC | MS_PRIVATE)` — Make root private
+4. Mount tmpfs (16 MiB) on the working directory (a second tmpfs is always additionally mounted for `src_content`)
+5. Process all configured mount entries in order
+6. If `is_root_rw` is false: remount the root directory as read-only (only remounts the root itself, not submounts)
+7. `pivot_root(destdir, destdir)` + `umount2("/", MNT_DETACH)`
+   - Or if `no_pivotroot`: `chdir(destdir)` + `mount(".", "/", MS_MOVE)` + `chroot(".")`
 8. Remount each mount point to apply read-only flags
 9. `chdir(cwd)`
 
@@ -119,11 +134,13 @@ Requires kernel 6.3 or later at runtime (detected via `uname()`). Additionally, 
 | `fsconfig(fd, FSCONFIG_SET_FLAG, ...)` | Set mount option flags |
 | `fsconfig(fd, FSCONFIG_CMD_CREATE)` | Create the filesystem |
 | `fsmount(fs_fd, ...)` | Create a detached mount fd |
-| `open_tree(AT_FDCWD, src, OPEN_TREE_CLONE)` | Clone a bind mount |
+| `open_tree(AT_FDCWD, src, OPEN_TREE_CLONE \| OPEN_TREE_CLOEXEC)` | Clone a bind mount (`AT_RECURSIVE` is added conditionally) |
 | `mount_setattr(fd, "", AT_EMPTY_PATH, ...)` | Set RDONLY/NOSUID/NODEV/NOEXEC |
 | `move_mount(src_fd, "", dst_fd, path, MOVE_MOUNT_F_EMPTY_PATH)` | Attach a mount |
 
 Operations on the destination side are fd-relative (using the `root_fd` of destdir). However, source-side path resolution via `open_tree(AT_FDCWD, src, ...)` and `fsconfig(..., "source", ...)` remains, so operations are not entirely fd-relative.
+
+The new API parses generic options from the mount options string (e.g., `ro`, `nosuid`, `noexec`) and applies them as mount attribute flags via `mount_setattr`. The legacy API does not perform this generic options parsing.
 
 ### Mount API Control
 
@@ -131,9 +148,11 @@ Controllable via the `--experimental_mnt` CLI option:
 
 | Value | Behavior |
 |----|------|
-| `default` | Automatically selected based on kernel version |
+| `auto` | Automatically selected based on kernel version |
 | `new` | Force use of the new API |
 | `old` | Force use of the legacy API |
+
+The default when `--experimental_mnt` is not specified is `old`.
 
 ## no_pivotroot Warning
 

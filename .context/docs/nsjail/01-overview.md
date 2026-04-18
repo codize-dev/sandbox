@@ -2,7 +2,7 @@
 
 ## Overview
 
-nsjail is a Linux process isolation tool. It leverages Linux Namespaces, cgroups, rlimits, and seccomp-bpf system call filters to run processes inside a lightweight sandbox. It integrates the Kafel BPF language for writing security policies.
+nsjail is a Linux process isolation tool. It leverages Linux Namespaces, cgroups, rlimits, and seccomp-bpf system call filters to run processes inside a lightweight sandbox. It integrates the Kafel BPF language for writing security policies. It also supports SECCOMP_RET_USER_NOTIF for tracing and intercepting syscalls from a supervisor process. Networking backends include MACVLAN, pasta, and nstun (a built-in userland networking stack with TUN-based NAT, SOCKS5 proxy, and HTTP CONNECT proxy). Traffic rules provide netlink-based fib rules for filtering network traffic by protocol and address family.
 
 - **Developer**: Google (explicitly noted as "not an official Google product")
 - **Lead Developer**: Robert Swiecki (Google Staff Information Security Engineer)
@@ -54,18 +54,20 @@ Note: Dates in the table above are reference commit dates in the `google/nsjail`
 | Configuration file parsing | `config.cc` | Reading configuration files in Protobuf TextProto and JSON formats |
 | Subprocess management | `subproc.cc` | Process creation via `clone()`/`clone3()`, reaping, and time limits |
 | Containment setup | `contain.cc` | Orchestration of all namespace and resource setup inside the child process |
-| Mount namespace | `mnt.cc`, `mnt_legacy.cc`, `mnt_newapi.cc` | Filesystem isolation via legacy `mount(2)` or new `fsopen`/`fsmount` APIs |
-| Network | `net.cc` | MACVLAN cloning, interface moving, pasta launch, TCP listener |
+| Mount namespace | `mnt.cc`, `mnt_legacy.cc`, `mnt_newapi.cc` | Filesystem isolation via legacy `mount(2)` or new `fsopen`/`fsmount` APIs; selectable via `--experimental_mnt` (`old`, `new`, or `auto`) |
+| Network | `net.cc` | MACVLAN cloning, interface moving, pasta launch, nstun initialization, traffic rules, TCP listener |
 | User namespace | `user.cc` | UID/GID mapping, `setresuid`/`setresgid` |
 | Capabilities | `caps.cc` | Dropping capabilities, bounding set manipulation, ambient set |
 | Cgroup v1 | `cgroup.cc` | memory, pids, net_cls, cpu controllers |
 | Cgroup v2 | `cgroup2.cc` | memory, pids, cpu controllers in the unified hierarchy |
-| Seccomp/BPF | `sandbox.cc` | Compiling Kafel policies and applying seccomp-bpf |
+| Seccomp/BPF | `sandbox.cc` | Compiling Kafel policies and applying seccomp-bpf, and SECCOMP_RET_USER_NOTIF setup |
 | CPU affinity | `cpu.cc` | CPU restriction via `sched_setaffinity` |
 | PID namespace | `pid.cc` | Dummy init process for EXECVE mode |
 | UTS namespace | `uts.cc` | `sethostname` |
 | Logging | `logs.cc` | Color-coded level-based log output |
 | Utilities | `util.cc` | File I/O, string manipulation, kernel version checks, random number generation, rlimit wrappers |
+| Userland networking | `nstun/` | Userland networking stack (TUN-based NAT, SOCKS5 proxy, HTTP CONNECT proxy, ICMP/UDP/TCP handling) |
+| Seccomp user notification | `unotify/` | SECCOMP_RET_USER_NOTIF support for tracing syscalls (file access, network sockets) |
 
 ### Core Data Structures
 
@@ -80,30 +82,38 @@ struct nsj_t {
     std::vector<idmap_t> gids;    // GID mappings
     std::vector<int> openfds;     // fds to keep open (default: 0,1,2)
     std::vector<pipemap_t> pipes; // pipe pairs for TCP listen mode
+    int exit_status;
     std::string chroot;
     std::string proc_path;
     bool is_root_rw;
     bool mnt_newapi;             // whether to use the new fsopen/fsmount API
     bool is_proc_rw;
-    struct sock_fprog seccomp_fprog; // compiled BPF filter
+    struct sock_fprog seccomp_fprog;         // compiled BPF filter
+    struct sock_fprog seccomp_unotify_fprog; // compiled BPF filter for SECCOMP_RET_USER_NOTIF
 };
 
 struct pids_t {
+    pid_t pid;
     time_t start;
+    int pidfd;
     std::string remote_txt;
     struct sockaddr_in6 remote_addr;
     int pid_syscall_fd;    // /proc/PID/syscall for seccomp violation reporting
     pid_t pasta_pid;       // pasta userland network process
+    pthread_t monitor_tid;
 };
 ```
 
 ### Build Dependencies
 
 - `protobuf` (via pkg-config)
-- `libnl-route-3` (required for MACVLAN/interface features, optional)
+- `protobuf-compiler (protoc)` (for compiling `.proto` files)
+- `libnl-route-3` (required for MACVLAN/interface and traffic rules features, optional)
 - `kafel` (git submodule, built with `make -C kafel`)
 
-Build flags (COMMON_FLAGS + CXXFLAGS): `-O2 -c -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -fPIE -Wformat -Wformat-security -Wno-format-nonliteral -Wall -Wextra -Werror -Ikafel/include -std=c++20 -fno-exceptions -Wno-unused -Wno-unused-parameter`
+Build flags (COMMON_FLAGS + CXXFLAGS): `-O2 -c -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -fPIE -Wformat -Wformat-security -Wno-format-nonliteral -Wall -Wextra -Werror -Ikafel/include -I. -std=c++20 -fno-exceptions -Wno-unused -Wno-unused-parameter -Wno-c99-designator`
+
+There are two proto files: `config.proto` (main configuration schema) and `unotify/unotify.proto` (seccomp user notification records).
 
 Link flags: `-pie -Wl,-z,noexecstack -lpthread`
 

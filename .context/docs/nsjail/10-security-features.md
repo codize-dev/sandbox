@@ -1,6 +1,6 @@
 # Security Features
 
-nsjail provides numerous security features including capability management, no_new_privs, TSC disabling, personality flags, file descriptor control, and signal control.
+nsjail provides numerous security features including capability management, no_new_privs, TSC disabling, personality flags, file descriptor control, signal control, OOM score adjustment, securebits manipulation, and signal handler reset.
 
 ## Capability Management
 
@@ -17,14 +17,15 @@ All capabilities are dropped:
 
 1. Clear the inheritable set
 2. Clear the ambient set with `PR_CAP_AMBIENT_CLEAR_ALL`
-3. If `CAP_SETPCAP` is in the effective set: drop all capabilities from the bounding set
+3. Commit the inheritable set to the kernel via `setCaps()`
+4. If `CAP_SETPCAP` is in the effective set: drop all capabilities from the bounding set
 
 ### When Retaining Specific Capabilities (`cap` specified)
 
 1. Clear the inheritable set
 2. Clear the ambient set
 3. Set each capability specified in `cap` in the inheritable set
-4. `setCaps()`: set the effective and permitted sets
+4. `setCaps()`: commit the capability state (including the modified inheritable set) to the kernel
 5. If `CAP_SETPCAP` is effective: drop capabilities not in the retain list from the bounding set
 6. Raise each capability specified in `cap` in the ambient set
 
@@ -80,7 +81,7 @@ All capabilities are dropped:
 | `CAP_BPF` | Allow BPF operations |
 | `CAP_CHECKPOINT_RESTORE` | Allow checkpoint/restore |
 
-`CAP_PERFMON`, `CAP_BPF`, and `CAP_CHECKPOINT_RESTORE` have fallback definitions for older kernel headers.
+`CAP_AUDIT_READ`, `CAP_PERFMON`, `CAP_BPF`, and `CAP_CHECKPOINT_RESTORE` have fallback definitions for older kernel headers.
 
 ## no_new_privs
 
@@ -90,10 +91,11 @@ All capabilities are dropped:
 
 ### Default Behavior
 
-`prctl(PR_SET_NO_NEW_PRIVS, 1)` is set in two places:
+`prctl(PR_SET_NO_NEW_PRIVS, 1)` is set in multiple places:
 
-1. `contain::containDropPrivs()`: set unconditionally during the privilege-dropping step of the containment sequence (unless `disable_no_new_privs` is `true`)
-2. `sandbox::applyPolicy()`: set again immediately before applying the policy, but only when a seccomp policy is configured
+1. `contain::containDropPrivs()`: set during the privilege-dropping step of the containment sequence (unless `disable_no_new_privs` is `true`). If the `prctl` call fails, it is treated as a warning (`PLOG_W`), not fatal, for compatibility with older kernels
+2. `sandbox::applyPolicy()`: specifically in the internal `prepareAndCommit()` function called from `applyPolicy()`, set again immediately before applying the policy, but only when a seccomp policy is configured
+3. `sandbox::installUnotifyFilter()`: when `seccomp_unotify` is enabled, `PR_SET_NO_NEW_PRIVS` is set regardless of the `disable_no_new_privs` setting
 
 Effects:
 
@@ -107,7 +109,10 @@ When `disable_no_new_privs: true`:
 
 - The setting in `containDropPrivs()` is skipped
 - However, if a seccomp policy is configured, it is still set inside `sandbox::applyPolicy()` (required for applying seccomp filters)
+- When `seccomp_unotify` is enabled, it is always set in `installUnotifyFilter()` regardless of `disable_no_new_privs`
 - Without seccomp: use of setuid binaries is permitted
+
+See also: [06-seccomp.md](06-seccomp.md) for details on `seccomp_unotify` and `seccomp_log` and their interaction with `no_new_privs`.
 
 ## TSC Disabling
 
@@ -165,11 +170,36 @@ Controls the behavior of `killAndReapAll()` when nsjail itself receives a fatal 
 - `false` (default): send `SIGKILL` to child processes
 - `true`: forward the received signal as-is to child processes
 
-Note: When a process is terminated due to exceeding the time limit (`time_limit`), `SIGKILL` is always sent regardless of the `forward_signals` value. The effect of `forward_signals` applies only to `killAndReapAll()` when nsjail itself receives a signal.
+Note: When a process is terminated due to exceeding the time limit (`time_limit`), `SIGKILL` is always sent regardless of the `forward_signals` value. The effect of `forward_signals` applies only to `killAndReapAll()` when nsjail itself receives a signal. During final cleanup at program exit, `SIGKILL` is always used regardless of `forward_signals`.
 
 ### skip_setsid
 
 `setsid()` is called by default to place the jail process in a new session. Setting `skip_setsid: true` skips this, but is considered dangerous as it allows terminal injection (injecting characters into the controlling terminal). It is useful when job control or signal control via `/bin/sh` is needed, but carries security risks.
+
+## OOM Score Adjustment
+
+| Field | CLI | Description |
+|-------|-----|-------------|
+| `oom_score_adj` (field 29) | `--oom_score_adj VALUE` | Adjust the OOM killer priority for the child process |
+
+When set, writes the specified value to `/proc/self/oom_score_adj` in the child process. Valid range is -1000 to 1000. A higher value makes the process more likely to be killed by the OOM killer; -1000 disables OOM killing entirely.
+
+## CLONE_CLEAR_SIGHAND
+
+When using `clone3()` (Linux >= 5.5), nsjail attempts to add the `CLONE_CLEAR_SIGHAND` flag. This resets all signal dispositions to `SIG_DFL` in the child process, preventing inherited signal handlers from executing in the sandboxed context. If the kernel does not support `CLONE_CLEAR_SIGHAND`, nsjail falls back gracefully without the flag.
+
+## PR_SET_SECUREBITS
+
+During the containment sequence, nsjail temporarily manipulates securebits to preserve capabilities across uid/gid changes:
+
+1. Before uid/gid changes: sets `SECBIT_KEEP_CAPS | SECBIT_NO_SETUID_FIXUP` via `prctl(PR_SET_SECUREBITS, ...)`
+2. After uid/gid changes: resets securebits to `0`
+
+This ensures capabilities are not dropped when switching from root to an unprivileged user, allowing subsequent capability manipulation to work correctly.
+
+## Signal Handler Reset via resetEnv()
+
+Early in child process setup (after OOM score adjustment and FD setup), `resetEnv()` resets the nssigs signal set (SIGINT, SIGQUIT, SIGUSR1, SIGALRM, SIGCHLD, SIGTERM, SIGTTIN, SIGTTOU, SIGPIPE) to `SIG_DFL` and unblocks all signals. This ensures the child process starts with a clean signal state regardless of any signal configuration inherited from the parent.
 
 ## Death Signal via prctl
 

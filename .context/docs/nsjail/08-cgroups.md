@@ -26,6 +26,10 @@ The following resource limit fields are shared between cgroup v1 and v2:
 
 `cgroup_mem_memsw_max` and `cgroup_mem_swap_max` cannot be specified simultaneously.
 
+### Directory Permissions
+
+Cgroup directories are created with `mkdir(path, 0700)` in both v1 and v2.
+
 ## Cgroup v1
 
 ### Controller List
@@ -59,10 +63,11 @@ Example: `/sys/fs/cgroup/memory/NSJAIL/NSJAIL.12345`
 
 ### memory Controller
 
-- Writes `cgroup_mem_max` to `memory.limit_in_bytes`
-- Writes `cgroup_mem_memsw_max` to `memory.memsw.limit_in_bytes` (when configured)
-  - If `cgroup_mem_swap_max` is set: calculated as `memsw_max = mem_max + swap_max`
-- Writes `0` to `memory.oom_control` to enable the OOM killer (so processes are killed rather than hanging)
+- Writes `0` to `memory.oom_control` to enable the OOM killer (so processes are killed rather than hanging) — this is written unconditionally when the memory cgroup is created
+- Writes `cgroup_mem_max` to `memory.limit_in_bytes` (when `cgroup_mem_max > 0`)
+- Writes the computed `memsw_max` to `memory.memsw.limit_in_bytes` (when `memsw_max > 0`)
+  - If `cgroup_mem_swap_max` is set: `memsw_max = mem_max + swap_max`
+  - If `cgroup_mem_memsw_max` is set: `memsw_max = cgroup_mem_memsw_max` (used directly)
 
 ### pids Controller
 
@@ -70,7 +75,7 @@ Example: `/sys/fs/cgroup/memory/NSJAIL/NSJAIL.12345`
 
 ### net_cls Controller
 
-- Writes `cgroup_net_cls_classid` to `net_cls.classid`
+- Writes `cgroup_net_cls_classid` to `net_cls.classid` in hexadecimal format with `0x` prefix (e.g., `0x10001`)
 - Can be used in combination with tc (traffic control) for network bandwidth control
 
 ### cpu Controller
@@ -90,7 +95,11 @@ Processes are assigned to the cgroup by writing the PID to the `tasks` file.
 
 `finishFromParent()`: After process termination, removes the cgroup directory with `rmdir`.
 
-Note: In both v1 and v2, the conditions for creating and deleting a cgroup directory are inconsistent. If only `cgroup_mem_swap_max` is set (`cgroup_mem_max = 0`), the directory leaks. Similarly, if only `cgroup_mem_memsw_max` is set (`cgroup_mem_max = 0`), it also leaks (because `initNsFromParentMem` creates the cgroup by computing `swap_max = memsw_max - mem_max >= 0`, but the deletion condition in `finishFromParent` — `cgroup_mem_max != 0` — does not apply). In v2, the directory is also excluded from deletion when `cgroup_pids_max = 0` and `cgroup_cpu_ms_per_sec = 0`.
+Note: In both v1 and v2, the conditions for creating and deleting a cgroup directory are inconsistent.
+
+In v1, `finishFromParent` checks `cgroup_mem_max != 0 || cgroup_mem_memsw_max != 0`. The memory cgroup is created when `cgroup_mem_max != 0 || memsw_max != 0` (where `memsw_max` is computed as `mem_max + swap_max` when `cgroup_mem_swap_max >= 0`). The leak occurs when `cgroup_mem_swap_max > 0` with `cgroup_mem_max = 0` and `cgroup_mem_memsw_max = 0`: the cgroup is created (because `memsw_max = 0 + swap_max > 0` makes the creation condition pass) but the deletion condition does not match. When `cgroup_mem_swap_max = 0` and `cgroup_mem_max = 0`, the computed `memsw_max = 0`, so no cgroup is created and no leak occurs.
+
+In v2, `finishFromParent` checks `cgroup_mem_max != 0 || cgroup_pids_max != 0 || cgroup_cpu_ms_per_sec != 0`. It does not check `cgroup_mem_memsw_max` or `cgroup_mem_swap_max`. The leak occurs when a memory cgroup is created (e.g., via `cgroup_mem_swap_max > 0`) but all three checked fields are 0.
 
 ## Cgroup v2
 
@@ -98,8 +107,8 @@ Note: In both v1 and v2, the conditions for creating and deleting a cgroup direc
 
 In cgroup v2 (unified hierarchy), all controllers share a single cgroup hierarchy.
 
-- Basic support added in v2.9 (September 2021)
-- Enhanced in v3.4 (October 2024)
+- Basic support added in v2.9 (September 2019)
+- Enhanced in v3.4 (October 2023)
 
 ### v2-Specific Configuration Fields
 
@@ -131,11 +140,15 @@ Note: The cgroup v1 settings `cgroup_net_cls_classid` / `cgroup_net_cls_mount` /
 The handling of `cgroup_mem_swap_max` and `cgroup_mem_memsw_max` differs between cgroup v1 and v2:
 
 - **cgroup v1**: `memory.memsw.limit_in_bytes = mem_max + swap_max` (writes the combined value)
-- **cgroup v2**: `memory.swap.max = memsw_max - mem_max` (writes the difference)
+- **cgroup v2**: `memory.swap.max = swap_max` (writes the value directly)
 
 When `cgroup_mem_memsw_max` is specified:
 - v1: writes it directly to `memory.memsw.limit_in_bytes`
-- v2: writes `cgroup_mem_memsw_max - cgroup_mem_max` to `memory.swap.max`
+- v2: computes `swap_max = cgroup_mem_memsw_max - cgroup_mem_max` and writes the result to `memory.swap.max`
+
+When `cgroup_mem_swap_max` is specified (without `cgroup_mem_memsw_max`):
+- v1: computes `memsw_max = mem_max + swap_max` and writes the result to `memory.memsw.limit_in_bytes`
+- v2: writes `cgroup_mem_swap_max` directly to `memory.swap.max` without conversion
 
 ### CPU Throttling
 
@@ -149,9 +162,9 @@ To handle the cgroup v2 "no internal processes" rule (when a cgroup has processe
 
 1. Read `cgroup.subtree_control` on the root cgroup to check whether the required controllers are already enabled
 2. If all are enabled, do nothing (skip steps 3–5)
-3. Enable the missing controllers with `+memory`, `+pids`, `+cpu`
-4. If `EBUSY` is returned (because the nsjail process itself is in the root cgroup), move nsjail itself into the `NSJAIL_SELF.{nsjail-pid}` child cgroup (`moveSelfIntoChildCgroup`)
-5. Enable subtree control again
+3. Enable each needed controller one at a time (e.g., `+memory`, then `+pids`, then `+cpu`) by writing to `cgroup.subtree_control`. Controllers that are already enabled are harmlessly re-enabled
+4. For each controller, if `EBUSY` is returned (because the nsjail process itself is in the root cgroup), move nsjail itself into the `NSJAIL_SELF.{nsjail-pid}` child cgroup (`moveSelfIntoChildCgroup`) and retry enabling that controller
+5. Repeat per-controller until all needed controllers are enabled
 
 Note: No code exists to delete the `NSJAIL_SELF.{pid}` child cgroup. This cgroup directory may leak after nsjail exits.
 
@@ -159,16 +172,12 @@ Note: No code exists to delete the `NSJAIL_SELF.{pid}` child cgroup. This cgroup
 
 Processes are assigned to the cgroup by writing the PID to the `cgroup.procs` file.
 
-### Directory Permissions
-
-cgroup directories are created with `0700`.
-
 ### Usage Inside Docker
 
 When using cgroup v2 inside a Docker container:
 
-- nsjail must be the root process of the container
-- Docker's `--cgroupns=host` flag is required
+- nsjail must be run as root (with root privileges)
+- Docker's `--cgroupns=host` flag may be required
 
 ### Usage Example
 

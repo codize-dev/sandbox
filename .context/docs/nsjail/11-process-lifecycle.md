@@ -9,10 +9,11 @@ The following initialization steps are performed before the main loop begins:
 1. Daemonize (`daemon(1, 0)`) — only when the `daemon` flag is enabled
 2. Log configuration parameters (`cmdline::logParams()`)
 3. Set up signal handlers (`setSigHandlers()`)
-4. Set up a 1-second interval timer (`setTimer()`) — returns early in EXECVE mode
-5. Auto-detect cgroup v2 (when `detect_cgroupv2` is enabled)
-6. Set up the cgroup v2 parent cgroup (`cgroup2::setup()`) — enable controllers in the root cgroup's `cgroup.subtree_control`, and move nsjail itself into a `NSJAIL_SELF.{pid}` child cgroup if necessary
-7. Compile the seccomp policy (`sandbox::preparePolicy()`)
+4. Set file descriptor limit (`setFDLimit()`)
+5. Set up a 1-second interval timer (`setTimer()`) — returns early in EXECVE mode
+6. Auto-detect cgroup v2 (when `detect_cgroupv2` is enabled)
+7. Set up the cgroup v2 parent cgroup (`cgroup2::setup()`) — enable controllers in the root cgroup's `cgroup.subtree_control`, and move nsjail itself into a `NSJAIL_SELF.{pid}` child cgroup if necessary (cgroup v2 only)
+8. Compile the seccomp policy (`sandbox::preparePolicy()`)
 
 ## Non-EXECVE Mode (ONCE / RERUN / LISTEN) Lifecycle
 
@@ -20,7 +21,7 @@ The following initialization steps are performed before the main loop begins:
 
 1. `net::limitConns()` — check connection count limit (LISTEN mode)
 2. Build clone flags from configured namespaces
-3. Create a parent-child synchronization channel with `socketpair(AF_UNIX, SOCK_STREAM)`
+3. Create a parent-child synchronization channel with `socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC)`
 4. `cloneProc()` — three-stage fallback:
    1. Attempt `clone3()` + `CLONE_CLEAR_SIGHAND` (Linux 5.5 and above)
    2. If step 1 fails (regardless of error type): retry `clone3()` without `CLONE_CLEAR_SIGHAND`
@@ -28,22 +29,27 @@ The following initialization steps are performed before the main loop begins:
 
 ### 2. Child Process Side (`newProc()`)
 
-1. `contain::setupFD()` — dup2 for stdin/stdout/stderr
-2. `resetEnv()` — reset signals in the `nssigs` array (SIGINT, SIGQUIT, SIGUSR1, SIGALRM, SIGCHLD, SIGTERM, SIGTTIN, SIGTTOU, SIGPIPE) to `SIG_DFL` and unblock all signals
-3. Wait to read sync signal (`'D'`) from socketpair (non-EXECVE mode only)
-4. `contain::containProc()` — set up all namespaces and resources (described below)
-5. Clear environment variables (when `keep_env` is false)
-6. Set configured environment variables
-7. `sandbox::applyPolicy()` — apply seccomp-bpf (**last step**)
-8. `execv()` or `execveat()`
+1. Write to `/proc/self/oom_score_adj` — adjust OOM killer score (when configured)
+2. `contain::setupFD()` — dup2 for stdin/stdout/stderr
+3. `resetEnv()` — reset signals in the `nssigs` array (SIGINT, SIGQUIT, SIGUSR1, SIGALRM, SIGCHLD, SIGTERM, SIGTTIN, SIGTTOU, SIGPIPE) to `SIG_DFL` and unblock all signals
+4. `net::initChildPreSync()` — initialize nstun child-side (when user networking is configured)
+5. Wait to read sync signal (`'D'`) from socketpair (non-EXECVE mode only)
+6. `contain::containProc()` — set up all namespaces and resources (described below)
+7. Clear environment variables (when `keep_env` is false)
+8. Set configured environment variables
+9. `sandbox::applyPolicy()` — apply seccomp-bpf
+10. Send seccomp unotify notification FD to parent via the synchronization channel (when seccomp unotify is configured)
+11. Wait to read a second sync signal (`'D'`) from the parent (when seccomp unotify is configured)
+12. `execv()` or `execveat()`
 
 ### 3. Parent Process Side (`initParent()` + `runChild()`)
 
-1. `net::initParent()` — move/clone interfaces, start pasta
+1. `net::initParent()` — move/clone interfaces, start pasta, initialize nstun parent-side
 2. `cgroup::initNsFromParent()` or `cgroup2::initNsFromParent()` — create and configure cgroup
-3. `user::initNsFromParent()` — write to `/proc/PID/uid_map` and `/proc/PID/gid_map`, set `setgroups` to `"deny"`
+3. `user::initNsFromParent()` — set `setgroups` to `"deny"`, write to `/proc/PID/gid_map`, then write to `/proc/PID/uid_map`
 4. Send sync character `'D'` to unblock the child process
-5. After `initParent()` returns, wait inside `runChild()` for an error response from the child: if the child fails to start, it sends the error character `'E'`
+5. Receive seccomp unotify notification FD from the child (when seccomp unotify is configured)
+6. After `initParent()` returns, wait inside `runChild()` for an error response from the child: if the child fails to start, it sends the error character `'E'`
 
 ### 4. Child Process Execution
 
@@ -104,6 +110,7 @@ See [04-filesystem.md](04-filesystem.md) for details.
 
 1. Bring up `lo` (loopback) (when `iface_no_lo` is false)
 2. Configure MACVLAN IP/mask/gateway (when `macvlan_iface` is set)
+3. Apply traffic rules (when traffic rules are configured)
 
 ### Step 5: UTS Namespace Initialization
 
@@ -128,7 +135,7 @@ See [04-filesystem.md](04-filesystem.md) for details.
 
 `containCPU()` → `cpu::initCpu()`:
 
-- If `max_cpus > 0`, apply `sched_setaffinity` to a randomly selected CPU
+- If `max_cpus > 0`, apply `sched_setaffinity` to up to `max_cpus` randomly selected CPUs
 
 ### Step 9: TSC Disabling
 
@@ -140,7 +147,7 @@ See [04-filesystem.md](04-filesystem.md) for details.
 
 `containSetLimits()`:
 
-- Set 10 rlimits via `prlimit64`
+- Set 10 rlimits via `prlimit64` (skipped when `disable_rl` is true)
 
 ### Step 11: Environment Preparation
 
@@ -157,9 +164,9 @@ See [04-filesystem.md](04-filesystem.md) for details.
 
 - Set close-on-exec on all fds not in `openfds`
 - Three methods tried in order:
-  1. `close_range(CLOSE_RANGE_CLOEXEC)`
+  1. `close_range(CLOSE_RANGE_CLOEXEC)` — first marks ALL fds close-on-exec, then re-enables fds in `openfds` by clearing `FD_CLOEXEC`
   2. Read `/proc/self/fd`
-  3. Naive loop over fd 0-1024
+  3. Naive loop over fd 0-1023
 
 ## Process Reaping and Time Limits
 
@@ -188,7 +195,7 @@ A comment in the source code explains that stopped or namespaced processes may n
 1. Detect process termination with `waitid(P_ALL, 0, &si, WNOHANG | WNOWAIT | WEXITED)`, then reap via `wait4()` inside the internal `reapProc(nsj, pid)`
 2. Remove cgroup directory (`cgroup::finishFromParent()` / `cgroup2::finishFromParent()`)
 3. Call `removeProc()`:
-   - Terminate the pasta process if present (send `SIGKILL`)
+   - Terminate the pasta process if present (send `SIGKILL`, then `waitpid()` to reap it)
    - Close `pid_syscall_fd`
    - Remove the entry from the process map
 
@@ -200,15 +207,27 @@ When a process is added (`addProc()`), a fd to `/proc/PID/syscall` is opened in 
 
 If the pasta process exits unexpectedly, `SIGKILL` is sent to the corresponding jail process.
 
+### Forward Signals
+
+When `forward_signals` is true, fatal signals received by nsjail (e.g., `SIGTERM`, `SIGINT`) are forwarded to all running sandbox child processes before nsjail itself exits.
+
+### Shutdown Cleanup
+
+During shutdown, the following cleanup steps are performed:
+
+1. `killAndReapAll()` — send `SIGKILL` to all running sandbox child processes and reap them via `waitpid()`
+2. `sandbox::closePolicy()` — free the compiled seccomp policy
+3. `unotify::stop()` — stop the seccomp unotify listener thread if active
+
 ## LISTEN Mode-Specific Behavior
 
 ### Pipe Relay (`nsjail.cc: pipeTraffic()`)
 
 Data transfer between the TCP socket and the sandbox process's stdin/stdout:
 
-1. Monitor both fds with `poll()`
+1. Monitor fds with `poll()` — 3 fds per connection (connfd, pipe in, pipe out) plus the listen fd
 2. Transfer data with zero-copy using `splice()`
-3. Teardown on `POLLERR`/`POLLHUP`
+3. Teardown on `POLLERR`/`POLLHUP` or when `splice()` returns 0
 
 ### Handling of stderr
 
@@ -216,7 +235,7 @@ In LISTEN mode, the child process's stdout and stderr are both connected to the 
 
 ### Behavior on Connection Disconnect
 
-When a TCP connection is disconnected (when `POLLERR` / `POLLHUP` is detected):
+When a TCP connection is disconnected (when `POLLERR` / `POLLHUP` is detected or `splice()` returns 0):
 
 1. All fds for the socket and pipe are closed
 2. `SIGKILL` is sent to the corresponding child process
@@ -245,7 +264,7 @@ When a TCP connection is disconnected (when `POLLERR` / `POLLHUP` is detected):
 
 - Default: log output to `dup(STDERR_FILENO)` (to survive fd reassignment)
 - When `--daemon` is used and no log file is specified: `/var/log/nsjail.log` is created automatically
-- `FATAL` level logs call `exit(0xff)`
+- `FATAL` level logs call `_exit(0xff)`
 - TTY color codes are suppressed when the `NO_COLOR` environment variable is set
 
 ### Log Format
@@ -254,13 +273,17 @@ DEBUG/WARNING/ERROR/FATAL:
 ```
 [D][2024-01-01T12:00:00+0000][12345] functionName():123 message
 ```
+or, when TID differs from PID:
+```
+[D][2024-01-01T12:00:00+0000][12345/67890] functionName():123 message
+```
 
 INFO:
 ```
 [I][2024-01-01T12:00:00+0000] message
 ```
 
-`[D]`/`[I]`/`[W]`/`[E]`/`[F]` indicate the log level. Only the INFO level omits PID, function name, and line number (`print_funcline = false`).
+`[D]`/`[I]`/`[W]`/`[E]`/`[F]` indicate the log level. `[PID]` or `[PID/TID]` (TID is only included when it differs from PID) shows the process and thread IDs. Only the INFO level omits PID/TID, function name, and line number (`print_funcline = false`).
 
 ## TTY State Save and Restore
 

@@ -4,14 +4,14 @@ nsjail supports 4 execution modes. They are defined by the `Mode` enum in `confi
 
 ## Mode List
 
-| CLI Flag | Proto enum | Internal enum | Behavior |
+| CLI Flag | Proto enum | Log label | Behavior |
 |-----------|------------|-----------|------|
 | `-Mo` | `ONCE = 1` | `MODE_STANDALONE_ONCE` | Performs `clone`/`execve` exactly once, then exits with the child process's exit status. **Default.** |
 | `-Ml` / `--port PORT` | `LISTEN = 0` | `MODE_LISTEN_TCP` | inetd-style TCP server. Forks a new jail for each connection. |
 | `-Mr` | `RERUN = 2` | `MODE_STANDALONE_RERUN` | Repeatedly re-executes the command. Useful for fuzzing. |
 | `-Me` | `EXECVE = 3` | `MODE_STANDALONE_EXECVE` | Directly performs `unshare()` → `execve()` without a supervisor fork. |
 
-Note: The numeric values of the internal `ns_mode_t` enum do not match those of the Proto enum (`MODE_STANDALONE_EXECVE = 2`, `MODE_STANDALONE_RERUN = 3`). However, the actual code uses Proto's `nsjail::Mode`, and `ns_mode_t` is not referenced.
+The "Log label" column shows the display strings used in help text and log messages; the actual mode is represented by the Proto enum value (`nsjail::Mode`).
 
 ## ONCE Mode (`-Mo`)
 
@@ -40,8 +40,10 @@ An inetd-style server that listens on a TCP port and forks a new jail process fo
 - Creates an `AF_INET6` socket with `SO_REUSEADDR`, `O_NONBLOCK`, and `SOMAXCONN` backlog
 - IPv4 addresses are automatically converted to the `::ffff:IP` format
 - `max_conns_per_ip` tracks and limits connections per IP
-- stdin/stdout is piped between the TCP socket and sandbox process using `poll()` + `splice()`
+- For each connection, two pipe pairs are created: one for stdin and one shared for stdout and stderr. The child process receives the pipe endpoints (not the TCP socket directly). The parent bridges data between the TCP socket and the pipe file descriptors using `poll()` + `splice()`
 - Teardown is handled on `POLLERR`/`POLLHUP`
+
+Note: Specifying `--port` on the CLI implicitly sets the mode to LISTEN, even without `-Ml`.
 
 ```bash
 nsjail -Ml --port 8080 --chroot /jail -- /bin/handler
@@ -49,7 +51,7 @@ nsjail -Ml --port 8080 --chroot /jail -- /bin/handler
 
 ## RERUN Mode (`-Mr`)
 
-Executes the command repeatedly. Primarily used in fuzzing workflows.
+Executes the command repeatedly. Primarily used in fuzzing workflows. Each child is waited on before the next iteration is launched (serial execution). Internally, RERUN mode uses the same standalone code path as ONCE mode, looping the spawn-and-wait cycle.
 
 ```bash
 nsjail -Mr --chroot /jail -- /bin/fuzz_target
@@ -59,9 +61,11 @@ nsjail -Mr --chroot /jail -- /bin/fuzz_target
 
 Unlike other modes, rather than spawning a new process with `clone()`, this mode calls `unshare()` to isolate namespaces within the current process, then performs `execve()`. There is no supervisor process.
 
+Note: The periodic interval timer used for time limit enforcement is not set in EXECVE mode, since there is no supervisor process to receive the timer signals.
+
 ### init Process for PID Namespace
 
-When `CLONE_NEWPID` is enabled, a dummy "ns-init" process that acts as PID 1 inside the PID namespace is spawned via `subproc::cloneProc(CLONE_FS, 0)` (not `fork()`). This is because without a PID 1 process, subsequent `fork()` calls within the namespace will fail with `ENOMEM`. This dummy process is configured with `SA_NOCLDWAIT | SA_NOCLDSTOP` to reap zombie processes.
+When `CLONE_NEWPID` is enabled, a dummy "ns-init" process that acts as PID 1 inside the PID namespace is spawned via `subproc::cloneProc(CLONE_FS, 0)` (not `fork()`). This is because without a PID 1 process, subsequent `fork()` calls within the namespace will fail with `ENOMEM`. This dummy process is configured with `SA_NOCLDWAIT | SA_NOCLDSTOP` to reap zombie processes, and `PR_SET_PDEATHSIG(SIGKILL)` (so it is killed when the parent dies) and `PR_SET_DUMPABLE(0)` (to prevent core dumps) are also set via `prctl()`.
 
 ```bash
 nsjail -Me --chroot /jail -- /bin/bash
@@ -89,6 +93,6 @@ message Exe {
 - `path`: Path to the binary to execute. Used as the path argument to `execv()` when `exec_fd` is false; opened with `O_RDONLY | O_PATH | O_CLOEXEC` when true
 - `arg`: Command-line arguments (argv[1] and beyond)
 - `arg0`: Overrides argv[0]. If not specified, `path` is used as argv[0]
-- `exec_fd`: When true, `execveat(__NR_execveat, fd, "", argv, environ, AT_EMPTY_PATH)` is used
+- `exec_fd`: When true, the binary is executed via a raw syscall invocation: `syscall(__NR_execveat, fd, "", argv, environ, AT_EMPTY_PATH)`
 
 On the CLI, specify as `-- /path/to/cmd args`. CLI specification overrides `exec_bin` in the configuration file.

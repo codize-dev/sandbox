@@ -91,10 +91,11 @@ Creates an independent network stack (interfaces, routing tables, iptables rules
 - No network access by default (no interfaces other than loopback)
 - The loopback interface is brought up by default
 - `iface_no_lo: true` prevents the loopback from being brought up
-- Three methods to provide network access:
+- Four methods to provide network access:
   1. MACVLAN clone
   2. `iface_own` (moving an existing interface)
   3. pasta userland networking
+  4. nstun userland networking (`--user_net`)
 
 See [05-network.md](05-network.md) for details.
 
@@ -124,7 +125,7 @@ Allows offsets for `CLOCK_MONOTONIC` and `CLOCK_BOOTTIME` clocks within the name
 - **Disabled by default** (`clone_newtime: false`)
 - Enable with `--enable_clone_newtime`
 - On Linux in general, offsets can be configured via `/proc/pid/timens_offsets`, but nsjail itself does not implement writing to this file
-- The `CLONE_NEWTIME` flag is also applied in ONCE/RERUN/LISTEN modes. It may work in environments where `clone3()` is available, but a warning log is emitted in the implementation
+- The `CLONE_NEWTIME` flag is also passed to `clone3()` in ONCE/RERUN/LISTEN modes; a warning is logged, and it will succeed if clone3 supports it. However, if the system falls back to legacy `clone()` (no clone3 support), using `CLONE_NEWTIME` causes a hard failure (returns -1)
 - If `clone_newtime` is requested in an environment that does not support `clone3()`, it will fail in all modes except EXECVE (`-Me`)
 
 ## Namespace Creation Methods
@@ -148,6 +149,7 @@ All configured namespace flags are included in the clone flags.
 
 - Uses a communication channel created by `socketpair(AF_UNIX, SOCK_STREAM)`
 - After the parent process completes setup of network, cgroup, and UID/GID mappings, it sends the sync character `'D'` to unblock the child process
+- Before the child reads the `'D'` sync character, it calls `net::initChildPreSync()` (which initializes nstun on the child side if user networking is configured)
 
 ### Special Handling in EXECVE Mode
 

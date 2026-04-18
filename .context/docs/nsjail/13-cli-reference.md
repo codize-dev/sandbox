@@ -18,7 +18,7 @@ nsjail [options] -- command-path [arguments...]
 
 | Option | Description |
 |--------|-------------|
-| `--chroot VALUE` / `-c VALUE` | Root directory for the jail |
+| `--chroot VALUE` / `-c VALUE` | Root directory for the jail (default: none) |
 | `--rw` | Mount chroot as read-write (default: read-only) |
 | `--no_pivotroot` | Use mount(MS_MOVE) + chroot instead of pivot_root |
 | `--bindmount_ro VALUE` / `-R VALUE` | Read-only bind mount (`src` or `src:dst`) |
@@ -65,10 +65,10 @@ nsjail [options] -- command-path [arguments...]
 
 | Option | Description |
 |--------|-------------|
-| `--port VALUE` / `-p VALUE` | TCP port (enables LISTEN mode) |
+| `--port VALUE` / `-p VALUE` | TCP port (enables LISTEN mode, default: 0) |
 | `--bindhost VALUE` | Bind address (default: `::`) |
 | `--max_conns VALUE` | Maximum concurrent connections (default: 0 = unlimited) |
-| `--max_conns_per_ip VALUE` / `-i VALUE` | Maximum connections per IP |
+| `--max_conns_per_ip VALUE` / `-i VALUE` | Maximum connections per IP (default: 0 = unlimited) |
 | `--iface_no_lo` | Do not bring up the loopback interface |
 | `--iface_own VALUE` | Move an interface into the jail |
 | `--macvlan_iface VALUE` / `-I VALUE` | MACVLAN clone source interface |
@@ -76,8 +76,8 @@ nsjail [options] -- command-path [arguments...]
 | `--macvlan_vs_nm VALUE` | MACVLAN netmask |
 | `--macvlan_vs_gw VALUE` | MACVLAN gateway |
 | `--macvlan_vs_ma VALUE` | MACVLAN MAC address |
-| `--macvlan_vs_mo VALUE` | MACVLAN mode (private/vepa/bridge/passthru) |
-| `--use_pasta` | Enable pasta userland networking |
+| `--macvlan_vs_mo VALUE` | MACVLAN mode (private/vepa/bridge/passthru, default: private) |
+| `--user_net` | Enable user-mode networking (nstun backend) |
 
 ## Resource Limits
 
@@ -92,12 +92,12 @@ nsjail [options] -- command-path [arguments...]
 | `--rlimit_nofile VALUE` | Open file count limit (default: 32) |
 | `--rlimit_nproc VALUE` | Process count limit (default: `soft`) |
 | `--rlimit_stack VALUE` | Stack size limit (MiB, default: `soft`) |
-| `--rlimit_memlock VALUE` | Locked memory limit (default: `soft`) |
+| `--rlimit_memlock VALUE` | Locked memory limit (KB, default: `soft`) |
 | `--rlimit_rtprio VALUE` | Real-time priority limit (default: `soft`) |
-| `--rlimit_msgqueue VALUE` | Message queue limit (default: `soft`) |
+| `--rlimit_msgqueue VALUE` | Message queue limit (bytes, default: `soft`) |
 | `--disable_rlimits` | Disable all resource limits |
 
-Note: The help text in `cmdline.cc` uses "MB", but the actual multiplication factor is `1024 * 1024` (= 1 MiB), so the precise unit is MiB (mebibytes).
+Note: The help text in `cmdline.cc` uses "MB", but the actual unit conversion happens in `contain.cc`. The multiplication factor is `1024 * 1024` (= 1 MiB) for `--rlimit_as/core/fsize/stack`, and `1024` (= 1 KiB) for `--rlimit_memlock`.
 
 In addition to numeric values, the special strings `inf`, `soft`/`def`, and `hard`/`max` can be specified for rlimit values.
 However, in the current implementation, using special strings for `--rlimit_as/core/fsize/stack/memlock` may produce unexpected results due to interaction with unit conversion. For strict `SOFT/HARD/INF` specification, using the `*_type` fields in the configuration file is recommended.
@@ -112,6 +112,8 @@ However, in the current implementation, using special strings for `--rlimit_as/c
 | `--seccomp_policy VALUE` / `-P VALUE` | Kafel seccomp policy file |
 | `--seccomp_string VALUE` | Inline Kafel policy |
 | `--seccomp_log` | Use SECCOMP_FILTER_FLAG_LOG |
+| `--seccomp_unotify` | Use SECCOMP_RET_USER_NOTIF and trace accessed files and network sockets |
+| `--seccomp_unotify_report VALUE` | File to write the seccomp_unotify report to |
 | `--disable_tsc` | Disable rdtsc/rdtscp (x86/x86-64 only) |
 | `--forward_signals` | Forward fatal signals to child processes |
 
@@ -120,16 +122,16 @@ However, in the current implementation, using special strings for `--rlimit_as/c
 | Option | Description |
 |--------|-------------|
 | `--cgroup_mem_max VALUE` | Memory limit (bytes, default: 0 = disabled) |
-| `--cgroup_mem_memsw_max VALUE` | Memory+swap limit (bytes) |
-| `--cgroup_mem_swap_max VALUE` | Swap limit (bytes) |
+| `--cgroup_mem_memsw_max VALUE` | Memory+swap limit (bytes, default: 0 = disabled) |
+| `--cgroup_mem_swap_max VALUE` | Swap limit (bytes, default: -1 = disabled) |
 | `--cgroup_mem_mount VALUE` | memory cgroup mount (default: `/sys/fs/cgroup/memory`) |
 | `--cgroup_mem_parent VALUE` | memory parent cgroup (default: `NSJAIL`) |
 | `--cgroup_pids_max VALUE` | PID limit (default: 0 = disabled) |
 | `--cgroup_pids_mount VALUE` | pids cgroup mount (default: `/sys/fs/cgroup/pids`) |
 | `--cgroup_pids_parent VALUE` | pids parent cgroup (default: `NSJAIL`) |
-| `--cgroup_net_cls_classid VALUE` | Network classification class ID |
-| `--cgroup_net_cls_mount VALUE` | net_cls cgroup mount |
-| `--cgroup_net_cls_parent VALUE` | net_cls parent cgroup |
+| `--cgroup_net_cls_classid VALUE` | Network classification class ID (default: 0 = disabled) |
+| `--cgroup_net_cls_mount VALUE` | net_cls cgroup mount (default: `/sys/fs/cgroup/net_cls`) |
+| `--cgroup_net_cls_parent VALUE` | net_cls parent cgroup (default: `NSJAIL`) |
 | `--cgroup_cpu_ms_per_sec VALUE` | CPU ms/second (default: 0 = unlimited) |
 | `--cgroup_cpu_mount VALUE` | cpu cgroup mount (default: `/sys/fs/cgroup/cpu`) |
 | `--cgroup_cpu_parent VALUE` | cpu parent cgroup (default: `NSJAIL`) |
@@ -167,4 +169,5 @@ However, in the current implementation, using special strings for `--rlimit_as/c
 | `--persona_mmap_page_zero` | MMAP_PAGE_ZERO personality |
 | `--persona_read_implies_exec` | READ_IMPLIES_EXEC personality |
 | `--persona_addr_limit_3gb` | ADDR_LIMIT_3GB personality |
-| `--experimental_mnt VALUE` | Mount API selection (`default`/`new`/`old`) |
+| `--oom_score_adj VALUE` | OOM score adjustment for the sandbox (-1000 to 1000, default: not set) |
+| `--experimental_mnt VALUE` | Mount API selection (`new`/`old`/`auto`, default: `old`) |

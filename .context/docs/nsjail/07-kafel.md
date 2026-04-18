@@ -27,10 +27,12 @@ Note: `#` is not a comment character. It is used as a preprocessor prefix for `#
 
 | Format | Example |
 |--------|---------|
-| Decimal | `42` |
+| Decimal | `42`, `-1` |
 | Hexadecimal | `0xfa1` |
 | Octal | `0777` |
 | Binary | `0b10101` |
+
+Negative decimal numbers are supported (e.g., `-1`). Note: negative values are lexically accepted but stored as unsigned 64-bit values via `strtoull` (two's complement representation). For example, `-1` becomes `0xFFFFFFFFFFFFFFFF` internally.
 
 ## Actions
 
@@ -53,7 +55,7 @@ The argument `n` for `ERRNO(n)`, `TRAP(n)`, and `TRACE(n)` is restricted to the 
 DEFAULT KILL
 ```
 
-If `DEFAULT` is not specified, the default action is `KILL` (kills the thread on any unmatched system call).
+If `DEFAULT` is not specified, the default action is `KILL` (kills the thread on any unmatched system call). `DEFAULT` can only be specified once; specifying it multiple times is a compilation error.
 
 ## Basic Rule Syntax
 
@@ -132,6 +134,7 @@ open { flags == O_RDONLY|O_CLOEXEC }  // Allow read-only + CLOEXEC only
 
 | Operator | Description |
 |----------|-------------|
+| `!` | Logical NOT (unary) |
 | `&&` | Logical AND |
 | `\|\|` | Logical OR |
 
@@ -141,6 +144,8 @@ open { flags == O_RDONLY|O_CLOEXEC }  // Allow read-only + CLOEXEC only
 |----------|-------------|
 | `&` | Bitwise AND |
 | `\|` | Bitwise OR |
+
+The maximum expression depth is 200. A maximum of 6 arguments per syscall can be specified, matching the Linux kernel convention. Duplicate argument names within a single syscall definition are not allowed.
 
 ## Policy Definitions and USE
 
@@ -155,7 +160,7 @@ POLICY my_policy {
 USE my_policy DEFAULT KILL
 ```
 
-`USE somePolicy` inserts the body of `somePolicy` inline. Only previously defined policies can be referenced.
+`USE somePolicy` inserts the body of `somePolicy` inline. Only previously defined policies can be referenced. Defining two policies with the same name is a compilation error.
 
 ## Architecture-Specific Filters
 
@@ -169,7 +174,7 @@ ALLOW {
 }
 ```
 
-Supported architecture names: `x86_64`, `x86`, `arm`, `aarch64`, `mips64`, `riscv64`, `m68k`
+Supported architecture names (matching is case-insensitive): `x86_64` (alias: `amd64`), `x86` (alias: `i386`), `arm`, `aarch64` (alias: `arm64`), `mips` (alias: `mipso32`), `mips64`, `riscv64` (alias: `rv64`), `m68k`
 
 Rules for architectures not being compiled for are ignored.
 
@@ -201,13 +206,16 @@ ERRNO(42) { some_syscall }
 
 Kafel does not automatically import Linux kernel header constants. To use constants such as `O_RDONLY`, `PROT_EXEC`, or `EPERM` in argument filtering expressions, they must be explicitly defined in the policy file using `#define`. Only numeric literals are accepted as action arguments for `ERRNO()`, `TRAP()`, and `TRACE()`.
 
+Redefining a constant with a different value is a compilation error. Redefining with the same value is silently accepted. Constant definitions cannot be placed inside policy blocks.
+
 ## File Includes
 
 ```kafel
 #include "some_other_file.policy"
+#include "first.policy" "second.policy"
 ```
 
-Each `#include` directive specifies one file. Include directives are terminated by a newline or semicolon. Search paths must be explicitly registered via `kafel_add_include_search_path()`.
+Multiple files, separated by whitespace, can be specified in one `#include` directive. Include directives are terminated by a newline or semicolon. Search paths must be explicitly registered via `kafel_add_include_search_path()`. The maximum include depth is 16.
 
 ## Complete Examples
 
@@ -245,7 +253,7 @@ DEFAULT ALLOW
 ```
 
 In this example:
-- `geteuid` returns -1337
+- `geteuid` fails with errno 1337 (raw kernel return value: -1337, displayed by `/usr/bin/id` as `euid=4294965959`)
 - `ptrace` and `sched_setaffinity` are blocked with EPERM (1)
 - `syslog` kills the process
 - Everything else is allowed
