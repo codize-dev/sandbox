@@ -18,6 +18,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "write to /etc/ld.so.preload for global library injection"
     requests:
@@ -38,6 +39,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "modify /etc/ld.so.conf for library search path manipulation"
     requests:
@@ -58,6 +60,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "overwrite system shared library"
     requests:
@@ -78,6 +81,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Ruby dlopen of arbitrary shared object path"
     requests:
@@ -99,6 +103,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Node.js dlopen of arbitrary shared object"
     requests:
@@ -119,6 +124,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "replace /usr/bin/id binary with trojan"
     requests:
@@ -139,3 +145,4 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

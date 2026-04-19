@@ -19,6 +19,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "seccomp self-install is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -40,6 +41,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "uselib (legacy) is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -61,6 +63,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "lsm_set_self_attr is blocked by seccomp (ruby)"
     requests:
@@ -81,6 +84,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "landlock_create_ruleset is blocked with SIGSYS"
     requests:
@@ -102,6 +106,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "landlock_add_rule is blocked with SIGSYS"
     requests:
@@ -123,6 +128,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "landlock_restrict_self is blocked with SIGSYS"
     requests:
@@ -144,3 +150,4 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"

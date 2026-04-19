@@ -175,7 +175,7 @@ func Test_collectResult(t *testing.T) {
 				waitErr = makeExitError(t, tc.exitCode)
 			}
 
-			result, err := e.collectResult(waitErr, tc.logStr)
+			result, err := e.collectResult(waitErr, tc.logStr, 0)
 			require.NoError(t, err)
 			assert.Equal(t, tc.wantStatus, result.Status)
 			assert.Equal(t, tc.wantSignal, result.Signal)

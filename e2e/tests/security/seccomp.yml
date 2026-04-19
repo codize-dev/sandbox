@@ -19,6 +19,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "ptrace is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -40,6 +41,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "mount is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -61,6 +63,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "mount is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -82,6 +85,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "ptrace is blocked by seccomp (go)"
     requests:
@@ -108,6 +112,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: ""
@@ -115,6 +120,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "io_uring_setup returns ENOSYS instead of killing process (ruby)"
     requests:
@@ -139,6 +145,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "io_uring_enter returns ENOSYS instead of killing process (ruby)"
     requests:
@@ -163,6 +170,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "io_uring_register returns ENOSYS instead of killing process (ruby)"
     requests:
@@ -187,3 +195,4 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

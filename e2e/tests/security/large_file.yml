@@ -25,6 +25,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "large fill file dumped to stdout exceeds output limit"
     requests:
@@ -48,3 +49,4 @@ tests:
               exit_code: 137
               status: "OUTPUT_LIMIT_EXCEEDED"
               signal: null
+              duration_ms: "/^[0-9]+$/"

@@ -146,7 +146,8 @@ Response:
     "output": "SGVsbG8sIFdvcmxkIQo=",
     "exit_code": 0,
     "status": "OK",
-    "signal": null
+    "signal": null,
+    "duration_ms": 42
   }
 }
 ```
@@ -157,6 +158,7 @@ Response:
   - `exit_code`: process exit code
   - `status`: one of `"OK"`, `"SIGNAL"`, `"TIMEOUT"`, `"OUTPUT_LIMIT_EXCEEDED"`
   - `signal`: signal name if the process was killed by a signal (e.g. `"SIGKILL"`), `null` otherwise
+  - `duration_ms`: wall-clock execution time for this step in milliseconds (integer). Measured around the nsjail process lifetime (from successful `cmd.Start()` to `cmd.Wait()` returning), so it includes nsjail's own startup/teardown overhead in addition to user code runtime. Always present regardless of `status`.
 
 #### `GET /metrics`
 

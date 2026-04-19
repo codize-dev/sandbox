@@ -18,6 +18,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "enable core dumps via ulimit"
     requests:
@@ -39,6 +40,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "disable ASLR via /proc/sys"
     requests:
@@ -59,6 +61,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "enable dmesg_restrict bypass via /proc"
     requests:
@@ -79,6 +82,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "disable kptr_restrict to leak kernel addresses"
     requests:
@@ -99,6 +103,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "enable perf_event for side-channel attack via /proc"
     requests:
@@ -119,6 +124,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "enable BPF JIT for kernel exploit via /proc"
     requests:
@@ -139,6 +145,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "write to /proc/sys/vm/overcommit_memory to manipulate OOM behavior"
     requests:
@@ -159,6 +166,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "enable IP forwarding to pivot network traffic"
     requests:
@@ -179,6 +187,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "read /proc/kcore for kernel memory dump"
     requests:
@@ -199,6 +208,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "strace self for syscall debugging"
     requests:
@@ -219,6 +229,7 @@ tests:
               exit_code: 127
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "gdb attach to PID 1"
     requests:
@@ -239,3 +250,4 @@ tests:
               exit_code: 127
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

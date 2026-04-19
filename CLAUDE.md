@@ -60,7 +60,7 @@ The container must run in **privileged mode** (required for nsjail to create Lin
 POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
              → internal/handler/handler.go (validate runtime, reject restricted files, optional base64 decode, validate filenames, write to tmpdir)
              → internal/sandbox/sandbox.go (invoke nsjail with the selected runtime)
-             → Response: {compile, run} where each contains {stdout, stderr, output, exit_code, status, signal} (stdout/stderr/output are base64-encoded)
+             → Response: {compile, run} where each contains {stdout, stderr, output, exit_code, status, signal, duration_ms} (stdout/stderr/output are base64-encoded)
 ```
 
 ### Key Packages
@@ -95,11 +95,13 @@ Request (`runtime` is required, must be `"node"`, `"node-typescript"`, `"ruby"`,
 
 Response:
 ```json
-{"compile": null, "run": {"stdout": "<base64>", "stderr": "<base64>", "output": "<base64>", "exit_code": 0, "status": "OK", "signal": null}}
+{"compile": null, "run": {"stdout": "<base64>", "stderr": "<base64>", "output": "<base64>", "exit_code": 0, "status": "OK", "signal": null, "duration_ms": 42}}
 ```
 
 Possible `status` values: `"OK"`, `"SIGNAL"`, `"TIMEOUT"`, `"OUTPUT_LIMIT_EXCEEDED"`.
 
 `compile`: Compilation step result (same schema as `run`). `null` for non-compiled runtimes (node, ruby, python, bash). When compilation fails, `run` is `null`.
+
+`duration_ms` (int64): wall-clock time in milliseconds between `cmd.Start()` and `cmd.Wait()` for that step's nsjail process. Always present for all statuses. Includes nsjail startup/teardown overhead.
 
 `files[].base64_encoded` (bool, optional, default: `false`): when `true`, `content` is treated as a Base64-encoded string and decoded by the server. When `false` (default), `content` is used as plain text.

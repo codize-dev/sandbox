@@ -18,6 +18,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "setuid(0) is rejected inside the sandbox (node)"
     requests:
@@ -44,3 +45,4 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

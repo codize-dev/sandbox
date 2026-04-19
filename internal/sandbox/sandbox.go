@@ -43,6 +43,14 @@ type Result struct {
 	ExitCode int     `json:"exit_code"`
 	Status   Status  `json:"status"`
 	Signal   *string `json:"signal"`
+	// DurationMs is the wall-clock milliseconds between cmd.Start() and
+	// cmd.Wait() returning for this step's nsjail invocation. It is always
+	// non-negative and is populated on every Result that Runner.exec
+	// returns alongside a nil error, covering every Status value: OK,
+	// SIGNAL, TIMEOUT, and OUTPUT_LIMIT_EXCEEDED. Error returns yield a
+	// zero-valued Result that the caller discards. Includes nsjail's own
+	// startup/teardown in addition to user code runtime.
+	DurationMs int64 `json:"duration_ms"`
 }
 
 // RunOutput holds the results of a sandbox execution.
@@ -102,6 +110,28 @@ func NewRunner(cfg Config) *Runner {
 	return &Runner{cfg: cfg}
 }
 
+// newOutputLimitResult builds the Result returned from Runner.exec when
+// the sandboxed process is killed for exceeding the combined output
+// limit. Lives as a package-level helper so DurationMs propagation on
+// this path can be unit-tested in isolation, mirroring collectResult.
+//
+// ExitCode is hardcoded to 137 (128 + SIGKILL). The Go process kills
+// nsjail via proc.Kill() (SIGKILL), so nsjail never gets a chance to
+// report the child's exit status. Go's ExitCode() returns -1 for
+// signal-terminated processes, but 137 is used here to stay consistent
+// with other SIGKILL scenarios (timeout, OOM).
+func newOutputLimitResult(durationMs int64) Result {
+	return Result{
+		Stdout:     "",
+		Stderr:     "",
+		Output:     "",
+		ExitCode:   137,
+		Status:     StatusOutputLimitExceeded,
+		Signal:     nil,
+		DurationMs: durationMs,
+	}
+}
+
 // exec runs a single nsjail invocation with the given parameters and returns
 // the result. Called once for interpreted runtimes, or twice (compile + run)
 // for compiled runtimes.
@@ -141,6 +171,7 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 	outputLimitHit := errors.Is(drainErr, errOutputLimitExceeded)
 
 	waitErr := cmd.Wait()
+	durationMs := e.elapsedMs()
 
 	logData, err := io.ReadAll(e.logR)
 	if err != nil {
@@ -149,26 +180,14 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 	logStr := string(logData)
 
 	if outputLimitHit {
-		// ExitCode is hardcoded to 137 (128 + SIGKILL). The Go process
-		// kills nsjail via proc.Kill() (SIGKILL), so nsjail never gets a
-		// chance to report the child's exit status. Go's ExitCode() returns
-		// -1 for signal-terminated processes, but 137 is used here to stay
-		// consistent with other SIGKILL scenarios (timeout, OOM).
-		return Result{
-			Stdout:   "",
-			Stderr:   "",
-			Output:   "",
-			ExitCode: 137,
-			Status:   StatusOutputLimitExceeded,
-			Signal:   nil,
-		}, nil
+		return newOutputLimitResult(durationMs), nil
 	}
 
 	if ctx.Err() != nil {
 		return Result{}, ctx.Err()
 	}
 
-	return e.collectResult(waitErr, logStr)
+	return e.collectResult(waitErr, logStr, durationMs)
 }
 
 // execTimeoutBuffer is the grace period added beyond the nsjail --time_limit /

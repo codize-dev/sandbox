@@ -18,6 +18,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stderr output"
     requests:
@@ -38,6 +39,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "non-zero exit code"
     requests:
@@ -58,6 +60,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stderr with non-zero exit code"
     requests:
@@ -79,6 +82,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "pipeline"
     requests:
@@ -99,6 +103,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "multiple files with source"
     requests:
@@ -126,6 +131,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "curl is available"
     requests:
@@ -146,6 +152,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "wget is available"
     requests:
@@ -166,6 +173,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "awk is available"
     requests:
@@ -186,6 +194,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "variables and arithmetic"
     requests:
@@ -211,6 +220,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "arrays"
     requests:
@@ -236,6 +246,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "for loop"
     requests:
@@ -260,6 +271,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "while loop"
     requests:
@@ -285,6 +297,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "conditionals"
     requests:
@@ -312,6 +325,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "command substitution"
     requests:
@@ -333,6 +347,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "string manipulation"
     requests:
@@ -358,6 +373,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "functions"
     requests:
@@ -388,6 +404,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "read file"
     requests:
@@ -416,6 +433,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "sed and grep"
     requests:
@@ -438,6 +456,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "case statement"
     requests:
@@ -469,3 +488,4 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

@@ -19,6 +19,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "open_by_handle_at (Shocker attack) is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -40,6 +41,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "fsopen (new mount API) is blocked by seccomp (ruby)"
     requests:
@@ -60,6 +62,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "fsconfig is blocked by seccomp (ruby)"
     requests:
@@ -80,6 +83,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "fsmount is blocked by seccomp (ruby)"
     requests:
@@ -100,6 +104,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "fspick is blocked by seccomp (ruby)"
     requests:
@@ -120,6 +125,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "move_mount is blocked by seccomp (ruby)"
     requests:
@@ -140,6 +146,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "open_tree is blocked by seccomp (ruby)"
     requests:
@@ -160,6 +167,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "mount_setattr is blocked by seccomp (ruby)"
     requests:
@@ -180,6 +188,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "name_to_handle_at is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -201,6 +210,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "name_to_handle_at is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -222,6 +232,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "fanotify_init is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -243,6 +254,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "fanotify_init is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -264,6 +276,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "fanotify_mark is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -285,6 +298,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "fanotify_mark is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -306,3 +320,4 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"

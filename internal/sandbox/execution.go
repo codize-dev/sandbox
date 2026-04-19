@@ -39,6 +39,25 @@ type execution struct {
 	stdoutBuf bytes.Buffer
 	stderrBuf bytes.Buffer
 	combined  bytes.Buffer
+
+	// startTime is set inside start() right after a successful cmd.Start(),
+	// so a non-zero value implies the child was actually launched. Read via
+	// elapsedMs() right after cmd.Wait() in Runner.exec, bounding the
+	// measured window to the nsjail invocation.
+	startTime time.Time
+}
+
+// elapsedMs returns the milliseconds since startTime was set, or 0 if
+// startTime is the zero value (i.e., cmd.Start() never succeeded). The
+// zero guard prevents a future refactor that reads startTime on an
+// unstarted execution from reporting an absurd duration (time.Since on
+// the zero time saturates near math.MaxInt64 nanoseconds — roughly 292
+// years when converted to milliseconds).
+func (e *execution) elapsedMs() int64 {
+	if e.startTime.IsZero() {
+		return 0
+	}
+	return time.Since(e.startTime).Milliseconds()
 }
 
 func (e *execution) buildArgs() []string {
@@ -151,6 +170,7 @@ func (e *execution) start(ctx context.Context, args []string) (*exec.Cmd, error)
 		e.closePipes()
 		return nil, fmt.Errorf("sandbox execution failed: %w", err)
 	}
+	e.startTime = time.Now()
 
 	e.proc = cmd.Process
 
@@ -162,16 +182,17 @@ func (e *execution) start(ctx context.Context, args []string) (*exec.Cmd, error)
 	return cmd, nil
 }
 
-func (e *execution) collectResult(waitErr error, logStr string) (Result, error) {
+func (e *execution) collectResult(waitErr error, logStr string, durationMs int64) (Result, error) {
 	// Detect nsjail timeout by searching its log output. This string must
 	// match nsjail's actual log format (see nsjail/logs.cc).
 	timedOut := strings.Contains(logStr, "run time >= time limit")
 
 	result := Result{
-		Stdout: base64.StdEncoding.EncodeToString(e.stdoutBuf.Bytes()),
-		Stderr: base64.StdEncoding.EncodeToString(e.stderrBuf.Bytes()),
-		Output: base64.StdEncoding.EncodeToString(e.combined.Bytes()),
-		Status: StatusOK,
+		Stdout:     base64.StdEncoding.EncodeToString(e.stdoutBuf.Bytes()),
+		Stderr:     base64.StdEncoding.EncodeToString(e.stderrBuf.Bytes()),
+		Output:     base64.StdEncoding.EncodeToString(e.combined.Bytes()),
+		Status:     StatusOK,
+		DurationMs: durationMs,
 	}
 
 	if waitErr != nil {

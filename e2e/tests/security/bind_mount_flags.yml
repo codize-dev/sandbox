@@ -18,6 +18,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/usr/lib64 is mounted with nosuid and nodev"
     arch: [amd64]
@@ -39,6 +40,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/usr/bin is mounted with nosuid and nodev"
     requests:
@@ -59,6 +61,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/etc/alternatives is mounted with nosuid and nodev"
     requests:
@@ -79,6 +82,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/sandbox bind mount has nosuid and nodev flags"
     requests:
@@ -100,3 +104,4 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

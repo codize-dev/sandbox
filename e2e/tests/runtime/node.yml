@@ -18,6 +18,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stderr output"
     requests:
@@ -38,6 +39,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stdout and stderr"
     requests:
@@ -59,6 +61,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "non-zero exit code"
     requests:
@@ -79,6 +82,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stderr with non-zero exit code"
     requests:
@@ -100,6 +104,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "multiple files with require"
     requests:
@@ -129,6 +134,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "JSON parse and stringify"
     requests:
@@ -151,6 +157,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "array map filter sort"
     requests:
@@ -176,6 +183,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "async/await with Promise"
     requests:
@@ -201,6 +209,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Promise.all"
     requests:
@@ -222,6 +231,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "try/catch error handling"
     requests:
@@ -246,6 +256,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "unhandled exception"
     requests:
@@ -266,6 +277,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "class and inheritance"
     requests:
@@ -299,6 +311,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Map and Set"
     requests:
@@ -326,6 +339,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "string methods"
     requests:
@@ -351,6 +365,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "regular expression"
     requests:
@@ -373,6 +388,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "destructuring and spread"
     requests:
@@ -397,3 +413,4 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

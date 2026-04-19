@@ -18,6 +18,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "setting hostname is blocked (no CAP_SYS_ADMIN)"
     requests:
@@ -38,6 +39,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "all effective capabilities are zero"
     requests:
@@ -58,6 +60,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "no_new_privs is set"
     requests:
@@ -78,3 +81,4 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

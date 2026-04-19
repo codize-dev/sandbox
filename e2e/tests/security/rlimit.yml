@@ -33,6 +33,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "operation not permitted\n"
@@ -40,6 +41,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "real-time scheduling is blocked"
     requests:
@@ -85,6 +87,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "operation not permitted\n"
@@ -92,6 +95,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "POSIX message queue creation is blocked"
     requests:
@@ -135,6 +139,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "permission denied\n"
@@ -142,6 +147,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stack exhaustion is safely handled"
     requests:
@@ -166,6 +172,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "fork bomb is blocked by cgroup pids limit"
     requests:
@@ -188,4 +195,5 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 

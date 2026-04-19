@@ -27,6 +27,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "outbound HTTP request via fetch is blocked by network namespace"
     requests:
@@ -52,6 +53,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "loopback interface is disabled inside sandbox"
     requests:
@@ -81,6 +83,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "connecting to loopback server is blocked inside sandbox"
     requests:
@@ -119,3 +122,4 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

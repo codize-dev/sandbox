@@ -18,6 +18,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "curl data exfiltration is blocked by network namespace"
     requests:
@@ -38,6 +39,7 @@ tests:
               exit_code: 7
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "wget download of malicious payload is blocked by network namespace"
     requests:
@@ -58,6 +60,7 @@ tests:
               exit_code: 4
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Node.js TCP reverse shell is blocked by network namespace"
     requests:
@@ -85,6 +88,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Ruby TCP reverse shell is blocked by network namespace"
     requests:
@@ -107,6 +111,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Go TCP reverse shell is blocked by network namespace"
     requests:
@@ -146,6 +151,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "dial tcp 10.0.0.1:4444: connect: network is unreachable\n"
@@ -153,6 +159,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "curl exfiltration of /proc/self/maps to external server"
     requests:
@@ -173,6 +180,7 @@ tests:
               exit_code: 7
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "bash reverse shell to IPv6 address is blocked"
     requests:
@@ -193,3 +201,4 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

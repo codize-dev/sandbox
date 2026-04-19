@@ -20,6 +20,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "Hello, World!\n"
               stderr: ""
@@ -27,6 +28,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "compile error"
     requests:
@@ -49,6 +51,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run: null
 
   - name: "stderr output"
@@ -72,6 +75,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "error message\n"
@@ -79,6 +83,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stdout and stderr"
     requests:
@@ -102,6 +107,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "out\n"
               stderr: "err\n"
@@ -109,6 +115,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "non-zero exit code"
     requests:
@@ -133,6 +140,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: ""
@@ -140,6 +148,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stderr with non-zero exit code"
     requests:
@@ -165,6 +174,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "error occurred\n"
@@ -172,6 +182,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "multiple files"
     requests:
@@ -202,6 +213,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "Hello from helper\n"
               stderr: ""
@@ -209,6 +221,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "syntax error"
     requests:
@@ -231,6 +244,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run: null
 
   - name: "unhandled panic"
@@ -254,6 +268,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "\nthread 'main' (1) panicked at main.rs:2:5:\nsomething went wrong\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
@@ -261,6 +276,7 @@ tests:
               exit_code: 101
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "restricted file main rejected"
     requests:
@@ -315,6 +331,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "a=1\nb=2\nc=3\n"
               stderr: ""
@@ -322,6 +339,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "struct and impl"
     requests:
@@ -356,6 +374,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "12.0\n"
               stderr: ""
@@ -363,6 +382,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "traits"
     requests:
@@ -399,6 +419,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "(3, 4)\n"
               stderr: ""
@@ -406,6 +427,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Result and error handling"
     requests:
@@ -443,6 +465,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "3.33\nError: division by zero\n"
               stderr: ""
@@ -450,6 +473,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "closures and iterators"
     requests:
@@ -478,6 +502,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "[1, 1, 2, 3, 4, 5, 6, 9]\n[4, 5, 6, 9]\n"
               stderr: ""
@@ -485,6 +510,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "JSON serialization with serde-like manual impl"
     requests:
@@ -509,6 +535,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "{\"name\":\"Alice\",\"age\":30}\n"
               stderr: ""
@@ -516,6 +543,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "threading"
     requests:
@@ -545,6 +573,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "42\n"
               stderr: ""
@@ -552,3 +581,4 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

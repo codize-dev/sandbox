@@ -18,6 +18,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "Hello, World!\n"
               stderr: ""
@@ -25,6 +26,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "compile error - type error"
     requests:
@@ -46,6 +48,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run: null
 
   - name: "compile error - syntax error"
@@ -67,6 +70,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run: null
 
   - name: "stderr output"
@@ -88,6 +92,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "error message\n"
@@ -95,6 +100,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stdout and stderr"
     requests:
@@ -116,6 +122,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "out\n"
               stderr: "err\n"
@@ -123,6 +130,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "non-zero exit code"
     requests:
@@ -143,6 +151,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: ""
@@ -150,6 +159,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stderr with non-zero exit code"
     requests:
@@ -171,6 +181,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "fatal error\n"
@@ -178,6 +189,7 @@ tests:
               exit_code: 42
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "multiple files"
     requests:
@@ -205,6 +217,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "Hello, World!\n"
               stderr: ""
@@ -212,6 +225,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "unhandled exception"
     requests:
@@ -232,6 +246,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "/^/sandbox/index\\.js:1\\nthrow new Error\\(\"something went wrong\"\\);\\n\\^\\n\\nError: something went wrong\\n    at Object\\.<anonymous> \\(/sandbox/index\\.js:1:7\\)\\n    at Module\\._compile \\(node:internal/modules/cjs/loader:1812:14\\)\\n    at Object\\.\\.js \\(node:internal/modules/cjs/loader:1943:10\\)\\n    at Module\\.load \\(node:internal/modules/cjs/loader:1533:32\\)\\n    at Module\\._load \\(node:internal/modules/cjs/loader:1335:12\\)\\n    at wrapModuleLoad \\(node:internal/modules/cjs/loader:255:19\\)\\n    at Module\\.executeUserEntryPoint \\[as runMain\\] \\(node:internal/modules/run_main:154:5\\)\\n    at node:internal/main/run_main_module:33:47\\n\\nNode\\.js v\\d+\\.\\d+\\.\\d+\\n$/"
@@ -239,6 +254,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "restricted file - package.json"
     requests:
@@ -320,6 +336,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "Bob\n"
               stderr: ""
@@ -327,6 +344,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "enums and type guards"
     requests:
@@ -359,6 +377,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "GREEN\ntrue\nfalse\n"
               stderr: ""
@@ -366,6 +385,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "async/await"
     requests:
@@ -395,6 +415,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "data\n"
               stderr: ""
@@ -402,6 +423,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "custom tsconfig.json override - strict mode rejects implicit any"
     requests:
@@ -436,6 +458,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run: null
 
   - name: "standard library usage - JSON"
@@ -466,6 +489,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "Alice\n30\n"
               stderr: ""
@@ -473,3 +497,4 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

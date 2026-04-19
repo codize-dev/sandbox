@@ -29,6 +29,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: ""
@@ -36,3 +37,4 @@ tests:
               exit_code: 137
               status: "SIGNAL"
               signal: "SIGKILL"
+              duration_ms: "/^[0-9]+$/"

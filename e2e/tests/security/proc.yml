@@ -18,6 +18,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/proc/self/mem write is blocked"
     requests:
@@ -38,6 +39,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/proc/sys/kernel write is blocked"
     requests:
@@ -58,6 +60,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "only sandbox PIDs are visible (PID namespace isolation)"
     requests:
@@ -78,3 +81,4 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

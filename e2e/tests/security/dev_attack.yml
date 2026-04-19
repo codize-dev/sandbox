@@ -18,6 +18,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "read /dev/kmem for kernel memory access"
     requests:
@@ -38,6 +39,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "read /dev/port for I/O port access"
     requests:
@@ -58,6 +60,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "read /dev/sda for raw disk access"
     requests:
@@ -78,6 +81,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/dev/tty is not accessible"
     requests:
@@ -98,6 +102,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/dev/console is not accessible"
     requests:
@@ -118,6 +123,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/dev/ptmx is not accessible"
     requests:
@@ -138,6 +144,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/dev/zero is not mounted"
     requests:
@@ -158,6 +165,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/dev/random is not mounted (only /dev/urandom)"
     requests:
@@ -178,6 +186,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "create device node for /dev/mem is blocked"
     requests:
@@ -198,6 +207,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "create device node for /dev/sda is blocked"
     requests:
@@ -218,3 +228,4 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

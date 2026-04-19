@@ -18,6 +18,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stderr output"
     requests:
@@ -38,6 +39,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stdout and stderr"
     requests:
@@ -60,6 +62,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "non-zero exit code"
     requests:
@@ -80,6 +83,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "stderr with non-zero exit code"
     requests:
@@ -101,6 +105,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "multiple files with require_relative"
     requests:
@@ -128,6 +133,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "JSON parse and generate"
     requests:
@@ -151,6 +157,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "array operations"
     requests:
@@ -173,6 +180,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "class and inheritance"
     requests:
@@ -215,6 +223,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "begin/rescue error handling"
     requests:
@@ -239,6 +248,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "unhandled exception"
     requests:
@@ -259,6 +269,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "hash operations"
     requests:
@@ -282,6 +293,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "block and iterator"
     requests:
@@ -308,6 +320,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "string operations"
     requests:
@@ -332,6 +345,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "regular expression"
     requests:
@@ -355,3 +369,4 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

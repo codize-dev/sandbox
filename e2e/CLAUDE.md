@@ -47,6 +47,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "hello\n"
               stderr: ""
@@ -54,6 +55,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             error:
               code: VALIDATION_ERROR
               message: "request validation failed"
@@ -108,9 +110,11 @@ tests:
 
 ### Regex Matching
 
-String fields (`stdout`, `stderr`, `output`) support regex matching via `/pattern/` syntax. When a value starts and ends with `/`, the inner content is treated as a Go regular expression and matched against the actual value using partial match (`regexp.MatchString`).
+String fields (`stdout`, `stderr`, `output`, `duration_ms`) support regex matching via `/pattern/` syntax. When a value starts and ends with `/`, the inner content is treated as a Go regular expression and matched against the actual value using partial match (`regexp.MatchString`).
 
 **Exact match is always preferred.** Even if the output is long or verbose, the full expected string must be written out. Regex is permitted **only** for values that are genuinely non-deterministic across runs — timestamps, random IDs, kernel-version-dependent messages, or runtime version strings in stack traces (which change with automated dependency updates).
+
+`duration_ms` is inherently non-deterministic across runs (measures wall-clock time) and therefore always uses regex matching. The canonical pattern is `/^[0-9]+$/` (non-negative integer). The field is present on every successful `compile` / `run` block and is compared against the API response's integer value by formatting the integer as a decimal string before matching.
 
 When converting an exact-match string to regex, escape all regex special characters with `regexp.QuoteMeta` and replace only the non-deterministic parts (e.g. `Node\.js v24\.14\.0` → `Node\.js v\d+\.\d+\.\d+`). Anchor the pattern with `^` and `$`.
 

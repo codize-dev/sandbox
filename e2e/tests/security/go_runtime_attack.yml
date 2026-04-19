@@ -33,6 +33,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "cat: /etc/shadow: No such file or directory\n\n"
@@ -40,6 +41,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Go syscall.Exec replaces process but sandbox holds"
     requests:
@@ -74,6 +76,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "uid=65534 gid=65534 groups=65534\n"
               stderr: ""
@@ -81,6 +84,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Go raw socket creation is blocked"
     requests:
@@ -117,6 +121,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "operation not permitted\n"
@@ -124,6 +129,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Go write to read-only /usr/bin"
     requests:
@@ -158,6 +164,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "open /usr/bin/trojan: read-only file system\n"
@@ -165,6 +172,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Go read host /proc/1/environ in PID namespace"
     requests:
@@ -205,6 +213,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: "HOME=/sandbox\nPATH=/usr/bin:/bin\n"
               stderr: ""
@@ -212,6 +221,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Go attempt to listen on privileged port"
     requests:
@@ -248,6 +258,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "listen tcp :80: bind: permission denied\n"
@@ -255,6 +266,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Go fork bomb via goroutines with os/exec"
     requests:
@@ -299,6 +311,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: "/.*: too many open files\n$/"
@@ -306,3 +319,4 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

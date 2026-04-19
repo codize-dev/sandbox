@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -98,6 +99,9 @@ type runOutput struct {
 	ExitCode int     `yaml:"exit_code"`
 	Status   string  `yaml:"status"`
 	Signal   *string `yaml:"signal"`
+	// String because this field is always regex-matched against the
+	// stringified int64 from the API response; see e2e/CLAUDE.md.
+	DurationMs string `yaml:"duration_ms"`
 }
 
 type testRequest struct {
@@ -134,6 +138,10 @@ type apiRunResult struct {
 	ExitCode int     `json:"exit_code"`
 	Status   string  `json:"status"`
 	Signal   *string `json:"signal"`
+	// Pointer so a missing or null "duration_ms" key in the response
+	// decodes as nil and fails the assertion, instead of silently becoming
+	// 0 and matching the /^[0-9]+$/ regex.
+	DurationMs *int64 `json:"duration_ms"`
 }
 
 type apiErrorResponse struct {
@@ -272,6 +280,8 @@ func TestE2E(t *testing.T) {
 								assert.Equal(t, req.Output.Body.Compile.ExitCode, apiResp.Compile.ExitCode, "[request %d] compile exit_code mismatch", ri)
 								assert.Equal(t, req.Output.Body.Compile.Status, apiResp.Compile.Status, "[request %d] compile status mismatch", ri)
 								assert.Equal(t, req.Output.Body.Compile.Signal, apiResp.Compile.Signal, "[request %d] compile signal mismatch", ri)
+								require.NotNil(t, apiResp.Compile.DurationMs, "[request %d] compile duration_ms must be present and non-null", ri)
+								assertStringField(t, req.Output.Body.Compile.DurationMs, strconv.FormatInt(*apiResp.Compile.DurationMs, 10), "[request %d] compile duration_ms mismatch", ri)
 							}
 
 							if req.Output.Body.Run == nil {
@@ -284,6 +294,8 @@ func TestE2E(t *testing.T) {
 								assert.Equal(t, req.Output.Body.Run.ExitCode, apiResp.Run.ExitCode, "[request %d] run exit_code mismatch", ri)
 								assert.Equal(t, req.Output.Body.Run.Status, apiResp.Run.Status, "[request %d] run status mismatch", ri)
 								assert.Equal(t, req.Output.Body.Run.Signal, apiResp.Run.Signal, "[request %d] run signal mismatch", ri)
+								require.NotNil(t, apiResp.Run.DurationMs, "[request %d] run duration_ms must be present and non-null", ri)
+								assertStringField(t, req.Output.Body.Run.DurationMs, strconv.FormatInt(*apiResp.Run.DurationMs, 10), "[request %d] run duration_ms mismatch", ri)
 							}
 						}
 					}()

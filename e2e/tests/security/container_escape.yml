@@ -18,6 +18,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "double /proc/self/root traversal to escape chroot"
     requests:
@@ -38,6 +39,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "chroot escape attempt"
     requests:
@@ -58,6 +60,7 @@ tests:
               exit_code: 127
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "/sys filesystem is not accessible"
     requests:
@@ -78,6 +81,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "cgroup filesystem is not accessible"
     requests:
@@ -98,6 +102,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Docker socket is not accessible via filesystem"
     requests:
@@ -118,6 +123,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "overwrite nsjail config to weaken sandbox"
     requests:
@@ -138,6 +144,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "debugfs is not accessible"
     requests:
@@ -158,6 +165,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "tracefs is not accessible"
     requests:
@@ -178,6 +186,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "symlink to /proc/1/root for escape"
     requests:
@@ -198,6 +207,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "containerd socket is not accessible"
     requests:
@@ -218,6 +228,7 @@ tests:
               exit_code: 2
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "write to /proc/self/attr/current to change security context"
     requests:
@@ -238,3 +249,4 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

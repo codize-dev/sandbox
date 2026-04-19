@@ -28,6 +28,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "tmpfs inode exhaustion is bounded by size limit"
     requests:
@@ -50,6 +51,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "CPU spin with multiple processes is terminated by timeout"
     requests:
@@ -73,3 +75,4 @@ tests:
               exit_code: 137
               status: "TIMEOUT"
               signal: "SIGKILL"
+              duration_ms: "/^[0-9]+$/"

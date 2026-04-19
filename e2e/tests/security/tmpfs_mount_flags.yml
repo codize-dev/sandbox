@@ -18,6 +18,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "device node creation on /tmp is blocked"
     requests:
@@ -38,6 +39,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "SUID bit does not grant new privileges"
     requests:
@@ -60,6 +62,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "binary execution from /tmp is blocked by noexec"
     requests:
@@ -82,3 +85,4 @@ tests:
               exit_code: 126
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

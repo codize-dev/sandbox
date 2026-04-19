@@ -19,6 +19,7 @@ tests:
               exit_code: 7
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "write script to /tmp and execute via interpreter"
     requests:
@@ -40,6 +41,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Node.js child_process.exec for arbitrary command execution"
     requests:
@@ -61,6 +63,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Ruby system() for shell command injection"
     requests:
@@ -81,6 +84,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "crypto mining attempt is terminated by timeout"
     requests:
@@ -104,6 +108,7 @@ tests:
               exit_code: 137
               status: "TIMEOUT"
               signal: "SIGKILL"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "persist data in /tmp then steal in second request"
     requests:
@@ -125,6 +130,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
       - input:
           runtime: bash
           files:
@@ -142,6 +148,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Ruby eval of dynamically constructed exploit code"
     requests:
@@ -163,6 +170,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Node.js eval of dynamically constructed exploit code"
     requests:
@@ -185,6 +193,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Go compile-time network access is blocked by GOPROXY=off"
     requests:
@@ -211,4 +220,5 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run: null

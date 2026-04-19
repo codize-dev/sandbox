@@ -18,6 +18,7 @@ tests:
               exit_code: 137
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "user exit with SIGSEGV-like code"
     requests:
@@ -38,6 +39,7 @@ tests:
               exit_code: 139
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "user exit with SIGTERM-like code"
     requests:
@@ -58,6 +60,7 @@ tests:
               exit_code: 143
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "user exit with SIGINT-like code"
     requests:
@@ -78,3 +81,4 @@ tests:
               exit_code: 130
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

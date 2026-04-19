@@ -19,6 +19,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "reboot is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -40,6 +41,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "acct is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -61,6 +63,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "acct is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -82,6 +85,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "swapon is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -103,6 +107,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "swapon is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -124,6 +129,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "swapoff is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -145,6 +151,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "swapoff is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -166,6 +173,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "syslog is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -187,6 +195,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "syslog is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -208,6 +217,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "quotactl is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -229,6 +239,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "quotactl is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -250,6 +261,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "quotactl_fd is blocked by seccomp (ruby)"
     requests:
@@ -270,6 +282,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clock_settime is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -291,6 +304,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clock_settime is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -312,6 +326,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clock_adjtime is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -333,6 +348,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clock_adjtime is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -354,6 +370,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "settimeofday is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -375,6 +392,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "settimeofday is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -396,6 +414,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "adjtimex is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -417,6 +436,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "adjtimex is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -438,6 +458,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "umount is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -459,6 +480,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "umount is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -480,3 +502,4 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"

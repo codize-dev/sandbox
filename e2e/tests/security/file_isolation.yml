@@ -20,6 +20,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
       - input:
           runtime: node
           files:
@@ -43,6 +44,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "files created in sandbox are not visible to subsequent requests (bash)"
     requests:
@@ -64,6 +66,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
       - input:
           runtime: bash
           files:
@@ -85,6 +88,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "files written to /tmp are not visible to subsequent requests"
     requests:
@@ -106,6 +110,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
       - input:
           runtime: bash
           files:
@@ -127,3 +132,4 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

@@ -19,6 +19,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "SIGSEGV to PID 1 is ignored inside PID namespace"
     requests:
@@ -40,6 +41,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "SIGTERM to PID 1 is ignored inside PID namespace"
     requests:
@@ -61,6 +63,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "SIGSTOP to PID 1 is blocked inside PID namespace"
     requests:
@@ -82,3 +85,4 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

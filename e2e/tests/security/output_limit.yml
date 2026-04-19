@@ -18,3 +18,4 @@ tests:
               exit_code: 137
               status: "OUTPUT_LIMIT_EXCEEDED"
               signal: null
+              duration_ms: "/^[0-9]+$/"

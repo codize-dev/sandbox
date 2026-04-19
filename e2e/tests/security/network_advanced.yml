@@ -19,6 +19,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "Unix domain socket to Docker socket path is not reachable"
     requests:
@@ -40,6 +41,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "UDP outbound is blocked by network namespace"
     requests:
@@ -69,6 +71,7 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "DNS resolution is blocked by network namespace"
     requests:
@@ -96,3 +99,4 @@ tests:
               exit_code: 1
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"

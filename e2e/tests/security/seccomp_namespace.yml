@@ -19,6 +19,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "unshare is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -40,6 +41,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "setns is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -61,6 +63,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "setns is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -82,6 +85,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "pivot_root is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -103,6 +107,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "pivot_root is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -124,6 +129,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "unshare is blocked by seccomp (go)"
     requests:
@@ -150,6 +156,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: ""
@@ -157,6 +164,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clone with CLONE_NEWUSER is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -178,6 +186,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clone with CLONE_NEWUSER is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -199,6 +208,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clone with CLONE_NEWNET is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -220,6 +230,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clone with CLONE_NEWNET is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -241,6 +252,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clone3 returns ENOSYS instead of killing process (ruby)"
     requests:
@@ -265,6 +277,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clone with CLONE_NEWNS is blocked by seccomp (ruby)"
     arch: [amd64]
@@ -286,6 +299,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clone with CLONE_NEWNS is blocked by seccomp (ruby)"
     arch: [arm64]
@@ -307,6 +321,7 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
 
   - name: "clone with CLONE_NEWUSER is blocked by seccomp (go)"
     requests:
@@ -333,6 +348,7 @@ tests:
               exit_code: 0
               status: "OK"
               signal: null
+              duration_ms: "/^[0-9]+$/"
             run:
               stdout: ""
               stderr: ""
@@ -340,3 +356,4 @@ tests:
               exit_code: 159
               status: "SIGNAL"
               signal: "SIGSYS"
+              duration_ms: "/^[0-9]+$/"
