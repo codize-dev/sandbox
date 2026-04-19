@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.8.0](https://github.com/codize-dev/sandbox/compare/v0.7.4...v0.8.0) (2026-04-19)
+
+
+### Features
+
+* add duration_ms field to response for each step ([4fcb562](https://github.com/codize-dev/sandbox/commit/4fcb5629406108afb7bfe4f5724c8e06b6b9a75d))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/labstack/echo/v5 to v5.1.0 ([#40](https://github.com/codize-dev/sandbox/issues/40)) ([163525d](https://github.com/codize-dev/sandbox/commit/163525db9873394ab5bc8956a1c95531fd007586))
+* **deps:** update module golang.org/x/sys to v0.43.0 ([#41](https://github.com/codize-dev/sandbox/issues/41)) ([338f98f](https://github.com/codize-dev/sandbox/commit/338f98f6f16e6310af2bc79f92b6c6838d97d615))
+* **依存関係:** ghcr.io/codize-dev/nsjail:latest の Docker ダイジェストを a4131e2 に更新 ([#51](https://github.com/codize-dev/sandbox/issues/51)) ([3406da9](https://github.com/codize-dev/sandbox/commit/3406da91b9cc3138ca469bbfefa6243446424ecf))
+
 ## [0.7.4](https://github.com/codize-dev/sandbox/compare/v0.7.3...v0.7.4) (2026-04-17)
 
 
