@@ -65,9 +65,37 @@ func (f testInputFile) resolveContent() (string, error) {
 	}
 }
 
+type testInputStdin struct {
+	Type    fileType `yaml:"type"`
+	Content *string  `yaml:"content"`
+	Size    int      `yaml:"size"` // used only when Type == fileTypeFill
+}
+
+// resolveContent returns the raw stdin string payload.
+//   - fill: generates Size bytes of 'A'.
+//   - plain / base64 / empty-type: returns *Content. The caller MUST
+//     gate on Content != nil before invoking this for plain/base64 —
+//     a nil Content is treated as a misconfiguration and returns an
+//     error rather than silently substituting an empty payload.
+//   - unknown type: returns an error so misconfigured YAML fails loudly.
+func (s testInputStdin) resolveContent() (string, error) {
+	switch s.Type {
+	case fileTypePlain, fileTypeBase64, "":
+		if s.Content == nil {
+			return "", fmt.Errorf("stdin type %q requires non-nil content", s.Type)
+		}
+		return *s.Content, nil
+	case fileTypeFill:
+		return strings.Repeat("A", s.Size), nil
+	default:
+		return "", fmt.Errorf("unsupported stdin type: %q", s.Type)
+	}
+}
+
 type testInput struct {
 	Runtime *string         `yaml:"runtime"`
 	Files   []testInputFile `yaml:"files"`
+	Stdin   *testInputStdin `yaml:"stdin"`
 }
 
 type testOutput struct {
@@ -118,10 +146,16 @@ type testCase struct {
 type apiRequest struct {
 	Runtime *string   `json:"runtime"`
 	Files   []apiFile `json:"files"`
+	Stdin   *apiStdin `json:"stdin,omitempty"`
 }
 
 type apiFile struct {
 	Name          *string `json:"name"`
+	Content       *string `json:"content"`
+	Base64Encoded *bool   `json:"base64_encoded,omitempty"`
+}
+
+type apiStdin struct {
 	Content       *string `json:"content"`
 	Base64Encoded *bool   `json:"base64_encoded,omitempty"`
 }
@@ -233,9 +267,37 @@ func TestE2E(t *testing.T) {
 							}
 						}
 
+						var apiStdinPayload *apiStdin
+						if req.Input.Stdin != nil {
+							payload := &apiStdin{}
+							switch req.Input.Stdin.Type {
+							case fileTypeFill:
+								content, err := req.Input.Stdin.resolveContent()
+								require.NoError(t, err, "[request %d] failed to resolve stdin content", ri)
+								payload.Content = &content
+							case fileTypePlain, "":
+								if req.Input.Stdin.Content != nil {
+									content, err := req.Input.Stdin.resolveContent()
+									require.NoError(t, err, "[request %d] failed to resolve stdin content", ri)
+									payload.Content = &content
+								}
+							case fileTypeBase64:
+								if req.Input.Stdin.Content != nil {
+									content, err := req.Input.Stdin.resolveContent()
+									require.NoError(t, err, "[request %d] failed to resolve stdin content", ri)
+									payload.Content = &content
+								}
+								payload.Base64Encoded = new(true)
+							default:
+								require.FailNowf(t, "unsupported stdin type", "[request %d] stdin type %q is not supported", ri, req.Input.Stdin.Type)
+							}
+							apiStdinPayload = payload
+						}
+
 						reqBody := apiRequest{
 							Runtime: req.Input.Runtime,
 							Files:   apiFiles,
+							Stdin:   apiStdinPayload,
 						}
 
 						bodyBytes, err := json.Marshal(reqBody)

@@ -1,0 +1,35 @@
+tests:
+  - name: "node-typescript reads stdin and echoes to stdout"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                let buf: string = '';
+                process.stdin.setEncoding('utf8');
+                process.stdin.on('data', (d: string) => { buf += d; });
+                process.stdin.on('end', () => { process.stdout.write(buf); });
+          stdin:
+            type: plain
+            content: "hello ts\n"
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "hello ts\n"
+              stderr: ""
+              output: "hello ts\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"

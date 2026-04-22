@@ -1,0 +1,41 @@
+tests:
+  - name: "go reads stdin and echoes to stdout"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: app.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"io"
+                	"os"
+                )
+
+                func main() {
+                	_, _ = io.Copy(os.Stdout, os.Stdin)
+                }
+          stdin:
+            type: plain
+            content: "hello go\n"
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "hello go\n"
+              stderr: ""
+              output: "hello go\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"

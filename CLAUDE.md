@@ -46,6 +46,7 @@ The container must run in **privileged mode** (required for nsjail to create Lin
 - `--output-limit` (default `1048576` / 1 MiB) — maximum combined output bytes
 - `--max-files` (default `10`) — maximum number of files per request
 - `--max-file-size` (default `262144` / 256 KiB) — maximum file size in bytes per file
+- `--max-stdin-size` (default `1048576` / 1 MiB) — maximum stdin size in bytes per request (post-decode when `base64_encoded` is true; wire bytes otherwise)
 - `--max-body-size` (default `5242880` / 5 MiB) — maximum request body size in bytes
 - `--max-concurrency` (default `10`) — maximum number of concurrent sandbox executions
 - `--max-queue-size` (default `50`) — maximum number of requests waiting in the execution queue
@@ -58,8 +59,8 @@ The container must run in **privileged mode** (required for nsjail to create Lin
 
 ```
 POST /v1/run → main.go → cmd/serve.go (Cobra CLI, Echo v5 router)
-             → internal/handler/handler.go (validate runtime, reject restricted files, optional base64 decode, validate filenames, write to tmpdir)
-             → internal/sandbox/sandbox.go (invoke nsjail with the selected runtime)
+             → internal/handler/handler.go (validate runtime, reject restricted files, optional base64 decode of files/stdin, validate filenames, write to tmpdir)
+             → internal/sandbox/sandbox.go (invoke nsjail with the selected runtime; stdin piped to the run step only)
              → Response: {compile, run} where each contains {stdout, stderr, output, exit_code, status, signal, duration_ms} (stdout/stderr/output are base64-encoded)
 ```
 
@@ -92,6 +93,13 @@ Request (`runtime` is required, must be `"node"`, `"node-typescript"`, `"ruby"`,
 ```json
 {"runtime": "node", "files": [{"name": "index.js", "content": "console.log('hello');"}]}
 ```
+
+Optional `stdin` payload (delivered to the run-step child process only; compile steps never receive stdin):
+```json
+{"runtime": "node", "files": [{"name": "index.js", "content": "..."}], "stdin": {"content": "hello\n", "base64_encoded": false}}
+```
+
+`stdin.content` (required when `stdin` is present) is plain text by default. `stdin.base64_encoded` (optional, default `false`) treats `content` as a Base64-encoded string and decodes it server-side. Omit the top-level `stdin` to leave the child's stdin empty (read returns EOF immediately).
 
 Response:
 ```json

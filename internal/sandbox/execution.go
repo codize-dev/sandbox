@@ -26,6 +26,7 @@ type execution struct {
 	env         []string
 	tmpDir      string
 	limits      Limits
+	stdin       []byte
 
 	proc *os.Process
 
@@ -161,6 +162,15 @@ func (e *execution) closeReadEnds() {
 func (e *execution) start(ctx context.Context, args []string) (*exec.Cmd, error) {
 	cmd := exec.CommandContext(ctx, nsjailPath, args...)
 	cmd.Env = append(os.Environ(), "NSJAIL_WORKING_DIR="+e.tmpDir)
+
+	// Empty stdin ([]byte{}) is intentionally treated as no-stdin. The
+	// child observes immediate EOF in both the nil and []byte{} paths,
+	// and leaving cmd.Stdin unset avoids the goroutine that os/exec
+	// would otherwise spawn to feed a non-*os.File reader into the
+	// child's stdin pipe.
+	if len(e.stdin) > 0 {
+		cmd.Stdin = bytes.NewReader(e.stdin)
+	}
 
 	cmd.Stdout = e.stdoutW
 	cmd.Stderr = e.stderrW

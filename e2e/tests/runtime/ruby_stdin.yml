@@ -1,0 +1,25 @@
+tests:
+  - name: "ruby reads stdin and echoes to stdout"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                STDOUT.write STDIN.read
+          stdin:
+            type: plain
+            content: "hello ruby\n"
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: "hello ruby\n"
+              stderr: ""
+              output: "hello ruby\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"

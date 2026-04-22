@@ -1,0 +1,38 @@
+tests:
+  - name: "rust reads stdin and echoes to stdout"
+    requests:
+      - input:
+          runtime: rust
+          files:
+            - name: main.rs
+              type: plain
+              content: |
+                use std::io::{self, Read, Write};
+
+                fn main() {
+                    let mut buf = String::new();
+                    io::stdin().read_to_string(&mut buf).unwrap();
+                    io::stdout().write_all(buf.as_bytes()).unwrap();
+                }
+          stdin:
+            type: plain
+            content: "hello rust\n"
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "hello rust\n"
+              stderr: ""
+              output: "hello rust\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"

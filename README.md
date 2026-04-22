@@ -95,6 +95,7 @@ $ docker compose up
 | `--output-limit` | `1048576` (1 MiB) | Maximum combined output bytes |
 | `--max-files` | `10` | Maximum number of files per request |
 | `--max-file-size` | `262144` (256 KiB) | Maximum file size in bytes |
+| `--max-stdin-size` | `1048576` (1 MiB) | Maximum stdin size in bytes (post-decode when `base64_encoded` is true; wire bytes otherwise) |
 | `--max-body-size` | `5242880` (5 MiB) | Maximum request body size in bytes |
 | `--max-concurrency` | `10` | Maximum number of concurrent sandbox executions |
 | `--max-queue-size` | `50` | Maximum number of requests waiting in the execution queue |
@@ -133,6 +134,9 @@ Request:
 - `files` (required): array of source files. The first file in the array is used as the entrypoint
   - `name` (required): file name
   - `content` (required): file content as plain text (default) or Base64-encoded string
+  - `base64_encoded` (optional, default: `false`): when `true`, `content` is treated as a Base64-encoded string and decoded by the server
+- `stdin` (optional): stdin payload delivered to the run-step child process only. Compile steps never receive stdin.
+  - `content` (required when `stdin` is specified): stdin bytes as plain text (default) or Base64-encoded string
   - `base64_encoded` (optional, default: `false`): when `true`, `content` is treated as a Base64-encoded string and decoded by the server
 
 Response:

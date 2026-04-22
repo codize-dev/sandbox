@@ -69,6 +69,7 @@ type execParams struct {
 	tmpDir     string      // host directory bind-mounted as /sandbox (sandbox working directory)
 	limits     Limits      // nsjail resource limits (rlimits + cgroups)
 	timeout    int         // nsjail --time_limit and --rlimit_cpu value for this invocation, in seconds
+	stdin      []byte      // raw stdin bytes for the child process; nil or empty leaves the child's stdin empty (read returns EOF immediately; see Runner.Run godoc)
 }
 
 // resolveSignal decodes Unix signal-encoded exit codes. By convention, shells
@@ -144,6 +145,7 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 		env:         params.env,
 		tmpDir:      params.tmpDir,
 		limits:      params.limits,
+		stdin:       params.stdin,
 	}
 
 	args := e.buildArgs()
@@ -164,6 +166,7 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 			slog.WarnContext(ctx, "cmd.Wait failed after pipe drain error",
 				"wait_error", waitErr,
 				"drain_error", drainErr,
+				"stdin_bytes", len(e.stdin),
 			)
 		}
 		return Result{}, fmt.Errorf("sandbox execution failed: %w", drainErr)
@@ -195,8 +198,12 @@ func (r *Runner) exec(ctx context.Context, params execParams) (Result, error) {
 // exec.Cmd can return before the Go context fires.
 const execTimeoutBuffer = 10 * time.Second
 
-// Run executes the given entryFile inside an nsjail sandbox.
-func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) (RunOutput, error) {
+// Run executes the given entryFile inside an nsjail sandbox. stdin is piped
+// to the run-step child process; a nil or empty stdin leaves the child's
+// stdin empty (read returns EOF immediately). Compile-step children never
+// receive stdin — the compile step is expected to be deterministic with
+// respect to the provided files alone.
+func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string, stdin []byte) (RunOutput, error) {
 	// Compute a single Go-level context timeout covering the full lifecycle
 	// (compile + run). Per-step time limits are enforced by nsjail's
 	// --time_limit; this context is a coarse safety net that fires only if
@@ -244,6 +251,7 @@ func (r *Runner) Run(ctx context.Context, rt Runtime, tmpDir, entryFile string) 
 		tmpDir:     tmpDir,
 		limits:     rt.Limits(),
 		timeout:    r.cfg.RunTimeout,
+		stdin:      stdin,
 	})
 	if err != nil {
 		return RunOutput{}, fmt.Errorf("run: %w", err)

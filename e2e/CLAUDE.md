@@ -37,6 +37,9 @@ tests:
             - name: large.txt
               type: fill
               size: 1048576
+          stdin:
+            type: plain
+            content: "input data\n"
         output:
           status: 200
           body:
@@ -107,6 +110,36 @@ tests:
 - `plain` (default): File content is provided inline via the `content` field. The framework sends it as-is (plain text).
 - `fill`: Generates a file of the specified `size` bytes, filled with the character `A`. The framework sends it as-is (plain text).
 - `base64`: Content is sent as-is in the request's `content` field with `base64_encoded: true`. Use for testing pre-encoded content or intentionally invalid base64.
+
+### Stdin Input
+
+The optional `stdin` block under `input` configures the `stdin` field of the request. When omitted, no `stdin` object is sent and the server leaves the child's stdin empty (read returns EOF immediately).
+
+- `type: plain` (default): `content` is sent as-is with `base64_encoded: false`.
+- `type: base64`: `content` is sent as-is with `base64_encoded: true`. Use to test pre-encoded input or intentionally invalid Base64.
+- `type: fill`: Generates a stdin payload of `size` bytes filled with the character `A`, sent as `base64_encoded: false`. Use to exercise the `--max-stdin-size` validation path with a compact YAML description.
+
+Omit `content` (write `stdin: {}`) to test the server-side `content required` validation — the framework sends `stdin: {"content": null}`, which the server treats as a missing content pointer and rejects with `required`.
+
+```yaml
+# plain stdin
+stdin:
+  type: plain
+  content: "hello\n"
+
+# base64 stdin
+stdin:
+  type: base64
+  content: "aGVsbG8K"
+
+# fill (for size-bound tests)
+stdin:
+  type: fill
+  size: 1048577   # 1 MiB + 1 byte: one over the default --max-stdin-size
+
+# empty stdin object (for validation tests)
+stdin: {}
+```
 
 ### Regex Matching
 

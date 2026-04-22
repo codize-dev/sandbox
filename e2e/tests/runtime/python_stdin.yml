@@ -1,0 +1,26 @@
+tests:
+  - name: "python reads stdin and echoes to stdout"
+    requests:
+      - input:
+          runtime: python
+          files:
+            - name: main.py
+              type: plain
+              content: |
+                import sys
+                sys.stdout.write(sys.stdin.read())
+          stdin:
+            type: plain
+            content: "hello python\n"
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: "hello python\n"
+              stderr: ""
+              output: "hello python\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"

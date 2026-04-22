@@ -1,0 +1,28 @@
+tests:
+  - name: "node reads stdin and echoes to stdout"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                let buf = '';
+                process.stdin.setEncoding('utf8');
+                process.stdin.on('data', d => buf += d);
+                process.stdin.on('end', () => process.stdout.write(buf));
+          stdin:
+            type: plain
+            content: "hello node\n"
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: "hello node\n"
+              stderr: ""
+              output: "hello node\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"

@@ -30,6 +30,7 @@ var (
 	flagOutputLimit    int
 	flagMaxFiles       int
 	flagMaxFileSize    int
+	flagMaxStdinSize   int
 	flagMaxBodySize    int
 	flagMaxConcurrency int
 	flagMaxQueueSize   int
@@ -56,6 +57,7 @@ func init() {
 	f.IntVar(&flagOutputLimit, "output-limit", 1<<20, "maximum combined output bytes")
 	f.IntVar(&flagMaxFiles, "max-files", 10, "maximum number of files per request")
 	f.IntVar(&flagMaxFileSize, "max-file-size", 256<<10, "maximum file size in bytes per file")
+	f.IntVar(&flagMaxStdinSize, "max-stdin-size", 1<<20, "maximum stdin size in bytes (post-decode when base64_encoded is true; wire bytes otherwise)")
 	f.IntVar(&flagMaxBodySize, "max-body-size", 5<<20, "maximum request body size in bytes")
 	f.IntVar(&flagMaxConcurrency, "max-concurrency", 10, "maximum number of concurrent sandbox executions")
 	f.IntVar(&flagMaxQueueSize, "max-queue-size", 50, "maximum number of requests waiting in the execution queue")
@@ -74,6 +76,7 @@ func runServe(_ *cobra.Command, _ []string) error {
 		{"--output-limit", flagOutputLimit},
 		{"--max-files", flagMaxFiles},
 		{"--max-file-size", flagMaxFileSize},
+		{"--max-stdin-size", flagMaxStdinSize},
 		{"--max-body-size", flagMaxBodySize},
 		{"--max-concurrency", flagMaxConcurrency},
 		{"--queue-timeout", flagQueueTimeout},
@@ -95,7 +98,12 @@ func runServe(_ *cobra.Command, _ []string) error {
 		OutputLimit:    flagOutputLimit,
 	}
 
-	h := &handler.Handler{Runner: sandbox.NewRunner(cfg), MaxFiles: flagMaxFiles, MaxFileSize: flagMaxFileSize}
+	h := &handler.Handler{
+		Runner:       sandbox.NewRunner(cfg),
+		MaxFiles:     flagMaxFiles,
+		MaxFileSize:  flagMaxFileSize,
+		MaxStdinSize: flagMaxStdinSize,
+	}
 
 	metrics := &intmw.ConcurrencyMetrics{}
 

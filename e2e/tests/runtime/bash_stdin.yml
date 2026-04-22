@@ -1,0 +1,25 @@
+tests:
+  - name: "bash reads stdin and echoes to stdout"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                cat
+          stdin:
+            type: plain
+            content: "hello bash\n"
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: "hello bash\n"
+              stderr: ""
+              output: "hello bash\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"

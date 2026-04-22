@@ -1,0 +1,286 @@
+tests:
+  - name: "stdin omitted - program sees immediate EOF"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                process.stdin.on('end', () => process.stdout.write('EOF'));
+                process.stdin.resume();
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: "EOF"
+              stderr: ""
+              output: "EOF"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "stdin empty content - program sees immediate EOF"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                process.stdin.on('end', () => process.stdout.write('EOF'));
+                process.stdin.resume();
+          stdin:
+            type: plain
+            content: ""
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: "EOF"
+              stderr: ""
+              output: "EOF"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "stdin plain content is delivered to the child process"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                let buf = '';
+                process.stdin.setEncoding('utf8');
+                process.stdin.on('data', d => buf += d);
+                process.stdin.on('end', () => process.stdout.write(buf));
+          stdin:
+            type: plain
+            content: "hello from stdin\n"
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: "hello from stdin\n"
+              stderr: ""
+              output: "hello from stdin\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "stdin base64 content is decoded server-side"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                let buf = '';
+                process.stdin.setEncoding('utf8');
+                process.stdin.on('data', d => buf += d);
+                process.stdin.on('end', () => process.stdout.write(buf));
+          stdin:
+            type: base64
+            content: "aGVsbG8gYmFzZTY0Cg=="
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: "hello base64\n"
+              stderr: ""
+              output: "hello base64\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "stdin object with no content returns 400 required"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                console.log("unreachable");
+          stdin: {}
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["stdin", "content"]
+                  message: "required"
+
+  - name: "stdin base64 with invalid content returns 400 invalid base64"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                console.log("unreachable");
+          stdin:
+            type: base64
+            content: "not-valid-base64!@#"
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["stdin", "content"]
+                  message: "invalid base64"
+
+  - name: "stdin binary bytes (including NUL) are delivered byte-for-byte"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                const bufs = [];
+                process.stdin.on('data', d => bufs.push(d));
+                process.stdin.on('end', () => {
+                  process.stdout.write(Buffer.concat(bufs).toString('hex'));
+                });
+          # Raw bytes: 00 01 02 7f 80 ff → base64 "AAECf4D/"
+          stdin:
+            type: base64
+            content: "AAECf4D/"
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: "0001027f80ff"
+              stderr: ""
+              output: "0001027f80ff"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  # Guards against the os/exec Cmd.Stdin goroutine deadlock: Wait() waits
+  # for the copier goroutine to finish, and if the child never reads, the
+  # goroutine must still terminate cleanly (via EPIPE when the child's
+  # stdin fd is closed on process exit).
+  - name: "child that exits without reading stdin does not hang"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                process.exit(0);
+          stdin:
+            type: plain
+            content: "stdin bytes the program never reads."
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  # Stdin is ~128 KiB, exceeding Linux's default 64 KiB pipe buffer, so
+  # the os/exec writer goroutine cannot push all bytes into the pipe
+  # before the child exits. This verifies Wait() still returns promptly
+  # once EPIPE arrives at the blocked copier.
+  - name: "large stdin (past pipe buffer) with child that exits does not hang"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                process.exit(0);
+          stdin:
+            type: fill
+            size: 131072
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "stdin exactly --max-stdin-size is accepted"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                wc -c
+          # Default --max-stdin-size is 1048576 (1 MiB). Exactly at the
+          # limit should be accepted and delivered to the child.
+          stdin:
+            type: fill
+            size: 1048576
+        output:
+          status: 200
+          body:
+            compile: null
+            run:
+              stdout: "1048576\n"
+              stderr: ""
+              output: "1048576\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "stdin one byte over --max-stdin-size returns 400"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                console.log("unreachable");
+          # Default --max-stdin-size is 1048576 (1 MiB). 1 byte over
+          # should trip the size limit at the handler layer.
+          stdin:
+            type: fill
+            size: 1048577
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["stdin", "content"]
+                  message: "stdin too large (max: 1048576 bytes)"
