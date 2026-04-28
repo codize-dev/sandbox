@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.10.0](https://github.com/codize-dev/sandbox/compare/v0.9.0...v0.10.0) (2026-04-28)
+
+
+### Features
+
+* add Bundler gem pre-install to Ruby runtime ([200339d](https://github.com/codize-dev/sandbox/commit/200339d098be063f81c6aeb4bebe35d58da17ccb))
+* add csv and base64 gems to Ruby runtime ([1eb312f](https://github.com/codize-dev/sandbox/commit/1eb312f85f29fee667228e9f620aa3603504ef04))
+
+
+### Bug Fixes
+
+* **deps:** update golang:1.26.2-bookworm docker digest to 47ce563 ([#56](https://github.com/codize-dev/sandbox/issues/56)) ([d40645c](https://github.com/codize-dev/sandbox/commit/d40645c3e09ec95599fa870b76a8e47b757ddfc7))
+
 ## [0.9.0](https://github.com/codize-dev/sandbox/compare/v0.8.0...v0.9.0) (2026-04-22)
 
 
