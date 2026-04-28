@@ -397,6 +397,238 @@ tests:
               signal: null
               duration_ms: "/^[0-9]+$/"
 
+  - name: "pre-installed gem base64 standard encode/decode"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                require 'base64'
+
+                encoded = Base64.encode64("Hello, World!")
+                puts encoded
+                puts Base64.decode64(encoded)
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "SGVsbG8sIFdvcmxkIQ==\nHello, World!\n"
+              stderr: ""
+              output: "SGVsbG8sIFdvcmxkIQ==\nHello, World!\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "pre-installed gem base64 strict encode/decode"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                require 'base64'
+
+                # strict_encode64 omits the trailing newline and never wraps
+                # at 60 columns, unlike encode64.
+                long = "a" * 50
+                encoded = Base64.strict_encode64(long)
+                puts encoded
+                puts encoded.length
+                puts Base64.strict_decode64(encoded) == long
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=\n68\ntrue\n"
+              stderr: ""
+              output: "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=\n68\ntrue\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "pre-installed gem base64 urlsafe encode/decode"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                require 'base64'
+
+                # Bytes 0xfb 0xff produce '+' and '/' under standard Base64;
+                # urlsafe_encode64 substitutes '-' and '_' instead so the
+                # result is safe to embed in URLs.
+                bytes = [0xfb, 0xff, 0xbf].pack("C*")
+                std    = Base64.strict_encode64(bytes)
+                urlsafe = Base64.urlsafe_encode64(bytes)
+                puts std
+                puts urlsafe
+                puts Base64.urlsafe_decode64(urlsafe).bytes.map { |b| format("%02x", b) }.join
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "+/+/\n-_-_\nfbffbf\n"
+              stderr: ""
+              output: "+/+/\n-_-_\nfbffbf\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "pre-installed gem base64 binary round-trip"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                require 'base64'
+
+                # Round-trip every byte value 0..255 to confirm binary safety.
+                original = (0..255).map(&:chr).join.force_encoding(Encoding::ASCII_8BIT)
+                decoded  = Base64.decode64(Base64.encode64(original))
+                puts original.bytesize
+                puts decoded.bytesize
+                puts decoded == original
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "256\n256\ntrue\n"
+              stderr: ""
+              output: "256\n256\ntrue\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "pre-installed gem csv parse with headers"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                require 'csv'
+
+                input = "name,age,city\nAlice,30,Tokyo\nBob,25,Osaka\n"
+                rows = CSV.parse(input, headers: true)
+                rows.each do |row|
+                  puts "#{row['name']} (#{row['age']}) lives in #{row['city']}"
+                end
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "Alice (30) lives in Tokyo\nBob (25) lives in Osaka\n"
+              stderr: ""
+              output: "Alice (30) lives in Tokyo\nBob (25) lives in Osaka\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "pre-installed gem csv generate with quoting"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                require 'csv'
+
+                output = CSV.generate do |csv|
+                  csv << ["name", "note"]
+                  csv << ["Alice", "hello, world"]
+                  csv << ["Bob",   "she said \"hi\""]
+                end
+                print output
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "name,note\nAlice,\"hello, world\"\nBob,\"she said \"\"hi\"\"\"\n"
+              stderr: ""
+              output: "name,note\nAlice,\"hello, world\"\nBob,\"she said \"\"hi\"\"\"\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "pre-installed gem csv custom column separator"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                require 'csv'
+
+                # TSV input parsed via col_sep; round-trip back to TSV.
+                input = "id\tname\n1\tAlice\n2\tBob\n"
+                rows  = CSV.parse(input, col_sep: "\t", headers: true)
+                rows.each { |row| puts "#{row['id']}=#{row['name']}" }
+
+                tsv = CSV.generate(col_sep: "\t") do |csv|
+                  csv << ["id", "name"]
+                  rows.each { |row| csv << [row['id'], row['name']] }
+                end
+                print tsv
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "1=Alice\n2=Bob\nid\tname\n1\tAlice\n2\tBob\n"
+              stderr: ""
+              output: "1=Alice\n2=Bob\nid\tname\n1\tAlice\n2\tBob\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "pre-installed gem csv round-trip via parse and generate"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                require 'csv'
+
+                rows = [
+                  ["product", "price", "in_stock"],
+                  ["apple",   "100",   "true"],
+                  ["banana",  "50",    "false"],
+                ]
+                serialized = CSV.generate { |csv| rows.each { |r| csv << r } }
+                parsed = CSV.parse(serialized)
+                puts parsed == rows
+                puts parsed.length
+                puts parsed[1].join("|")
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "true\n3\napple|100|true\n"
+              stderr: ""
+              output: "true\n3\napple|100|true\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
   - name: "user-submitted Gemfile is rejected"
     requests:
       - input:
