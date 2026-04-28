@@ -370,3 +370,75 @@ tests:
               status: "OK"
               signal: null
               duration_ms: "/^[0-9]+$/"
+
+  - name: "pre-installed gem fiddle"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                require 'fiddle'
+
+                # Verify the pre-installed gem is loadable and its API is
+                # accessible. SIZEOF_VOIDP is set during Fiddle initialization
+                # based on the platform's pointer width (8 on amd64/arm64).
+                puts Fiddle::SIZEOF_VOIDP
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "8\n"
+              stderr: ""
+              output: "8\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "user-submitted Gemfile is rejected"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                puts "ok"
+            - name: Gemfile
+              type: plain
+              content: |
+                source "https://rubygems.org"
+                gem "rails"
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 1, "name"]
+                  message: "not allowed for this runtime"
+
+  - name: "user-submitted Gemfile.lock is rejected"
+    requests:
+      - input:
+          runtime: ruby
+          files:
+            - name: main.rb
+              type: plain
+              content: |
+                puts "ok"
+            - name: Gemfile.lock
+              type: plain
+              content: ""
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 1, "name"]
+                  message: "not allowed for this runtime"

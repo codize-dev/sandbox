@@ -26,7 +26,7 @@ ENV MISE_DATA_DIR="/mise"
 # Install tools for sandbox
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      curl wget mawk gcc libc-dev && \
+      curl wget mawk gcc libc-dev make pkg-config libffi-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Node.js
@@ -44,6 +44,10 @@ ARG RUBY_VERSION=3.4.9
 ENV PATH="/mise/installs/ruby/${RUBY_VERSION}/bin:$PATH"
 RUN mise settings ruby.compile=false && mise use -g ruby@${RUBY_VERSION} && \
     ln -s /mise/installs/ruby/${RUBY_VERSION} /mise/installs/ruby/current
+COPY internal/sandbox/defaults/ruby/Gemfile internal/sandbox/defaults/ruby/Gemfile.lock /tmp/preinstall/
+RUN cd /tmp/preinstall && \
+    BUNDLE_DEPLOYMENT=true BUNDLE_PATH=/mise/ruby-bundle bundle install && \
+    rm -rf /tmp/preinstall
 
 # Go
 # renovate: datasource=golang-version depName=go

@@ -229,11 +229,19 @@ func (rubyRuntime) Command(entryFile string) []string {
 }
 
 func (rubyRuntime) BindMounts() []BindMount {
-	return []BindMount{{Src: "/mise/installs/ruby/current", Dst: "/mise/installs/ruby/current"}}
+	return []BindMount{
+		{Src: "/mise/installs/ruby/current", Dst: "/mise/installs/ruby/current"},
+		{Src: "/mise/ruby-bundle", Dst: "/mise/ruby-bundle"}, // pre-installed gem store via Bundler (read-only)
+	}
 }
 
 func (rubyRuntime) Env() []string {
-	return []string{"PATH=/mise/installs/ruby/current/bin:/usr/bin:/bin"}
+	return []string{
+		"PATH=/mise/installs/ruby/current/bin:/usr/bin:/bin",
+		"BUNDLE_GEMFILE=/sandbox/Gemfile", // applyDefaultFiles writes the embedded Gemfile here per request; explicit path so Bundler does not depend on cwd
+		"BUNDLE_PATH=/mise/ruby-bundle",   // gem store populated at Docker build time and bind-mounted read-only
+		"RUBYOPT=-rbundler/setup",         // auto-activate Bundler so user code can `require` pre-installed gems without setup boilerplate
+	}
 }
 
 // Limits returns resource limits for Ruby execution.
@@ -265,7 +273,14 @@ func (rubyRuntime) Limits() Limits {
 	}
 }
 
-func (rubyRuntime) RestrictedFiles() []string { return nil }
+// RestrictedFiles prevents users from overriding Gemfile and Gemfile.lock,
+// which must match the gem set pre-installed at /mise/ruby-bundle. The
+// default Gemfile and Gemfile.lock from defaults/ruby/ are written into
+// /sandbox per request by applyDefaultFiles; rejecting user-submitted
+// versions ensures the embedded versions are always used.
+func (rubyRuntime) RestrictedFiles() []string {
+	return []string{"Gemfile", "Gemfile.lock"}
+}
 
 // --- Python ---
 

@@ -1,0 +1,18 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    fiddle (1.1.8)
+
+PLATFORMS
+  aarch64-linux
+  ruby
+  x86_64-linux
+
+DEPENDENCIES
+  fiddle (= 1.1.8)
+
+CHECKSUMS
+  fiddle (1.1.8) sha256=7fa8ee3627271497f3add5503acdbc3f40b32f610fc1cf49634f083ef3f32eee
+
+BUNDLED WITH
+   2.6.9

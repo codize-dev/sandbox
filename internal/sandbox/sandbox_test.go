@@ -263,11 +263,16 @@ func Test_readDefaultFiles(t *testing.T) {
 		assert.Empty(t, files)
 	})
 
-	t.Run("ruby has no defaults", func(t *testing.T) {
+	t.Run("ruby has Gemfile and Gemfile.lock", func(t *testing.T) {
 		t.Parallel()
 		files, err := readDefaultFiles(RuntimeRuby)
-		assert.NoError(t, err)
-		assert.Empty(t, files)
+		require.NoError(t, err)
+		require.Len(t, files, 2)
+		// Files are returned in directory order (lexicographic by embedded FS)
+		assert.Equal(t, "Gemfile", files[0].Name)
+		assert.Contains(t, string(files[0].Content), `gem "fiddle"`)
+		assert.Equal(t, "Gemfile.lock", files[1].Name)
+		assert.Contains(t, string(files[1].Content), "fiddle")
 	})
 
 	t.Run("bash has no defaults", func(t *testing.T) {
@@ -359,11 +364,11 @@ func TestRuntime_RestrictedFiles(t *testing.T) {
 		assert.Empty(t, rt.RestrictedFiles())
 	})
 
-	t.Run("ruby has no restricted files", func(t *testing.T) {
+	t.Run("ruby restricts Gemfile and Gemfile.lock", func(t *testing.T) {
 		t.Parallel()
 		rt, err := LookupRuntime(RuntimeRuby)
 		require.NoError(t, err)
-		assert.Empty(t, rt.RestrictedFiles())
+		assert.ElementsMatch(t, []string{"Gemfile", "Gemfile.lock"}, rt.RestrictedFiles())
 	})
 
 	t.Run("go restricts go.mod, go.sum, and main", func(t *testing.T) {
