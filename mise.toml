@@ -3,3 +3,8 @@ go = "1.26.2"
 "aqua:golangci/golangci-lint" = "2.11.4"
 "aqua:evilmartians/lefthook" = "2.1.5"
 "aqua:hadolint/hadolint" = "2.14.0"
+
+node = "24.14.1"
+ruby = "3.4.9"
+rust = "1.94.1"
+python = "3.14.4"
