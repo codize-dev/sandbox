@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/codize-dev/sandbox/compare/v0.10.0...v0.11.0) (2026-04-30)
+
+
+### Features
+
+* block AF_ALG sockets via seccomp ([3d024ab](https://github.com/codize-dev/sandbox/commit/3d024abf03578cfc116816c24a3276a029f36d2b))
+
 ## [0.10.0](https://github.com/codize-dev/sandbox/compare/v0.9.0...v0.10.0) (2026-04-28)
 
 
