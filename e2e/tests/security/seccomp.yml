@@ -196,3 +196,105 @@ tests:
               status: "OK"
               signal: null
               duration_ms: "/^[0-9]+$/"
+
+  - name: "AF_ALG socket creation is blocked by seccomp (go)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	// AF_ALG = 38
+                	fd, _, errno := syscall.RawSyscall(syscall.SYS_SOCKET, 38, syscall.SOCK_SEQPACKET, 0)
+                	if errno == syscall.EPERM {
+                		fmt.Println("EPERM")
+                		return
+                	}
+                	if errno != 0 {
+                		fmt.Printf("UNEXPECTED: errno=%d\n", int(errno))
+                		return
+                	}
+                	syscall.Close(int(fd))
+                	fmt.Println("ALLOWED")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "EPERM\n"
+              stderr: ""
+              output: "EPERM\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "AF_ALG socket with non-zero high 32 bits in family arg is also blocked (go)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	// family = AF_ALG (38) with non-zero high 32 bits. Linux truncates the
+                	// family arg to int and still routes to AF_ALG, but seccomp sees the
+                	// full 64-bit args[0]. The kafel rule must use size=4 (low-word-only)
+                	// comparison so the high bits cannot be used to slip past the filter.
+                	family := uintptr(38) | (uintptr(1) << 32)
+                	fd, _, errno := syscall.RawSyscall(syscall.SYS_SOCKET, family, syscall.SOCK_SEQPACKET, 0)
+                	if errno == syscall.EPERM {
+                		fmt.Println("EPERM")
+                		return
+                	}
+                	if errno != 0 {
+                		fmt.Printf("UNEXPECTED: errno=%d\n", int(errno))
+                		return
+                	}
+                	syscall.Close(int(fd))
+                	fmt.Println("BYPASSED")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "EPERM\n"
+              stderr: ""
+              output: "EPERM\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"

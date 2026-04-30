@@ -49,6 +49,26 @@ POLICY blocked {
         clone { (clone_flags & 0x7E020000) != 0 }
     },
 
+    // -- AF_ALG (Linux Crypto API sockets) --
+    // AF_ALG sockets expose the kernel crypto subsystem to userspace via a
+    // socket/bind/accept/splice chain. The crypto subsystem is global and
+    // not constrained by network namespaces, so it remains reachable even
+    // from inside an unprivileged user namespace. This makes AF_ALG a direct
+    // path to kernel crypto vulnerabilities (e.g. CVE-2026-31431) without
+    // any race condition or kernel offset requirement.
+    // None of the sandbox runtimes require AF_ALG (38 == AF_ALG).
+    // kafel's built-in database names this argument "family" (not "domain"),
+    // which produces a 32-bit (size=4) comparison against the low word of
+    // args[0]. Using the inline declaration form would default to size=8 and
+    // generate a 64-bit comparison (HIGH_WORD==0 AND LOW_WORD==38), which can
+    // be bypassed by passing rdi = 38|(non_zero<<32) — the kernel truncates
+    // the arg to int and still routes to AF_ALG, but seccomp's HIGH_WORD check
+    // fails. The built-in "family" (size=4) checks only LOW_WORD and blocks
+    // any socket() call whose lower 32 bits equal 38, regardless of upper bits.
+    ERRNO(1) {
+        socket { family == 38 }
+    },
+
     KILL_PROCESS {
         // -- Kernel attack surface --
         // eBPF program loading allows kernel memory read/write and data structure
