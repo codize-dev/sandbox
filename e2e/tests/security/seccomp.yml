@@ -262,10 +262,12 @@ tests:
                 )
 
                 func main() {
-                	// family = AF_ALG (38) with non-zero high 32 bits. Linux truncates the
-                	// family arg to int and still routes to AF_ALG, but seccomp sees the
-                	// full 64-bit args[0]. The kafel rule must use size=4 (low-word-only)
-                	// comparison so the high bits cannot be used to slip past the filter.
+                	// family = AF_ALG (38) with non-zero high 32 bits. Linux truncates
+                	// the family arg to int (still routes to AF_ALG), but seccomp sees
+                	// the full 64-bit args[0]. Verifies that the whitelist rule blocks
+                	// AF_ALG even when high bits are set — this is the historical bypass
+                	// that motivated using kafel's built-in `family` (size=4) instead of
+                	// the inline declaration form (which would default to size=8).
                 	family := uintptr(38) | (uintptr(1) << 32)
                 	fd, _, errno := syscall.RawSyscall(syscall.SYS_SOCKET, family, syscall.SOCK_SEQPACKET, 0)
                 	if errno == syscall.EPERM {
@@ -294,6 +296,490 @@ tests:
               stdout: "EPERM\n"
               stderr: ""
               output: "EPERM\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "AF_UNIX socket with non-zero high 32 bits in family arg is allowed (size=4 regression)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	// family = AF_UNIX (1) with non-zero high 32 bits. Kernel truncates
+                	// to int (treats as AF_UNIX) and seccomp must do the same: only the
+                	// low 32 bits matter. With the correct size=4 rule, this call is
+                	// allowed because LOW=1 ∈ {AF_UNIX, AF_INET, AF_INET6, AF_NETLINK}.
+                	// If the rule were rewritten with the inline declaration form
+                	// (size=8), the HIGH_WORD!=0 condition would over-trigger the
+                	// whitelist's negation chain and incorrectly block this legitimate
+                	// AF_UNIX call. This test catches that misconfiguration.
+                	family := uintptr(1) | (uintptr(1) << 32)
+                	fd, _, errno := syscall.RawSyscall(syscall.SYS_SOCKET, family, syscall.SOCK_STREAM, 0)
+                	if errno != 0 {
+                		fmt.Printf("BLOCKED: errno=%d\n", int(errno))
+                		return
+                	}
+                	syscall.Close(int(fd))
+                	fmt.Println("OK")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "OK\n"
+              stderr: ""
+              output: "OK\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "AF_PACKET socket creation is blocked by seccomp (go)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	// AF_PACKET = 17 — raw packet sockets, kernel attack surface
+                	// (CVE-2016-8655, CVE-2020-14386).
+                	fd, _, errno := syscall.RawSyscall(syscall.SYS_SOCKET, 17, syscall.SOCK_RAW, 0)
+                	if errno == syscall.EPERM {
+                		fmt.Println("EPERM")
+                		return
+                	}
+                	if errno != 0 {
+                		fmt.Printf("UNEXPECTED: errno=%d\n", int(errno))
+                		return
+                	}
+                	syscall.Close(int(fd))
+                	fmt.Println("ALLOWED")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "EPERM\n"
+              stderr: ""
+              output: "EPERM\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "AF_VSOCK socket creation is blocked by seccomp (go)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	// AF_VSOCK = 40 — VM sockets, recent LPE history
+                	// (CVE-2024-50264, CVE-2025-21756).
+                	fd, _, errno := syscall.RawSyscall(syscall.SYS_SOCKET, 40, syscall.SOCK_STREAM, 0)
+                	if errno == syscall.EPERM {
+                		fmt.Println("EPERM")
+                		return
+                	}
+                	if errno != 0 {
+                		fmt.Printf("UNEXPECTED: errno=%d\n", int(errno))
+                		return
+                	}
+                	syscall.Close(int(fd))
+                	fmt.Println("ALLOWED")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "EPERM\n"
+              stderr: ""
+              output: "EPERM\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "AF_TIPC socket creation is blocked by seccomp (go)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	// AF_TIPC = 30 — cluster IPC; CVE-2021-43267 was a remote heap
+                	// overflow with CVSS 9.8.
+                	fd, _, errno := syscall.RawSyscall(syscall.SYS_SOCKET, 30, syscall.SOCK_DGRAM, 0)
+                	if errno == syscall.EPERM {
+                		fmt.Println("EPERM")
+                		return
+                	}
+                	if errno != 0 {
+                		fmt.Printf("UNEXPECTED: errno=%d\n", int(errno))
+                		return
+                	}
+                	syscall.Close(int(fd))
+                	fmt.Println("ALLOWED")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "EPERM\n"
+              stderr: ""
+              output: "EPERM\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "AF_NETLINK socket creation remains allowed (regression)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	// AF_NETLINK = 16 — required by Go's net package for interface
+                	// enumeration. Verify the whitelist still permits it.
+                	fd, _, errno := syscall.RawSyscall(syscall.SYS_SOCKET, 16, syscall.SOCK_RAW, 0)
+                	if errno != 0 {
+                		fmt.Printf("BLOCKED: errno=%d\n", int(errno))
+                		return
+                	}
+                	syscall.Close(int(fd))
+                	fmt.Println("OK")
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "OK\n"
+              stderr: ""
+              output: "OK\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "socketpair with non-AF_UNIX family is blocked by seccomp (go)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                	"unsafe"
+                )
+
+                func main() {
+                	// socketpair() is only legitimately used with AF_UNIX. The kernel
+                	// itself returns EOPNOTSUPP for other families; seccomp enforces
+                	// the same boundary as a defense-in-depth layer.
+                	var fds [2]int32
+                	_, _, errno := syscall.RawSyscall6(
+                		syscall.SYS_SOCKETPAIR,
+                		uintptr(syscall.AF_INET),
+                		uintptr(syscall.SOCK_STREAM),
+                		0,
+                		uintptr(unsafe.Pointer(&fds)),
+                		0, 0,
+                	)
+                	if errno == syscall.EPERM {
+                		fmt.Println("EPERM")
+                		return
+                	}
+                	fmt.Printf("UNEXPECTED: errno=%d\n", int(errno))
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "EPERM\n"
+              stderr: ""
+              output: "EPERM\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "io_setup is blocked by seccomp (go)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	// Legacy AIO io_setup → ENOSYS (mirrors io_uring_setup handling).
+                	_, _, errno := syscall.RawSyscall(syscall.SYS_IO_SETUP, 1, 0, 0)
+                	if errno == syscall.ENOSYS {
+                		fmt.Println("ENOSYS")
+                		return
+                	}
+                	fmt.Printf("UNEXPECTED: errno=%d\n", int(errno))
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "ENOSYS\n"
+              stderr: ""
+              output: "ENOSYS\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "io_submit is blocked by seccomp (go)"
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	// io_submit dispatches opaque iocb structures into many
+                	// filesystem/block-layer paths (long-tail attack surface).
+                	_, _, errno := syscall.RawSyscall(syscall.SYS_IO_SUBMIT, 0, 0, 0)
+                	if errno == syscall.ENOSYS {
+                		fmt.Println("ENOSYS")
+                		return
+                	}
+                	fmt.Printf("UNEXPECTED: errno=%d\n", int(errno))
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "ENOSYS\n"
+              stderr: ""
+              output: "ENOSYS\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "io_pgetevents is blocked by seccomp (go, x86_64)"
+    arch: [amd64]
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	// io_pgetevents on x86_64 = syscall 333. Bound by name in kafel.
+                	_, _, errno := syscall.Syscall6(333, 0, 0, 0, 0, 0, 0)
+                	if errno == syscall.ENOSYS {
+                		fmt.Println("ENOSYS")
+                		return
+                	}
+                	fmt.Printf("UNEXPECTED: errno=%d\n", int(errno))
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "ENOSYS\n"
+              stderr: ""
+              output: "ENOSYS\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "io_pgetevents is blocked by seccomp (go, arm64)"
+    arch: [arm64]
+    requests:
+      - input:
+          runtime: go
+          files:
+            - name: main.go
+              type: plain
+              content: |
+                package main
+
+                import (
+                	"fmt"
+                	"syscall"
+                )
+
+                func main() {
+                	// io_pgetevents on arm64 = syscall 292. Bound by raw number in
+                	// kafel because the bundled aarch64 syscall db lacks the name.
+                	_, _, errno := syscall.Syscall6(292, 0, 0, 0, 0, 0, 0)
+                	if errno == syscall.ENOSYS {
+                		fmt.Println("ENOSYS")
+                		return
+                	}
+                	fmt.Printf("UNEXPECTED: errno=%d\n", int(errno))
+                }
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "ENOSYS\n"
+              stderr: ""
+              output: "ENOSYS\n"
               exit_code: 0
               status: "OK"
               signal: null
