@@ -58,7 +58,7 @@ POLICY blocked {
     // any race condition or kernel offset requirement.
     // None of the sandbox runtimes require AF_ALG (38 == AF_ALG).
     ERRNO(1) {
-        socket { domain == 38 }
+        socket(domain, type, protocol) { domain == 38 }
     },
 
     KILL_PROCESS {
