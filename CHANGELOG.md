@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.1](https://github.com/codize-dev/sandbox/compare/v0.10.0...v0.10.1) (2026-04-30)
+
+
+### Bug Fixes
+
+* block AF_ALG socket creation in seccomp policy ([63023e7](https://github.com/codize-dev/sandbox/commit/63023e7011a4add79a7018993a48886a0cb6fee2))
+* declare socket argument names inline for kafel compatibility ([e4a89f3](https://github.com/codize-dev/sandbox/commit/e4a89f35110f7b25a86ccb6d4735986c5989252d))
+
 ## [0.10.0](https://github.com/codize-dev/sandbox/compare/v0.9.0...v0.10.0) (2026-04-28)
 
 
