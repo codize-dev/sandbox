@@ -49,24 +49,84 @@ POLICY blocked {
         clone { (clone_flags & 0x7E020000) != 0 }
     },
 
-    // -- AF_ALG (Linux Crypto API sockets) --
-    // AF_ALG sockets expose the kernel crypto subsystem to userspace via a
-    // socket/bind/accept/splice chain. The crypto subsystem is global and
-    // not constrained by network namespaces, so it remains reachable even
-    // from inside an unprivileged user namespace. This makes AF_ALG a direct
-    // path to kernel crypto vulnerabilities (e.g. CVE-2026-31431) without
-    // any race condition or kernel offset requirement.
-    // None of the sandbox runtimes require AF_ALG (38 == AF_ALG).
+    // -- Socket address family whitelist --
+    // Allow only the families our sandbox runtimes actually need:
+    //   AF_UNIX (1)     — local IPC
+    //   AF_INET (2)     — IPv4
+    //   AF_INET6 (10)   — IPv6
+    //   AF_NETLINK (16) — kernel/userspace messaging (used by Go's net package
+    //                     for interface enumeration and by glibc's
+    //                     getaddrinfo() AI_ADDRCONFIG path via check_pf.c,
+    //                     which opens PF_NETLINK NETLINK_ROUTE)
+    //
+    // All other families expose niche kernel subsystems with significant
+    // historical CVE counts and zero legitimate sandbox use. Notable removed
+    // attack surface (a partial list — block applies to every family except
+    // the four allowed):
+    //   - AF_ALG (38):       kernel Crypto API → CVE-2026-31431 (Copy Fail)
+    //   - AF_PACKET (17):    raw packets → CVE-2016-8655, CVE-2020-14386
+    //   - AF_VSOCK (40):     useless in container → CVE-2024-50264 (LPE)
+    //   - AF_BLUETOOTH (31): BleedingTooth (CVE-2020-12351 RCE)
+    //   - AF_TIPC (30):      cluster IPC → CVE-2021-43267 (RCE, CVSS 9.8)
+    //   - AF_KEY (15):       IPsec key mgmt → CVE-2022-1353
+    //   - AF_NFC (39):       NFC stack → CVE-2021-23134 (LPE)
+    //   - AF_KCM (41), AF_RDS (21), AF_CAN (29), AF_MPLS (28), AF_LLC (26),
+    //     AF_RXRPC (33), AF_XDP (44), AF_SMC (43), AF_MCTP (45), AF_PHONET,
+    //     AF_QIPCRTR, AF_IEEE802154, AF_CAIF, AF_PPPOX, AF_IB, AF_IUCV,
+    //     AF_ATMPVC/SVC, AF_AX25, AF_NETROM, AF_ROSE, AF_X25, AF_IPX,
+    //     AF_APPLETALK, AF_BRIDGE, AF_SECURITY, AF_NETBEUI, AF_SNA, AF_ISDN,
+    //     AF_UNSPEC, and any future family up to AF_MAX.
+    //
+    // For socketpair(), only AF_UNIX is legitimate (the kernel itself returns
+    // EOPNOTSUPP for other families); we enforce this at seccomp for
+    // defense-in-depth.
+    //
     // kafel's built-in database names this argument "family" (not "domain"),
     // which produces a 32-bit (size=4) comparison against the low word of
-    // args[0]. Using the inline declaration form would default to size=8 and
-    // generate a 64-bit comparison (HIGH_WORD==0 AND LOW_WORD==38), which can
-    // be bypassed by passing rdi = 38|(non_zero<<32) — the kernel truncates
-    // the arg to int and still routes to AF_ALG, but seccomp's HIGH_WORD check
-    // fails. The built-in "family" (size=4) checks only LOW_WORD and blocks
-    // any socket() call whose lower 32 bits equal 38, regardless of upper bits.
+    // args[0]. Using the inline declaration form `socket(family, type,
+    // protocol) { ... }` would default to size=8 and generate a 64-bit
+    // comparison (HIGH_WORD==0 AND LOW_WORD==N), which can be bypassed by
+    // passing rdi = N|(non_zero<<32) — the kernel truncates the arg to int
+    // and still routes to family N, but seccomp's HIGH_WORD check fails.
+    // The built-in "family" (size=4) checks only LOW_WORD, blocking any
+    // socket() call whose lower 32 bits do not match an allowed family,
+    // regardless of upper bits.
     ERRNO(1) {
-        socket { family == 38 }
+        socket {
+            family != 1 && family != 2 && family != 10 && family != 16
+        },
+        socketpair {
+            family != 1
+        }
+    },
+
+    // -- Legacy AIO (libaio) syscalls --
+    // The old in-kernel AIO interface (io_setup family) accepts opaque iocb
+    // structures that fs/aio.c::__io_submit_one dispatches into many
+    // filesystem and block-layer handlers (aio_read, aio_write, aio_fsync,
+    // aio_poll), forming a long-tail attack surface even though discrete CVE
+    // counts are low (the interface is rarely used by modern userspace).
+    // Sandbox runtimes (Node, Ruby, Go, Python, Rust, Bash) all use
+    // synchronous I/O or epoll; verified by `ldd` on the runtime binaries —
+    // none link against libaio, and libaio is not installed in the image.
+    // The newer io_uring family is already blocked above; blocking legacy AIO
+    // closes the parallel path. ENOSYS lets any optional probing in language
+    // runtimes fall back gracefully (mirroring the io_uring block strategy).
+    //
+    // io_pgetevents is bound by name on x86_64 (kafel's amd64 syscall db has
+    // it as syscall 333) and by raw syscall number 292 on arm64 (kafel's
+    // aarch64 db is missing this entry; arm64 inherits asm-generic where
+    // io_pgetevents = 292). The 32-bit-compat companion io_pgetevents_time64
+    // (416) is unreachable from native 64-bit arm64 userspace — the kernel
+    // returns ENOSYS for it on aarch64 — so no separate block is required.
+    ERRNO(38) {
+        io_setup,
+        io_destroy,
+        io_submit,
+        io_getevents,
+        io_cancel,
+        io_pgetevents ON x86_64,
+        SYSCALL[292] ON arm64
     },
 
     KILL_PROCESS {
