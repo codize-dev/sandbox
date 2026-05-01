@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/codize-dev/sandbox/compare/v0.11.0...v0.12.0) (2026-04-30)
+
+
+### Features
+
+* whitelist socket families and block legacy AIO via seccomp ([#61](https://github.com/codize-dev/sandbox/issues/61)) ([57b219a](https://github.com/codize-dev/sandbox/commit/57b219a0bea5bf8aee2ddff264cac0a53f947a72))
+
 ## [0.11.0](https://github.com/codize-dev/sandbox/compare/v0.10.0...v0.11.0) (2026-04-30)
 
 
