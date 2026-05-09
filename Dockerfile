@@ -12,7 +12,7 @@ RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "x64") && \
 # ---
 
 # ghcr.io/codize-dev/nsjail is based on debian:bookworm-slim
-FROM ghcr.io/codize-dev/nsjail:latest@sha256:a4131e28a144ebcb944185e783a7eebc8af976d448d3ca2dbe94b7e714b8259c AS base
+FROM ghcr.io/codize-dev/nsjail:latest@sha256:5309ec0e5ddfbd148593b4aef0776aa08296b0acd873163280dd485a92a6cd25 AS base
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
