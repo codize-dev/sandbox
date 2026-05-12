@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.1](https://github.com/codize-dev/sandbox/compare/v0.12.0...v0.12.1) (2026-05-12)
+
+
+### Bug Fixes
+
+* **deps:** update dependency jdx/mise to v2026.5.0 ([#65](https://github.com/codize-dev/sandbox/issues/65)) ([233d2fd](https://github.com/codize-dev/sandbox/commit/233d2fd0053a89868850955c7045845cdc4a1801))
+
 ## [0.12.0](https://github.com/codize-dev/sandbox/compare/v0.11.0...v0.12.0) (2026-04-30)
 
 
