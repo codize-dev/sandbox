@@ -414,3 +414,69 @@ tests:
               status: "OK"
               signal: null
               duration_ms: "/^[0-9]+$/"
+
+  - name: "pre-installed package lodash"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                const _ = require("lodash");
+
+                // Verify the pre-installed default package is requireable and
+                // its API works. chunk splits an array into groups of n.
+                console.log(JSON.stringify(_.chunk([1, 2, 3, 4, 5], 2)));
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "[[1,2],[3,4],[5]]\n"
+              stderr: ""
+              output: "[[1,2],[3,4],[5]]\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
+  - name: "restricted file package.json rejected"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: package.json
+              type: plain
+              content: |
+                {"dependencies": {"lodash": "1.0.0"}}
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 0, "name"]
+                  message: "not allowed for this runtime"
+
+  - name: "restricted file package-lock.json rejected even with valid index.js"
+    requests:
+      - input:
+          runtime: node
+          files:
+            - name: index.js
+              type: plain
+              content: |
+                console.log("hello");
+            - name: package-lock.json
+              type: plain
+              content: "{}"
+        output:
+          status: 400
+          body:
+            error:
+              code: VALIDATION_ERROR
+              message: "request validation failed"
+              errors:
+                - path: ["files", 1, "name"]
+                  message: "not allowed for this runtime"

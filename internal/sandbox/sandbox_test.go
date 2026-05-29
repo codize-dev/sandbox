@@ -256,11 +256,16 @@ func Test_readDefaultFiles(t *testing.T) {
 		assert.Contains(t, string(files[1].Content), "golang.org/x/text")
 	})
 
-	t.Run("node has no defaults", func(t *testing.T) {
+	t.Run("node has package.json and package-lock.json", func(t *testing.T) {
 		t.Parallel()
 		files, err := readDefaultFiles(RuntimeNode)
-		assert.NoError(t, err)
-		assert.Empty(t, files)
+		require.NoError(t, err)
+		require.Len(t, files, 2)
+		// Files are returned in directory order (lexicographic by embedded FS)
+		assert.Equal(t, "package-lock.json", files[0].Name)
+		assert.Contains(t, string(files[0].Content), `"lodash"`)
+		assert.Equal(t, "package.json", files[1].Name)
+		assert.Contains(t, string(files[1].Content), `"lodash"`)
 	})
 
 	t.Run("ruby has Gemfile and Gemfile.lock", func(t *testing.T) {
@@ -357,11 +362,11 @@ func Test_applyDefaultFiles(t *testing.T) {
 func TestRuntime_RestrictedFiles(t *testing.T) {
 	t.Parallel()
 
-	t.Run("node has no restricted files", func(t *testing.T) {
+	t.Run("node restricts package.json and package-lock.json", func(t *testing.T) {
 		t.Parallel()
 		rt, err := LookupRuntime(RuntimeNode)
 		require.NoError(t, err)
-		assert.Empty(t, rt.RestrictedFiles())
+		assert.ElementsMatch(t, []string{"package.json", "package-lock.json"}, rt.RestrictedFiles())
 	})
 
 	t.Run("ruby restricts Gemfile and Gemfile.lock", func(t *testing.T) {

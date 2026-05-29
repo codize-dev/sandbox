@@ -37,6 +37,8 @@ RUN mise use -g node@${NODE_VERSION} && \
     ln -s /mise/installs/node/${NODE_VERSION} /mise/installs/node/current
 COPY internal/sandbox/defaults/node-typescript/package.json internal/sandbox/defaults/node-typescript/package-lock.json /mise/ts-node-modules/
 RUN cd /mise/ts-node-modules && npm ci
+COPY internal/sandbox/defaults/node/package.json internal/sandbox/defaults/node/package-lock.json /mise/node-modules/
+RUN cd /mise/node-modules && npm ci
 
 # Ruby
 # renovate: datasource=ruby-version depName=ruby
