@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.13.0](https://github.com/codize-dev/sandbox/compare/v0.12.0...v0.13.0) (2026-05-29)
+
+
+### Features
+
+* add default lodash package to Node runtime ([b1f501e](https://github.com/codize-dev/sandbox/commit/b1f501e13a71279f242c77f13d9dab5c0a716094))
+* add default lodash package to Node-TypeScript runtime ([dadbf4a](https://github.com/codize-dev/sandbox/commit/dadbf4a23f45a3f2eb55aabc10afcca017fc9261))
+
+
+### Bug Fixes
+
+* **deps:** update alpine docker tag to v3.23.4 ([#63](https://github.com/codize-dev/sandbox/issues/63)) ([c806e60](https://github.com/codize-dev/sandbox/commit/c806e60da7ac77559806db0afde66babf60aaf0c))
+* **deps:** update dependency jdx/mise to v2026.5.0 ([#65](https://github.com/codize-dev/sandbox/issues/65)) ([233d2fd](https://github.com/codize-dev/sandbox/commit/233d2fd0053a89868850955c7045845cdc4a1801))
+* **依存関係:** ghcr.io/codize-dev/nsjail:latest の Docker ダイジェストを fce880b に更新 ([#64](https://github.com/codize-dev/sandbox/issues/64)) ([92f2009](https://github.com/codize-dev/sandbox/commit/92f2009af04eec513076c03381f224d1cc7ed307))
+* **依存関係:** 依存パッケージ jdx/mise を v2026.5.14 に更新 ([#67](https://github.com/codize-dev/sandbox/issues/67)) ([a39fa14](https://github.com/codize-dev/sandbox/commit/a39fa14234467dc461cd044e17237aa0d7e8fd95))
+
 ## [0.12.0](https://github.com/codize-dev/sandbox/compare/v0.11.0...v0.12.0) (2026-04-30)
 
 
