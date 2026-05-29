@@ -3,7 +3,7 @@ FROM alpine:3.23.4@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a
 ARG TARGETARCH
 
 # renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.+)$
-ARG MISE_VERSION=2026.5.0
+ARG MISE_VERSION=2026.5.14
 RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "x64") && \
     wget -qO /usr/local/bin/mise \
       "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-${ARCH}" && \
