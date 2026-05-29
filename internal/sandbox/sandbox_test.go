@@ -310,6 +310,7 @@ func Test_readDefaultFiles(t *testing.T) {
 		assert.Equal(t, "package-lock.json", files[0].Name)
 		assert.Equal(t, "package.json", files[1].Name)
 		assert.Contains(t, string(files[1].Content), `"@types/node"`)
+		assert.Contains(t, string(files[1].Content), `"lodash"`)
 		assert.Equal(t, "tsconfig.json", files[2].Name)
 		assert.Contains(t, string(files[2].Content), `"skipLibCheck": true`)
 	})

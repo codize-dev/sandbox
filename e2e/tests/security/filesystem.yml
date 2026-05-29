@@ -250,6 +250,36 @@ tests:
               signal: null
               duration_ms: "/^[0-9]+$/"
 
+  - name: "node-typescript node_modules is read-only"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                import * as fs from "fs";
+                fs.writeFileSync("/sandbox/node_modules/lodash/evil.js", "x");
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: ""
+              stderr: "/^node:fs:\\d+\\n[\\s\\S]*Error: EROFS: read-only file system, open '/sandbox/node_modules/lodash/evil.js'[\\s\\S]*Node\\.js v[\\d.]+\\n$/"
+              output: "/^node:fs:\\d+\\n[\\s\\S]*Error: EROFS: read-only file system, open '/sandbox/node_modules/lodash/evil.js'[\\s\\S]*Node\\.js v[\\d.]+\\n$/"
+              exit_code: 1
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+
   - name: "ruby runtime directory is read-only"
     requests:
       - input:

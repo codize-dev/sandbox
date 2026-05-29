@@ -498,3 +498,38 @@ tests:
               status: "OK"
               signal: null
               duration_ms: "/^[0-9]+$/"
+
+  - name: "pre-installed package lodash with types"
+    requests:
+      - input:
+          runtime: node-typescript
+          files:
+            - name: index.ts
+              type: plain
+              content: |
+                import _ from "lodash";
+
+                // Verify the pre-installed default package is importable, its
+                // @types/lodash declarations type-check (chunk returns T[][]),
+                // and it resolves at run time via the node_modules bind mount.
+                const result: number[][] = _.chunk([1, 2, 3, 4, 5], 2);
+                console.log(JSON.stringify(result));
+        output:
+          status: 200
+          body:
+            compile:
+              stdout: ""
+              stderr: ""
+              output: ""
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+            run:
+              stdout: "[[1,2],[3,4],[5]]\n"
+              stderr: ""
+              output: "[[1,2],[3,4],[5]]\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"

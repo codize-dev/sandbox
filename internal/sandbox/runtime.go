@@ -576,7 +576,10 @@ func (nodeTypeScriptRuntime) Command(entryFile string) []string {
 }
 
 func (nodeTypeScriptRuntime) BindMounts() []BindMount {
-	return []BindMount{{Src: "/mise/installs/node/current", Dst: "/mise/installs/node/current"}}
+	return []BindMount{
+		{Src: "/mise/installs/node/current", Dst: "/mise/installs/node/current"},
+		{Src: "/mise/ts-node-modules/node_modules", Dst: "/sandbox/node_modules"}, // pre-installed default packages (read-only); the compiled JS resolves require() against this at run time
+	}
 }
 
 func (nodeTypeScriptRuntime) Env() []string {
@@ -590,7 +593,7 @@ func (nodeTypeScriptRuntime) CompileCommand() []string {
 func (nodeTypeScriptRuntime) CompileBindMounts() []BindMount {
 	return []BindMount{
 		{Src: "/mise/installs/node/current", Dst: "/mise/installs/node/current"},
-		{Src: "/mise/ts-node-modules/node_modules", Dst: "/sandbox/node_modules"}, // pre-installed typescript and @types/node (read-only)
+		{Src: "/mise/ts-node-modules/node_modules", Dst: "/sandbox/node_modules"}, // pre-installed typescript, type definitions, and default packages such as lodash (read-only)
 	}
 }
 
@@ -658,7 +661,8 @@ func (nodeTypeScriptRuntime) Limits() Limits {
 
 // RestrictedFiles prevents users from overriding package.json and
 // package-lock.json, which must match the pre-installed node_modules
-// bind mount (contains typescript and @types/node).
+// bind mount (contains typescript, type definitions, and default
+// packages such as lodash).
 func (nodeTypeScriptRuntime) RestrictedFiles() []string {
 	return []string{"package.json", "package-lock.json"}
 }
