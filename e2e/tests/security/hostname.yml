@@ -1,0 +1,41 @@
+tests:
+  - name: "hostname does not leak the nsjail jailing technology"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                hostname
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "sandbox\n"
+              stderr: ""
+              output: "sandbox\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
+  - name: "uname -n reports the overridden hostname"
+    requests:
+      - input:
+          runtime: bash
+          files:
+            - name: main.sh
+              type: plain
+              content: |
+                uname -n
+        output:
+          status: 200
+          body:
+            run:
+              stdout: "sandbox\n"
+              stderr: ""
+              output: "sandbox\n"
+              exit_code: 0
+              status: "OK"
+              signal: null
+              duration_ms: "/^[0-9]+$/"
