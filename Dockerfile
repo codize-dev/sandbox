@@ -53,7 +53,7 @@ RUN cd /tmp/preinstall && \
 
 # Go
 # renovate: datasource=golang-version depName=go
-ARG GO_VERSION=1.26.2
+ARG GO_VERSION=1.26.3
 ENV PATH="/mise/installs/go/${GO_VERSION}/bin:$PATH"
 RUN mise use -g go@${GO_VERSION} && \
     ln -s /mise/installs/go/${GO_VERSION} /mise/installs/go/current
@@ -81,7 +81,7 @@ RUN mise use -g rust@${RUST_VERSION}
 
 # ---
 
-FROM golang:1.26.2-bookworm@sha256:47ce5636e9936b2c5cbf708925578ef386b4f8872aec74a67bd13a627d242b19 AS builder
+FROM golang:1.26.3-bookworm@sha256:386d475a660466863d9f8c766fec64d7fdad3edac2c6a05020c09534d71edb4b AS builder
 WORKDIR /src
 
 COPY go.mod go.sum ./
