@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.14.0](https://github.com/codize-dev/sandbox/compare/v0.13.0...v0.14.0) (2026-05-30)
+
+
+### Features
+
+* override jail hostname to hide nsjail fingerprint ([ed0a67a](https://github.com/codize-dev/sandbox/commit/ed0a67ab47c57523a4cca5243fd041c206e1095d))
+
+
+### Bug Fixes
+
+* **deps:** update dependency python to v3.14.5 ([#69](https://github.com/codize-dev/sandbox/issues/69)) ([0fdc98e](https://github.com/codize-dev/sandbox/commit/0fdc98e3762d24b31517c10909074a97ea5beefb))
+* **deps:** update go to v1.26.3 ([#70](https://github.com/codize-dev/sandbox/issues/70)) ([e61371c](https://github.com/codize-dev/sandbox/commit/e61371c03207dc37024b339c8b1ac66f66e49b62))
+
 ## [0.13.0](https://github.com/codize-dev/sandbox/compare/v0.12.0...v0.13.0) (2026-05-29)
 
 
