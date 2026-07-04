@@ -66,7 +66,7 @@ RUN cd /tmp/preinstall && \
 
 # Python
 # renovate: datasource=python-version depName=python
-ARG PYTHON_VERSION=3.14.5
+ARG PYTHON_VERSION=3.14.6
 ENV PATH="/mise/installs/python/${PYTHON_VERSION}/bin:$PATH"
 RUN mise use -g python@${PYTHON_VERSION} && \
     ln -s /mise/installs/python/${PYTHON_VERSION} /mise/installs/python/current
