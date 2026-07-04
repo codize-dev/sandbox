@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.14.1](https://github.com/codize-dev/sandbox/compare/v0.14.0...v0.14.1) (2026-07-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency python to v3.14.6 ([#81](https://github.com/codize-dev/sandbox/issues/81)) ([a30e51a](https://github.com/codize-dev/sandbox/commit/a30e51a98ec66013bed2c26ac95f5b733dcb3ec5))
+* **deps:** update ghcr.io/codize-dev/nsjail:latest docker digest to d38c6f4 ([#80](https://github.com/codize-dev/sandbox/issues/80)) ([073ce4c](https://github.com/codize-dev/sandbox/commit/073ce4c3f6e5c1806a7ed102f98abc8e2e0e6374))
+* **deps:** update go to v1.26.4 ([#76](https://github.com/codize-dev/sandbox/issues/76)) ([271c8cd](https://github.com/codize-dev/sandbox/commit/271c8cddfa3ef1e05021b35b789543e5a296e780))
+* **deps:** update module github.com/labstack/echo/v5 to v5.1.1 ([#72](https://github.com/codize-dev/sandbox/issues/72)) ([da39591](https://github.com/codize-dev/sandbox/commit/da3959142fe19a08af3d788c866cfd85e0b2c91f))
+* **deps:** update module go.yaml.in/yaml/v4 to v4.0.0-rc.6 ([#78](https://github.com/codize-dev/sandbox/issues/78)) ([118c80b](https://github.com/codize-dev/sandbox/commit/118c80b8893b3665a2ba8280c166145c6f7a158a))
+
 ## [0.14.0](https://github.com/codize-dev/sandbox/compare/v0.13.0...v0.14.0) (2026-05-30)
 
 
