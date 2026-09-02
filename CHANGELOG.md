@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.2](https://github.com/codize-dev/sandbox/compare/v0.14.1...v0.14.2) (2026-09-02)
+
+
+### Bug Fixes
+
+* **deps:** update ghcr.io/codize-dev/nsjail:latest docker digest to 8f6ea51 ([#85](https://github.com/codize-dev/sandbox/issues/85)) ([ab0e8cc](https://github.com/codize-dev/sandbox/commit/ab0e8cc986cc1c20ecc413526edf2f3a852ae907))
+
 ## [0.14.1](https://github.com/codize-dev/sandbox/compare/v0.14.0...v0.14.1) (2026-07-04)
 
 
