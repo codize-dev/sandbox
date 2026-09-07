@@ -42,7 +42,7 @@ RUN cd /mise/node-modules && npm ci
 
 # Ruby
 # renovate: datasource=ruby-version depName=ruby
-ARG RUBY_VERSION=3.4.9
+ARG RUBY_VERSION=3.4.10
 ENV PATH="/mise/installs/ruby/${RUBY_VERSION}/bin:$PATH"
 RUN mise settings ruby.compile=false && mise use -g ruby@${RUBY_VERSION} && \
     ln -s /mise/installs/ruby/${RUBY_VERSION} /mise/installs/ruby/current
